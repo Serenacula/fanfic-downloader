@@ -1,12 +1,12 @@
 ---
 id: 0002-fic-data-model
-status: pending
+status: complete
 module: shared-types
 implements: [data-model-c3f1]
 depends_on: [0001-extension-scaffold]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # Fic data model types

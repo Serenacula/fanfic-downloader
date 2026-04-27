@@ -22,6 +22,18 @@
 
 **Event:** Completed work item `0001-extension-scaffold` — Extension scaffold
 
+Files created: `manifest.json`, `vite.config.ts`, `tsconfig.json`, `package.json` (scripts: build/dev/test), `src/background/index.ts`, `src/popup/index.html`, `src/popup/index.ts`, `src/options/index.html`, `src/options/index.ts`, `src/content/index.ts`, `public/icons/icon-{16,32,48,128}.png` (placeholder). `npm run build` produces clean dist/.
+
+---
+
+## 2026-04-27T00:04:00
+
+**Event:** Completed work item `0002-fic-data-model` — Fic data model types
+
+Files created: `src/shared/types.ts`. `tsc --noEmit` passes. Also fixed tsconfig: removed `rootDir`/`outDir` (Vite owns the build), added `DOM` to lib. Metadata types included for all 9 target sites.
+
+---
+
 Files created: `manifest.json`, `vite.config.ts`, `tsconfig.json`, `package.json` (scripts: build/dev/test), `src/background/index.ts`, `src/popup/index.html`, `src/popup/index.ts`, `src/options/index.html`, `src/options/index.ts`, `src/content/index.ts`, `icons/icon-{16,32,48,128}.png` (placeholder). `npm run build` produces clean dist/.
 
 ---
