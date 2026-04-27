@@ -1,12 +1,12 @@
 ---
 id: 0003-settings-schema
-status: pending
+status: complete
 module: settings
 implements: [settings-8d4b]
 depends_on: [0002-fic-data-model]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # Settings schema and storage helpers

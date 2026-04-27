@@ -34,6 +34,18 @@ Files created: `src/shared/types.ts`. `tsc --noEmit` passes. Also fixed tsconfig
 
 ---
 
+## 2026-04-27T00:05:00
+
+**Event:** Completed work item `0003-settings-schema` — Settings schema and storage helpers
+
+Files created: `src/shared/settings.ts`. `Settings` type, `DEFAULT_SETTINGS`, `getSettings()`, `saveSettings()`, `RendererFn`. Moved `RendererFn` here (not types.ts) to avoid circular import since Settings uses SiteId from types.ts.
+
+---
+
+Files created: `src/shared/types.ts`. `tsc --noEmit` passes. Also fixed tsconfig: removed `rootDir`/`outDir` (Vite owns the build), added `DOM` to lib. Metadata types included for all 9 target sites.
+
+---
+
 Files created: `manifest.json`, `vite.config.ts`, `tsconfig.json`, `package.json` (scripts: build/dev/test), `src/background/index.ts`, `src/popup/index.html`, `src/popup/index.ts`, `src/options/index.html`, `src/options/index.ts`, `src/content/index.ts`, `icons/icon-{16,32,48,128}.png` (placeholder). `npm run build` produces clean dist/.
 
 ---

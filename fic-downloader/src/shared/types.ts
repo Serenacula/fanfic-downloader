@@ -99,8 +99,3 @@ export type FicData =
 
 export type SiteId = FicData["site"];
 
-export interface Settings {
-  [key: string]: unknown;
-}
-
-export type RendererFn = (data: FicData, settings: Settings) => Promise<Blob>;
