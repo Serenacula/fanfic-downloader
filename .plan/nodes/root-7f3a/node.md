@@ -32,25 +32,36 @@ Top-level node covering the full project: two Firefox WebExtension plugins and a
 ## Decisions
 
 - **Audience** (from `0001-audience`): Public release — both plugins will be published to AMO. Implies polished UX, user-facing errors, AMO-compliant permissions, and clean native host install experience.
+- **Success criteria** (from `0002-success-criteria`): Initial = AO3 + FFN, ePub. Feature complete = 9 sites (AO3/FFN/RR/Tapas/SH/Wattpad/SB/SV/QQ), 6 formats (ePub/PDF/HTML/Markdown/DOCX/TXT). Site list may flex based on anti-scrape difficulty.
+- **Out of scope** (from `0003-out-of-scope`): In-browser reader, cloud sync, chapter-level downloads, cross-browser, translation (all hard no). Calibre integration and translation possibly in scope for expanded plugin.
+- **Images in scope** (from `0003-out-of-scope`): Images included by default; settings option to disable. TXT handling deferred (question `0006`).
+- **Story info in scope** (from `0003-out-of-scope`): Story info included; settings option to configure which fields are shown.
+- **Pre-download confirmation dialogue** (from `0007-metadata-editing`): Optional, togglable in settings. When enabled, shows a form before download so user can adjust title, author, series, summary. When disabled, download proceeds immediately. Post-download ePub editing is out of scope.
+- **Forum-based sites: first-class** (from `0005-forum-sites`): SB, SV, QQ treated as first-class. Extraction approach uses threadmarks (story post index) and read mode (main-posts-only view) — clean enough to match dedicated sites.
 - **Platform**: Firefox WebExtension API — stated by user as the target platform.
 - **Native client language**: Rust — chosen by user for the native messaging host.
 - **Sharing model**: Opportunistic (`shared/` folder), not a design constraint — user stated this explicitly.
 
 ## Children
 
-_None yet — awaiting decomposition after root questions answered._
+- `fic-downloader-3a8f` — The basic fic-downloader Firefox plugin (planning in progress)
+- `fic-downloader-expanded` — Future planning session; not in scope now.
 
 ## Open threads
 
-- `0001-audience`
-- `0002-success-criteria`
-- `0003-out-of-scope`
+_None — all root questions answered or deferred._
 
 ## Considered but rejected
 
-_None yet._
+- **In-browser reader**: Out of scope — not the goal of a downloader.
+- **Cloud sync**: Out of scope — no plans.
+- **Chapter-level granular downloads**: Out of scope.
+- **Cross-browser support**: Out of scope — Firefox only.
+- **Translation**: Out of scope for basic; maybe for expanded.
 
 ## Notes
 
-- GitHub init and README.md are explicitly required before any implementation work begins.
+- GitHub repo: https://github.com/Serenacula/fic-downloader
+- **Planning scope**: This planning session covers `fic-downloader` only. `fic-downloader-expanded` is noted for future planning.
 - The expanded plugin is partially independent of Firefox (the Rust native host runs outside the browser).
+- **Planned future project**: `fic-downloader-cli` — a CLI tool that downloads fics to a chosen folder, defaulting to the current directory. Noted in README. Not part of this planning session.
