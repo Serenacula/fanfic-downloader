@@ -1,12 +1,12 @@
 ---
 id: 0009-cover-image-generator
-status: pending
+status: complete
 module: format-renderers
 implements: [format-generation-9f5a]
 depends_on: [0002-fic-data-model]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # Cover image generator
