@@ -50,6 +50,18 @@ Files created: `src/background/request-queue.ts`, `src/background/__tests__/requ
 
 ---
 
+## 2026-04-27T00:07:00
+
+**Event:** Completed work items `0006-ao3-parser`, `0007-ffn-parser`, `0008-site-detection` together
+
+Files created: `src/parsers/common.ts` (Parser interface, fetchHtml, sanitizeHtml, fetchImages, helpers), `src/parsers/ao3.ts`, `src/parsers/ffn.ts`, `src/parsers/index.ts` (detectParser, isFicPage). Unit tests for site detection: 9/9 pass. Parsers require manual integration testing against live sites.
+
+---
+
+Files created: `src/background/request-queue.ts`, `src/background/__tests__/request-queue.test.ts`. 4/4 tests pass. Exported `createQueue()` factory for test isolation. Key design: `inFlight` incremented synchronously before dispatch to prevent concurrent drain calls overclaiming slots; drain guard prevents re-entrant drain; rate limit re-checked on each while-loop iteration.
+
+---
+
 Files created: `src/shared/settings.ts`. `Settings` type, `DEFAULT_SETTINGS`, `getSettings()`, `saveSettings()`, `RendererFn`. Moved `RendererFn` here (not types.ts) to avoid circular import since Settings uses SiteId from types.ts.
 
 ---

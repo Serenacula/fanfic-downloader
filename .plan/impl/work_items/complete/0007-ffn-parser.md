@@ -1,12 +1,12 @@
 ---
 id: 0007-ffn-parser
-status: pending
+status: complete
 module: site-parsers
 implements: [dedicated-parsers-e4d9, data-model-c3f1]
 depends_on: [0002-fic-data-model, 0005-request-queue, 0003-settings-schema]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # FFN parser

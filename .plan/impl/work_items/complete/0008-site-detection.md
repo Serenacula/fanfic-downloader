@@ -1,12 +1,12 @@
 ---
 id: 0008-site-detection
-status: pending
+status: complete
 module: site-parsers
 implements: [site-detection-a7b2]
 depends_on: [0006-ao3-parser, 0007-ffn-parser]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # Site detection
