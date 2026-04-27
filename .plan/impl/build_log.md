@@ -42,6 +42,18 @@ Files created: `src/shared/settings.ts`. `Settings` type, `DEFAULT_SETTINGS`, `g
 
 ---
 
+## 2026-04-27T00:06:00
+
+**Event:** Completed work item `0005-request-queue` — Request queue
+
+Files created: `src/background/request-queue.ts`, `src/background/__tests__/request-queue.test.ts`. 4/4 tests pass. Exported `createQueue()` factory for test isolation. Key design: `inFlight` incremented synchronously before dispatch to prevent concurrent drain calls overclaiming slots; drain guard prevents re-entrant drain; rate limit re-checked on each while-loop iteration.
+
+---
+
+Files created: `src/shared/settings.ts`. `Settings` type, `DEFAULT_SETTINGS`, `getSettings()`, `saveSettings()`, `RendererFn`. Moved `RendererFn` here (not types.ts) to avoid circular import since Settings uses SiteId from types.ts.
+
+---
+
 Files created: `src/shared/types.ts`. `tsc --noEmit` passes. Also fixed tsconfig: removed `rootDir`/`outDir` (Vite owns the build), added `DOM` to lib. Metadata types included for all 9 target sites.
 
 ---

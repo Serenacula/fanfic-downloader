@@ -1,12 +1,12 @@
 ---
 id: 0005-request-queue
-status: pending
+status: complete
 module: request-queue
 implements: [content-extraction-4b1e]
 depends_on: [0003-settings-schema]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-27
+completed: 2026-04-27
 ---
 
 # Request queue
