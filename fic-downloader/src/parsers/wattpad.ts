@@ -58,13 +58,26 @@ async function fetchStoryApi(storyId: string): Promise<WattpadApiStory | null> {
   }
 }
 
-async function fetchChapterText(partId: string): Promise<string> {
+async function fetchChapterText(partId: string): Promise<string | null> {
   const apiUrl = `https://www.wattpad.com/api/v3/story_parts/${partId}?fields=text&_=${Date.now()}`;
-  const response = await enqueue(apiUrl);
-  if (!response.ok) throw new Error(`Failed to fetch Wattpad chapter ${partId}: HTTP ${response.status}`);
-  const data = (await response.json()) as { text?: string };
-  return data.text ?? "";
+  try {
+    const response = await enqueue(apiUrl);
+    if (!response.ok) return null;
+    const data = (await response.json()) as { text?: string };
+    return data.text || null;
+  } catch {
+    return null;
+  }
 }
+
+const CHAPTER_SELECTORS = [
+  ".panel-reading",        // legacy reader
+  ".story-part-content",   // newer reader
+  "#story-part-text",
+  ".prose-block",
+  "article.story-part",
+  "article",               // broad fallback
+].join(", ");
 
 async function parse(url: string, settings: Settings): Promise<FicData> {
   const match = STORY_PATTERN.exec(url);
@@ -128,15 +141,19 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const chapters: FicChapter[] = await Promise.all(
     parts.map(async (part, index) => {
-      let htmlContent: string;
+      let htmlContent: string | null = null;
+
       if (part.id) {
-        const rawHtml = await fetchChapterText(part.id);
-        htmlContent = sanitizeHtml(rawHtml);
-      } else {
+        const apiText = await fetchChapterText(part.id);
+        if (apiText) htmlContent = sanitizeHtml(apiText);
+      }
+
+      if (!htmlContent) {
         const chapterDoc = await fetchHtml(part.url);
-        const content = chapterDoc.querySelector(".panel-reading, #chapter-text");
+        const content = chapterDoc.querySelector(CHAPTER_SELECTORS);
         htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
       }
+
       return { index, title: part.title, htmlContent };
     }),
   );
