@@ -85,7 +85,8 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const title = textContent(doc.querySelector("h2.title.heading"));
   const author = textContent(doc.querySelector("h3.byline.heading a"));
-  const summary = doc.querySelector("blockquote.userstuff.summary.module")?.innerHTML ?? null;
+  const summaryBlockquote = doc.querySelector(".summary.module blockquote.userstuff");
+  const summary = summaryBlockquote?.innerHTML ?? null;
 
   const wordCountText = textContent(doc.querySelector("dd.words"));
   const wordCount = parseCount(wordCountText);

@@ -83,6 +83,12 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     chapterListing.map(async (listing, index) => {
       const chapterDoc = await fetchHtml(chapterUrl(listing.path));
       const content = chapterDoc.querySelector(".chapter-content");
+      if (content) {
+        // Watermark spans injected at paragraph level — remove before sanitizing
+        for (const span of Array.from(content.querySelectorAll(":scope > span"))) {
+          span.remove();
+        }
+      }
       const htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
       return { index, title: listing.title, htmlContent };
     }),
