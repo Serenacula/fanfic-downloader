@@ -74,6 +74,18 @@ Files created: `src/renderers/utils.ts` (htmlToText, htmlToMarkdown, zipFiles, f
 
 ---
 
+## 2026-04-28T00:02:00
+
+**Event:** Completed work items `0018-download-orchestrator` and `0019-download-by-url`
+
+Files created: `src/background/orchestrator.ts` (job lifecycle management, message API, renderer dispatch). Updated `src/background/index.ts` to wire message handler + keepalive alarm. Added `alarms` permission to manifest.
+
+---
+
+Files created: `src/renderers/utils.ts` (htmlToText, htmlToMarkdown, zipFiles, formatFilename), `src/renderers/txt.ts`, `src/renderers/markdown.ts`, `src/renderers/html.ts`, `src/renderers/epub.ts`, `src/renderers/pdf.ts`, `src/renderers/docx.ts`. All type-check cleanly. Renderers require manual smoke testing. Dependencies added: fflate, pdfmake, docx, @types/pdfmake.
+
+---
+
 Files created: `src/renderers/cover.ts` (OffscreenCanvas PNG generator), `src/renderers/story-info.ts` (renderStoryInfoHtml, renderStoryInfoText). 4 unit tests for story-info, all pass.
 
 ---

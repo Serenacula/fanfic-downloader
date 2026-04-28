@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Download fan fiction from AO3, FFN, and more in your preferred format.",
 
-  "permissions": ["downloads", "activeTab", "storage", "scripting"],
+  "permissions": ["downloads", "activeTab", "storage", "scripting", "alarms"],
   "host_permissions": [
     "*://*.archiveofourown.org/*",
     "*://*.fanfiction.net/*"

@@ -1,12 +1,12 @@
 ---
 id: 0018-download-orchestrator
-status: pending
+status: complete
 module: download-orchestrator
 implements: [download-flow-2e6c]
 depends_on: [0003-settings-schema, 0005-request-queue, 0008-site-detection, 0011-epub-renderer, 0012-html-renderer, 0013-markdown-renderer, 0014-txt-renderer, 0015-pdf-renderer, 0016-docx-renderer, 0017-odt-renderer]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-28
+completed: 2026-04-28
 ---
 
 # Download orchestrator
