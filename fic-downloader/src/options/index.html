@@ -4,6 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fic Downloader — Settings</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: system-ui, sans-serif; font-size: 14px; background: #1a1a2e; color: #e0d6ff; max-width: 640px; margin: 0 auto; padding: 32px 24px; }
+      h1 { font-size: 18px; margin-bottom: 24px; color: #c9aff0; }
+      section { margin-bottom: 28px; }
+      h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9980cc; margin-bottom: 10px; border-bottom: 1px solid #2e2a4a; padding-bottom: 6px; }
+      select, input[type=text], input[type=number] { background: #0f0f1e; border: 1px solid #3a3560; border-radius: 4px; color: #e0d6ff; padding: 6px 10px; font-size: 13px; width: 100%; max-width: 360px; margin: 4px 0 8px; }
+      select:focus, input:focus { outline: none; border-color: #7b5ea7; }
+      .toggle-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; cursor: pointer; }
+      .toggle-row input { width: auto; margin: 0; }
+      .disabled-row { opacity: 0.4; pointer-events: none; }
+      .note { font-size: 11px; color: #7b6aa0; margin: 2px 0 8px; line-height: 1.4; }
+      .note code { background: #2e2a4a; padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+      .hidden { display: none; }
+      .actions { display: flex; align-items: center; gap: 16px; padding-top: 12px; border-top: 1px solid #2e2a4a; }
+      button { cursor: pointer; border: none; border-radius: 4px; font-size: 13px; padding: 7px 16px; }
+      .btn-secondary { background: #2e2a4a; color: #c9aff0; }
+      .btn-secondary:hover { background: #3d3860; }
+      .save-status { font-size: 12px; color: #7ecf7e; }
+      label:not(.toggle-row) { font-size: 12px; color: #9980cc; display: block; margin-top: 8px; }
+    </style>
   </head>
   <body>
     <div id="app"></div>

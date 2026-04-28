@@ -183,12 +183,72 @@ async function runDownload(id: string, url: string, overrides?: Partial<Settings
     URL.revokeObjectURL(objectUrl);
 
     await updateJob(id, { status: "complete", completedAt: Date.now() });
+    await notifyCompletion(ficData.core.title, true);
   } catch (error) {
     if (!isCancelled(id)) {
       const message = error instanceof Error ? error.message : String(error);
       await updateJob(id, { status: "failed", error: message, completedAt: Date.now() });
+      const jobs = await loadJobs();
+      const failedTitle = jobs[id]?.title ?? url;
+      await notifyCompletion(failedTitle, false);
     }
   }
+}
+
+async function notifyCompletion(title: string, success: boolean): Promise<void> {
+  // Icon badge
+  await browser.action.setBadgeText({ text: success ? "✓" : "!" });
+  await browser.action.setBadgeBackgroundColor({ color: success ? "#7ecf7e" : "#e07070" });
+
+  // Page toast — inject into active tab
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id == null) return;
+
+    const message = success
+      ? `Download complete: ${title}`
+      : `Download failed: ${title}`;
+
+    await browser.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: injectToast,
+      args: [message, success],
+    });
+  } catch {
+    // Tab may not support content scripts — silently ignore
+  }
+}
+
+function injectToast(message: string, success: boolean): void {
+  const existing = document.getElementById("fic-downloader-toast");
+  existing?.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "fic-downloader-toast";
+  toast.attachShadow({ mode: "open" }).innerHTML = `
+    <style>
+      :host {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 2147483647;
+        background: ${success ? "#2a4a2a" : "#4a2a2a"};
+        color: ${success ? "#a0e0a0" : "#e0a0a0"};
+        border: 1px solid ${success ? "#5a9a5a" : "#9a5a5a"};
+        border-radius: 6px;
+        padding: 10px 16px;
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        animation: fadein 0.2s ease;
+      }
+      @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
+    </style>
+    <span>${message.replace(/</g, "&lt;")}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
 export function startDownloadByUrl(

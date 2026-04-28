@@ -1,12 +1,12 @@
 ---
 id: 0024-icon-badge
-status: pending
+status: complete
 module: notification-layer
 implements: [download-flow-2e6c]
 depends_on: [0018-download-orchestrator]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-28
+completed: 2026-04-28
 ---
 
 # Icon badge

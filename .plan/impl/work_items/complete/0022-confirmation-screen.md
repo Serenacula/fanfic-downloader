@@ -1,12 +1,12 @@
 ---
 id: 0022-confirmation-screen
-status: pending
+status: complete
 module: download-manager-ui
 implements: [download-flow-2e6c]
 depends_on: [0020-popup-shell, 0003-settings-schema]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-28
+completed: 2026-04-28
 ---
 
 # Confirmation screen

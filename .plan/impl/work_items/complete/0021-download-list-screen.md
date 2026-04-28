@@ -1,12 +1,12 @@
 ---
 id: 0021-download-list-screen
-status: pending
+status: complete
 module: download-manager-ui
 implements: [download-flow-2e6c]
 depends_on: [0018-download-orchestrator, 0020-popup-shell, 0008-site-detection]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-28
+completed: 2026-04-28
 ---
 
 # Download list screen
