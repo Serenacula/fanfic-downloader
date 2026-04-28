@@ -7,7 +7,14 @@
   "permissions": ["downloads", "activeTab", "storage", "scripting", "alarms"],
   "host_permissions": [
     "*://*.archiveofourown.org/*",
-    "*://*.fanfiction.net/*"
+    "*://*.fanfiction.net/*",
+    "*://*.royalroad.com/*",
+    "*://*.tapas.io/*",
+    "*://*.scribblehub.com/*",
+    "*://*.wattpad.com/*",
+    "*://*.spacebattles.com/*",
+    "*://*.sufficientvelocity.com/*",
+    "*://*.questionablequesting.com/*"
   ],
 
   "background": {
@@ -35,7 +42,14 @@
     {
       "matches": [
         "*://*.archiveofourown.org/works/*",
-        "*://*.fanfiction.net/s/*"
+        "*://*.fanfiction.net/s/*",
+        "*://*.royalroad.com/fiction/*",
+        "*://*.tapas.io/series/*",
+        "*://*.scribblehub.com/series/*",
+        "*://*.wattpad.com/story/*",
+        "*://*.spacebattles.com/threads/*",
+        "*://*.sufficientvelocity.com/threads/*",
+        "*://*.questionablequesting.com/threads/*"
       ],
       "js": ["src/content/index.ts"],
       "run_at": "document_idle"

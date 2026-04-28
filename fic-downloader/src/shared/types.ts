@@ -75,9 +75,12 @@ export interface QuestionableQuestingMetadata {
   subForum: string | null;
 }
 
-export interface FanficsDotNetMetadata {
-  fandom: string | null;
+export interface ScribbleHubMetadata {
+  tags: string[];
+  genres: string[];
   rating: string | null;
+  views: number | null;
+  favorites: number | null;
 }
 
 export interface WattpadMetadata {
@@ -91,11 +94,11 @@ export type FicData =
   | { site: "ffn"; core: FicCore; meta: FFNMetadata }
   | { site: "royalroad"; core: FicCore; meta: RoyalRoadMetadata }
   | { site: "tapas"; core: FicCore; meta: TapasMetadata }
+  | { site: "scribblehub"; core: FicCore; meta: ScribbleHubMetadata }
+  | { site: "wattpad"; core: FicCore; meta: WattpadMetadata }
   | { site: "spacebattles"; core: FicCore; meta: SpaceBattlesMetadata }
   | { site: "sufficientvelocity"; core: FicCore; meta: SufficientVelocityMetadata }
-  | { site: "questionablequesting"; core: FicCore; meta: QuestionableQuestingMetadata }
-  | { site: "fanficsdotnet"; core: FicCore; meta: FanficsDotNetMetadata }
-  | { site: "wattpad"; core: FicCore; meta: WattpadMetadata };
+  | { site: "questionablequesting"; core: FicCore; meta: QuestionableQuestingMetadata };
 
 export type SiteId = FicData["site"];
 
