@@ -13,9 +13,15 @@
   "type": "module",
   "devDependencies": {
     "@types/firefox-webext-browser": "^143.0.0",
+    "@types/pdfmake": "^0.3.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",
     "vite-plugin-web-extension": "^4.5.1",
     "vitest": "^4.1.5"
+  },
+  "dependencies": {
+    "docx": "^9.6.1",
+    "fflate": "^0.8.2",
+    "pdfmake": "^0.3.7"
   }
 }

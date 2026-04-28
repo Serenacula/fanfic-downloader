@@ -66,6 +66,18 @@ Files created: `src/renderers/cover.ts` (OffscreenCanvas PNG generator), `src/re
 
 ---
 
+## 2026-04-28T00:01:00
+
+**Event:** Completed work items `0011` through `0016` — all format renderers
+
+Files created: `src/renderers/utils.ts` (htmlToText, htmlToMarkdown, zipFiles, formatFilename), `src/renderers/txt.ts`, `src/renderers/markdown.ts`, `src/renderers/html.ts`, `src/renderers/epub.ts`, `src/renderers/pdf.ts`, `src/renderers/docx.ts`. All type-check cleanly. Renderers require manual smoke testing. Dependencies added: fflate, pdfmake, docx, @types/pdfmake.
+
+---
+
+Files created: `src/renderers/cover.ts` (OffscreenCanvas PNG generator), `src/renderers/story-info.ts` (renderStoryInfoHtml, renderStoryInfoText). 4 unit tests for story-info, all pass.
+
+---
+
 Files created: `src/parsers/common.ts` (Parser interface, fetchHtml, sanitizeHtml, fetchImages, helpers), `src/parsers/ao3.ts`, `src/parsers/ffn.ts`, `src/parsers/index.ts` (detectParser, isFicPage). Unit tests for site detection: 9/9 pass. Parsers require manual integration testing against live sites.
 
 ---

@@ -1,12 +1,12 @@
 ---
 id: 0013-markdown-renderer
-status: pending
+status: complete
 module: format-renderers
 implements: [format-generation-9f5a]
 depends_on: [0010-story-info-page]
 created: 2026-04-27
-started: null
-completed: null
+started: 2026-04-28
+completed: 2026-04-28
 ---
 
 # Markdown renderer
