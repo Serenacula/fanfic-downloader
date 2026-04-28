@@ -93,11 +93,14 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const doc = await fetchHtml(sourceUrl);
 
-  const title = textContent(doc.querySelector(".info-body__title, .series-header__title, h1")) || "Untitled";
-  const author = textContent(doc.querySelector(".creator-info__name, .creator__name, .author")) || "Unknown";
-  const summaryEl = doc.querySelector(".description--collapsible, .info-body__desc");
+  // p.title holds the series title in static HTML; .header__title is a CSR placeholder
+  const title = textContent(doc.querySelector("p.title")) || "Untitled";
+  // Author link is inside .creator div
+  const author = textContent(doc.querySelector(".creator a, a.creator__item")) || "Unknown";
+  const summaryEl = doc.querySelector(".description__body, .js-series-description, .description--collapsible");
   const summary = summaryEl ? sanitizeHtml(summaryEl.innerHTML) : null;
-  const genre = textContent(doc.querySelector(".info-body__genre a, .genre-tag")) || null;
+  // Genre is a link whose href contains genre_name=
+  const genre = textContent(doc.querySelector("a[href*='genre_name=']")) || null;
 
   const statusText = textContent(doc.querySelector(".series-status, .info-body__status")).toLowerCase();
   const status = statusText.includes("complet") ? "complete" as const

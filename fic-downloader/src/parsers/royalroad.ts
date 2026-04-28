@@ -59,14 +59,19 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     .map((element) => element.textContent?.trim() ?? "")
     .filter(Boolean);
 
-  const statusText = textContent(fictionDoc.querySelector(".label-ongoing, .label-completed")).toLowerCase();
+  // RR uses bg-blue-hoki for both content-type badges and status — must match by text
+  const statusEl = Array.from(fictionDoc.querySelectorAll(".label-sm")).find(
+    (el) => /completed|ongoing|hiatus|stub|dropped/i.test(el.textContent ?? ""),
+  );
+  const statusText = (statusEl?.textContent?.trim() ?? "").toLowerCase();
   const status = statusText.includes("complete") ? "complete" as const
     : statusText.includes("ongoing") ? "in-progress" as const
     : "unknown" as const;
 
-  const followersText = textContent(fictionDoc.querySelector("[data-original-title='Followers'] .count, .fiction-stats .followers"));
-  const ratingText = textContent(fictionDoc.querySelector(".star-rating .total, .fiction-stats .rating"));
-  const viewsText = textContent(fictionDoc.querySelector("[data-original-title='Views'] .count, .fiction-stats .views"));
+  // Followers/views/rating are JS-rendered on RR; these will be null from static HTML
+  const followersText = textContent(fictionDoc.querySelector(".fiction-stats .followers-count, .stats-followers"));
+  const ratingText = textContent(fictionDoc.querySelector(".fiction-stats .rating-score, .stats-rating"));
+  const viewsText = textContent(fictionDoc.querySelector(".fiction-stats .views-count, .stats-views"));
 
   const chapterListing = extractChapterListing(fictionDoc);
   if (chapterListing.length === 0) throw new Error("No chapters found on Royal Road fiction page");
