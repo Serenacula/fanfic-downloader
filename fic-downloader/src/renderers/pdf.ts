@@ -5,6 +5,36 @@ import { htmlToText } from "./utils.js";
 import pdfMake from "pdfmake/build/pdfmake.js";
 import type { TDocumentDefinitions, Content } from "pdfmake/interfaces.js";
 
+const pdfMakeAny = pdfMake as Record<string, unknown>;
+
+let fontsLoaded = false;
+
+async function ensureFontsLoaded(): Promise<void> {
+  if (fontsLoaded) return;
+  const fontFiles: Record<string, string> = {
+    "Roboto-Regular.ttf": browser.runtime.getURL("fonts/Roboto-Regular.ttf"),
+    "Roboto-Medium.ttf": browser.runtime.getURL("fonts/Roboto-Medium.ttf"),
+    "Roboto-Italic.ttf": browser.runtime.getURL("fonts/Roboto-Italic.ttf"),
+    "Roboto-MediumItalic.ttf": browser.runtime.getURL("fonts/Roboto-MediumItalic.ttf"),
+  };
+  const vfs = pdfMakeAny.virtualfs as { writeFileSync: (name: string, data: Uint8Array) => void };
+  for (const [filename, url] of Object.entries(fontFiles)) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to load PDF font: ${filename}`);
+    const buffer = await response.arrayBuffer();
+    vfs.writeFileSync(filename, new Uint8Array(buffer));
+  }
+  pdfMakeAny.fonts = {
+    Roboto: {
+      normal: "Roboto-Regular.ttf",
+      bold: "Roboto-Medium.ttf",
+      italics: "Roboto-Italic.ttf",
+      bolditalics: "Roboto-MediumItalic.ttf",
+    },
+  };
+  fontsLoaded = true;
+}
+
 type ContentPart = Content;
 
 function htmlToPdfContent(html: string): ContentPart[] {
@@ -98,6 +128,7 @@ function buildChapterContent(
 }
 
 async function renderSinglePdf(data: FicData, settings: Settings): Promise<Blob> {
+  await ensureFontsLoaded();
   const content: ContentPart[] = [];
 
   if (settings.includeCoverPage) {
@@ -133,7 +164,13 @@ async function renderSinglePdf(data: FicData, settings: Settings): Promise<Blob>
   return new Promise((resolve, reject) => {
     try {
       const pdf = pdfMake.createPdf(docDefinition);
-      (pdf.getBlob as (cb: (blob: Blob) => void) => void)((blob) => resolve(blob));
+      (pdf.getBlob as (cb: (blob: Blob) => void) => void)((blob) => {
+        try {
+          resolve(blob);
+        } catch (error) {
+          reject(error);
+        }
+      });
     } catch (error) {
       reject(error);
     }
