@@ -7,6 +7,7 @@ import type {
 import type { Settings } from "../shared/settings.js";
 import {
   fetchHtml,
+  ogImage,
   sanitizeHtml,
   textContent,
   parseDate,
@@ -30,8 +31,11 @@ interface ThreadmarkListing {
 }
 
 function extractThreadmarks(doc: Document, baseUrl: string): ThreadmarkListing[] {
+  // .structItem-title is a div; links are <a> inside it — not <a class="structItem-title">
   const links = Array.from(
-    doc.querySelectorAll(".structItemContainer a.structItem-title, .threadmarkList a[href], ol.block-body a"),
+    doc.querySelectorAll(
+      ".structItemContainer .structItem-title a[href], .threadmarkList a[href], ol.block-body a",
+    ),
   );
   return links.flatMap((link) => {
     const href = link.getAttribute("href") ?? "";
@@ -90,10 +94,16 @@ function createXenForoParser(
     const chapters: FicChapter[] = await Promise.all(
       listings.map(async (listing, index) => {
         const postDoc = await fetchHtml(listing.url);
-        // Target the specific post if it's an anchor link, otherwise first message body
+        // XF2: article has data-content="post-XXXX" and id="js-post-XXXX";
+        // the anchor id "post-XXXX" is on a <span> inside the article, not the article itself
         const anchor = new URL(listing.url).hash.replace("#", "");
         const postEl = anchor
-          ? postDoc.querySelector(`#${anchor} .message-body .bbWrapper, #${anchor} .messageContent`)
+          ? postDoc.querySelector(
+              `[data-content="${anchor}"] .message-body .bbWrapper,` +
+              `[data-content="${anchor}"] .messageContent,` +
+              `#js-${anchor} .message-body .bbWrapper,` +
+              `#js-${anchor} .messageContent`,
+            )
           : postDoc.querySelector(".message-body .bbWrapper, .messageContent");
         const htmlContent = postEl ? sanitizeHtml(postEl.innerHTML) : "";
         return { index, title: listing.title, htmlContent };
@@ -112,6 +122,7 @@ function createXenForoParser(
       summary,
       chapters,
       images,
+      coverImageUrl: ogImage(threadDoc),
       tags: [],
       status: "unknown",
       wordCount: null,

@@ -2,6 +2,7 @@ import type { FicData, FicCore, ScribbleHubMetadata, FicChapter } from "../share
 import type { Settings } from "../shared/settings.js";
 import {
   fetchHtml,
+  ogImage,
   sanitizeHtml,
   textContent,
   parseCount,
@@ -103,6 +104,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     summary,
     chapters,
     images,
+    coverImageUrl: ogImage(doc),
     tags,
     status,
     wordCount: null,

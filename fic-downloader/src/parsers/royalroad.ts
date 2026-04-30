@@ -2,6 +2,7 @@ import type { FicData, FicCore, RoyalRoadMetadata, FicChapter } from "../shared/
 import type { Settings } from "../shared/settings.js";
 import {
   fetchHtml,
+  ogImage,
   fetchImages,
   sanitizeHtml,
   textContent,
@@ -131,6 +132,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     summary,
     chapters,
     images,
+    coverImageUrl: ogImage(fictionDoc),
     tags,
     status,
     wordCount,

@@ -18,6 +18,7 @@ export interface FicCore {
   summary: string | null;
   chapters: FicChapter[];
   images: FicImage[];
+  coverImageUrl: string | null;
   tags: string[];
   status: FicStatus;
   wordCount: number | null;

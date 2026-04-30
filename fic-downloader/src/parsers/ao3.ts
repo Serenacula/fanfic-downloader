@@ -2,6 +2,7 @@ import type { FicData, FicCore, AO3Metadata, FicChapter } from "../shared/types.
 import type { Settings } from "../shared/settings.js";
 import {
   fetchHtml,
+  ogImage,
   fetchImages,
   sanitizeHtml,
   textContent,
@@ -123,6 +124,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     summary: summary ? sanitizeHtml(summary) : null,
     chapters,
     images,
+    coverImageUrl: ogImage(doc),
     tags: extractTags(doc, "dd.freeform.tags a.tag"),
     status,
     wordCount,

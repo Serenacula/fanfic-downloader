@@ -3,6 +3,7 @@ import type { Settings } from "../shared/settings.js";
 import type { FicStatus } from "../shared/types.js";
 import {
   fetchHtml,
+  ogImage,
   fetchImages,
   sanitizeHtml,
   parseCount,
@@ -199,6 +200,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     summary: meta.summary,
     chapters,
     images,
+    coverImageUrl: ogImage(firstDoc),
     tags: [...meta.genres, ...meta.characters],
     status: meta.status,
     wordCount: meta.wordCount,

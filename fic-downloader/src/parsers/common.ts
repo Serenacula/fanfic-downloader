@@ -101,6 +101,10 @@ export function parseCount(text: string): number | null {
   return isNaN(value) ? null : value;
 }
 
+export function ogImage(doc: Document): string | null {
+  return doc.querySelector('meta[property="og:image"]')?.getAttribute("content") ?? null;
+}
+
 export function parseDate(text: string): Date | null {
   const trimmed = text.trim();
   if (!trimmed) return null;

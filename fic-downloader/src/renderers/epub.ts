@@ -109,13 +109,35 @@ export const renderEpub: RendererFn = async (data, settings) => {
 
   // Cover image
   if (settings.includeCoverImage) {
-    const coverBlob = await generateCoverImage(data.core.title, data.core.author);
-    files["OEBPS/cover.png"] = await blobToU8(coverBlob);
+    let coverData: Uint8Array;
+    let coverMediaType: string;
+
+    const { coverImageUrl } = data.core;
+    if (coverImageUrl) {
+      const response = await fetch(coverImageUrl);
+      if (response.ok) {
+        const buffer = await response.arrayBuffer();
+        coverData = new Uint8Array(buffer);
+        coverMediaType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
+      } else {
+        const blob = await generateCoverImage(data.core.title, data.core.author);
+        coverData = await blobToU8(blob);
+        coverMediaType = "image/png";
+      }
+    } else {
+      const blob = await generateCoverImage(data.core.title, data.core.author);
+      coverData = await blobToU8(blob);
+      coverMediaType = "image/png";
+    }
+
+    const coverExtension = coverMediaType.split("/")[1] ?? "png";
+    const coverFilename = `cover.${coverExtension}`;
+    files[`OEBPS/${coverFilename}`] = coverData;
     files["OEBPS/cover.xhtml"] = xhtmlPage(
       "Cover",
-      `<div><img src="cover.png" alt="Cover" style="max-width:100%;"/></div>`,
+      `<div><img src="${coverFilename}" alt="Cover" style="max-width:100%;"/></div>`,
     );
-    spineItems.push({ id: "cover-image", href: "cover.png", mediaType: "image/png" });
+    spineItems.push({ id: "cover-image", href: coverFilename, mediaType: coverMediaType });
     spineItems.push({ id: "cover", href: "cover.xhtml", mediaType: "application/xhtml+xml" });
   }
 
