@@ -1,4 +1,4 @@
-# fic-downloader
+# Sere's Fic Downloader
 
 A Firefox extension for downloading fan fiction from popular sites in your preferred format.
 
