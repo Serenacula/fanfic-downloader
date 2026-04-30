@@ -1,25 +1,43 @@
 # fic-downloader
 
-A Firefox plugin for downloading fan fiction from popular sites.
+A Firefox extension for downloading fan fiction from popular sites in your preferred format.
 
 ## Supported Sites
 
 - Archive of Our Own (AO3)
 - FanFiction.net (FFN)
 - Royal Road
+- Tapas
+- ScribbleHub
+- Wattpad
+- SpaceBattles, Sufficient Velocity, Questionable Questing (XenForo forums)
 
-More sites planned — see the main [README](../README.md).
+## Output Formats
+
+EPUB, HTML, Markdown, plain text, PDF, DOCX
 
 ## Features
 
-- Download fics in multiple formats (ePub, and more — TBD)
-- Configurable output format via settings
-- Works on Firefox (published on AMO)
+- Configurable output format, filename template, and metadata fields
+- Optional cover image, table of contents, and chapter titles
+- Embeds downloaded images in the output file
+- Preview and edit title/author/tags before downloading
 
 ## Installation
 
-> Coming soon.
+Coming soon on [Firefox Add-ons (AMO)](https://addons.mozilla.org).
 
 ## Development
 
-> Coming soon.
+```bash
+npm install
+npm run build   # output in dist/
+npm run dev     # watch mode
+npm test        # run parser tests
+```
+
+Load the extension in Firefox: `about:debugging` → "Load Temporary Add-on" → pick any file in `dist/`.
+
+## License
+
+MIT
