@@ -13,9 +13,10 @@ function escXml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
-// XHTML requires void elements to be self-closing; sanitized HTML uses HTML syntax
+// XHTML requires self-closing void elements and no HTML named entities beyond the XML set
 function toXhtml(html: string): string {
   return html
+    .replace(/&nbsp;/g, "&#160;")
     .replace(/<(br|hr)(\s[^>]*)?\s*\/?>/gi, "<$1/>")
     .replace(/<img(\s[^>]*?)?\s*\/?>/gi, (_, attrs: string | undefined) =>
       `<img${(attrs ?? "").replace(/\s*\/$/, "")}/>`
