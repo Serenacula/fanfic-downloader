@@ -72,21 +72,28 @@ export const renderMarkdown: RendererFn = async (data, settings) => {
   const coverPath = cover ? `images/cover.${cover.extension}` : null;
   if (cover && coverPath) files[coverPath] = cover.data;
 
+  const titleBlock = [
+    ...(coverPath ? [`![Cover](${coverPath})`] : []),
+    `# ${data.core.title}`,
+    `*by ${data.core.author}*`,
+  ].join("\n\n");
+
   if (settings.chapterSplit) {
     for (let index = 0; index < data.core.chapters.length; index++) {
       const paddedIndex = String(index + 1).padStart(3, "0");
-      const header = index === 0 && frontmatter ? frontmatter + "\n\n" : "";
-      const coverLine = index === 0 && coverPath ? `![Cover](${coverPath})\n\n` : "";
-      files[`${paddedIndex}-chapter.md`] = header + coverLine + renderChapterMd(data, index, settings, imageMap);
+      const header = index === 0
+        ? [frontmatter, titleBlock].filter(Boolean).join("\n\n") + "\n\n"
+        : "";
+      files[`${paddedIndex}-chapter.md`] = header + renderChapterMd(data, index, settings, imageMap);
     }
     return zipFiles(files);
   }
 
   const parts: string[] = [];
   if (frontmatter) parts.push(frontmatter);
-  if (coverPath) parts.push(`![Cover](${coverPath})`);
+  parts.push(titleBlock);
   if (settings.includeToc) {
-    parts.push(`# Table of Contents\n`);
+    parts.push(`## Table of Contents\n`);
     for (const chapter of data.core.chapters) {
       const title = chapter.title ?? `Chapter ${chapter.index + 1}`;
       parts.push(`- ${title}`);
