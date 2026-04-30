@@ -84,6 +84,7 @@ function contentOpf(
     <dc:identifier id="book-id">${escXml(data.core.sourceUrl)}</dc:identifier>
     <dc:language>en</dc:language>
     <dc:date>${now}</dc:date>
+    <meta name="generator" content="Sere&#x27;s Fic Downloader (https://github.com/Serenacula/fic-downloader)"/>
     ${coverMeta}
   </metadata>
   <manifest>
