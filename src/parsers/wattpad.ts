@@ -2,11 +2,9 @@ import type { FicData, FicCore, WattpadMetadata, FicChapter } from "../shared/ty
 import type { Settings } from "../shared/settings.js";
 import {
   fetchHtml,
-  ogImage,
   sanitizeHtml,
   resolveImageSrcs,
   textContent,
-  parseCount,
   parseDate,
   collectImageUrls,
   fetchImages,
@@ -40,11 +38,34 @@ interface WattpadApiStory {
   user?: { name?: string };
   description?: string;
   mainCategory?: string;
-  categories?: string[];
   tags?: string[];
   readCount?: number;
   voteCount?: number;
   completed?: boolean;
+}
+
+interface WattpadJsonLd {
+  headline?: string;
+  about?: string;
+  author?: { name?: string };
+  description?: string;
+  image?: string;
+  keywords?: string;
+  datePublished?: string;
+  dateModified?: string;
+  interactionStatistic?: number;
+}
+
+const WATTPAD_PLATFORM_TAGS = new Set(["eBooks", "reading", "stories", "fiction"]);
+
+function parseJsonLd(doc: Document): WattpadJsonLd | null {
+  const script = doc.querySelector('script[type="application/ld+json"]');
+  if (!script?.textContent) return null;
+  try {
+    return JSON.parse(script.textContent) as WattpadJsonLd;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchStoryApi(storyId: string): Promise<WattpadApiStory | null> {
@@ -72,14 +93,16 @@ async function fetchChapterText(partId: string): Promise<string | null> {
   }
 }
 
-const CHAPTER_SELECTORS = [
-  ".panel-reading",        // legacy reader
-  ".story-part-content",   // newer reader
-  "#story-part-text",
-  ".prose-block",
-  "article.story-part",
-  "article",               // broad fallback
-].join(", ");
+function extractChapterContent(doc: Document): string {
+  // Chapter paragraphs have a stable data-p-id attribute unique to Wattpad
+  const paragraphs = Array.from(doc.querySelectorAll("p[data-p-id]"));
+  if (paragraphs.length > 0) {
+    return paragraphs.map((p) => p.outerHTML).join("\n");
+  }
+  // Legacy fallback for older chapter page layouts
+  const pre = doc.querySelector(".panel.panel-reading pre");
+  return pre ? pre.innerHTML : "";
+}
 
 async function parse(url: string, settings: Settings): Promise<FicData> {
   const match = STORY_PATTERN.exec(url);
@@ -92,26 +115,38 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     fetchStoryApi(storyId),
   ]);
 
-  const title = (apiData?.title
-    ?? textContent(doc.querySelector("h1.title, .story-info__title"))) || "Untitled";
-  const author = (apiData?.user?.name
-    ?? textContent(doc.querySelector(".author-info__username, .story-info__author"))) || "Unknown";
-  const summaryEl = doc.querySelector(".description-text, .story-description");
-  const summary = apiData?.description
-    ? sanitizeHtml(apiData.description)
-    : summaryEl ? sanitizeHtml(summaryEl.innerHTML) : null;
+  const jsonLd = parseJsonLd(doc);
 
-  const tags = apiData?.tags
-    ?? Array.from(doc.querySelectorAll(".tag-items a, .story-tags a"))
-      .map((element) => element.textContent?.trim() ?? "")
-      .filter(Boolean);
+  const title = (apiData?.title ?? jsonLd?.headline
+    ?? textContent(doc.querySelector('h1[data-testid="title"]'))) || "Untitled";
+
+  const author = (apiData?.user?.name ?? jsonLd?.author?.name
+    ?? textContent(doc.querySelector('a[aria-label^="by "]'))) || "Unknown";
+
+  const rawDescription = apiData?.description ?? jsonLd?.description ?? null;
+  const summary = rawDescription ? sanitizeHtml(rawDescription) : null;
+
+  const genre = apiData?.mainCategory ?? jsonLd?.about ?? null;
+
+  // API tags are cleanest; fall back to JSON-LD keywords with platform noise removed
+  const tags: string[] = apiData?.tags?.length
+    ? apiData.tags
+    : jsonLd?.keywords
+      ? jsonLd.keywords.split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag && !WATTPAD_PLATFORM_TAGS.has(tag) && tag !== genre)
+      : Array.from(doc.querySelectorAll('[data-testid="tags"] span'))
+          .map((el) => el.textContent?.trim() ?? "")
+          .filter(Boolean);
 
   const status = apiData?.completed === true ? "complete" as const
     : apiData?.completed === false ? "in-progress" as const
     : "unknown" as const;
 
-  const genre = (apiData?.mainCategory
-    ?? textContent(doc.querySelector(".story-categories a, .story-info__category"))) || null;
+  const coverImageUrl = jsonLd?.image
+    ?? (doc.querySelector('img[data-testid="image"]') as HTMLImageElement | null)
+        ?.getAttribute("src")
+    ?? null;
 
   let parts: PartListing[];
   if (apiData?.parts?.length) {
@@ -122,24 +157,29 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
       date: parseDate(part.createDate ?? ""),
     }));
   } else {
-    const links = Array.from(doc.querySelectorAll(".table-of-contents a, .story-parts a[href]"));
-    parts = links.flatMap((link) => {
-      const href = link.getAttribute("href") ?? "";
-      const partMatch = /\/(\d+)/.exec(href);
-      if (!partMatch) return [];
-      return [{
-        id: partMatch[1]!,
-        title: link.textContent?.trim() ?? "Untitled",
-        url: href.startsWith("http") ? href : `https://www.wattpad.com${href}`,
-        date: null,
-      }];
-    });
+    // Wattpad parts are React-rendered and won't be in the initial HTML;
+    // this fallback may only capture links visible in the summary view.
+    const CHAPTER_HREF = /^https:\/\/www\.wattpad\.com\/(\d+)/;
+    const seen = new Set<string>();
+    parts = (Array.from(doc.querySelectorAll("a[href]")) as HTMLAnchorElement[])
+      .flatMap((link) => {
+        const partMatch = CHAPTER_HREF.exec(link.href);
+        if (!partMatch || seen.has(partMatch[1]!)) return [];
+        seen.add(partMatch[1]!);
+        return [{
+          id: partMatch[1]!,
+          title: link.textContent?.trim() || "Untitled",
+          url: link.href,
+          date: null,
+        }];
+      });
   }
 
   if (parts.length === 0) throw new Error("No chapters found on Wattpad story page");
 
-  const publishDate = parts[0]?.date ?? null;
-  const updateDate = parts[parts.length - 1]?.date ?? null;
+  // Story-level dates from JSON-LD are more accurate than deriving from part dates
+  const publishDate = parseDate(jsonLd?.datePublished ?? "") || parts[0]?.date || null;
+  const updateDate = parseDate(jsonLd?.dateModified ?? "") || parts[parts.length - 1]?.date || null;
 
   const chapters: FicChapter[] = await Promise.all(
     parts.map(async (part, index) => {
@@ -150,13 +190,17 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
         if (apiText) htmlContent = sanitizeHtml(apiText);
       }
 
-      if (!htmlContent) {
+      if (!htmlContent && part.url) {
         const chapterDoc = await fetchHtml(part.url);
-        const content = chapterDoc.querySelector(CHAPTER_SELECTORS);
-        htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
+        const raw = extractChapterContent(chapterDoc);
+        htmlContent = raw ? sanitizeHtml(raw) : "";
       }
 
-      return { index, title: part.title, htmlContent: resolveImageSrcs(htmlContent, part.url) };
+      return {
+        index,
+        title: part.title,
+        htmlContent: resolveImageSrcs(htmlContent ?? "", part.url || sourceUrl),
+      };
     }),
   );
 
@@ -166,16 +210,13 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     images = await fetchImages([...new Set(imageUrls)]);
   }
 
-  const readsText = textContent(doc.querySelector(".reads-count, .story-stats__reads"));
-  const votesText = textContent(doc.querySelector(".votes-count, .story-stats__votes"));
-
   const core: FicCore = {
     title,
     author,
     summary,
     chapters,
     images,
-    coverImageUrl: ogImage(doc),
+    coverImageUrl,
     tags,
     status,
     wordCount: null,
@@ -186,8 +227,8 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const meta: WattpadMetadata = {
     genre,
-    reads: apiData?.readCount ?? parseCount(readsText),
-    votes: apiData?.voteCount ?? parseCount(votesText),
+    reads: apiData?.readCount ?? jsonLd?.interactionStatistic ?? null,
+    votes: apiData?.voteCount ?? null,
   };
 
   return { site: "wattpad", core, meta };
