@@ -4,6 +4,7 @@ import {
   fetchHtml,
   ogImage,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   collectImageUrls,
   fetchImages,
@@ -134,7 +135,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
       const content = chapterDoc.querySelector(
         ".viewer__body, .viewer__row, .viewer-row, .content-viewer, .prose-content, .novel-body",
       );
-      const htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
+      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
       return { index, title: listing.title, htmlContent };
     }),
   );

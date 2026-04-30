@@ -54,9 +54,16 @@ function sanitizeNode(node: Node): void {
       }
     }
 
-    // Strip inline base64 images — they're pre-compressed and bloat EPUB XHTML enormously
-    if (tagName === "img" && element.getAttribute("src")?.startsWith("data:")) {
-      element.removeAttribute("src");
+    // Strip inline base64 images (pre-compressed, bloat EPUB XHTML enormously); remove element if no src remains
+    if (tagName === "img") {
+      if (element.getAttribute("src")?.startsWith("data:")) {
+        toRemove.push(element);
+        continue;
+      }
+      if (!element.getAttribute("src")) {
+        toRemove.push(element);
+        continue;
+      }
     }
 
     sanitizeNode(element);
@@ -110,6 +117,21 @@ export function parseDate(text: string): Date | null {
   if (!trimmed) return null;
   const date = new Date(trimmed);
   return isNaN(date.getTime()) ? null : date;
+}
+
+export function resolveImageSrcs(html: string, baseUrl: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const base = new URL(baseUrl);
+  for (const img of Array.from(doc.querySelectorAll("img"))) {
+    const src = img.getAttribute("src");
+    if (!src || src.startsWith("http") || src.startsWith("data:")) continue;
+    try {
+      img.setAttribute("src", new URL(src, base).href);
+    } catch {
+      // Ignore unresolvable URLs
+    }
+  }
+  return doc.body.innerHTML;
 }
 
 export function collectImageUrls(html: string, baseUrl: string): string[] {

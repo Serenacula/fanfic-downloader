@@ -37,12 +37,15 @@ function containerXml(): string {
 
 function contentOpf(
   data: FicData,
-  spineItems: Array<{ id: string; href: string; mediaType: string }>,
+  spineItems: Array<{ id: string; href: string; mediaType: string; properties?: string }>,
   hasCover: boolean,
 ): string {
   const now = new Date().toISOString().slice(0, 10);
   const manifestItems = spineItems
-    .map((item) => `    <item id="${item.id}" href="${item.href}" media-type="${item.mediaType}"/>`)
+    .map((item) => {
+      const propsAttr = item.properties ? ` properties="${item.properties}"` : "";
+      return `    <item id="${item.id}" href="${item.href}" media-type="${item.mediaType}"${propsAttr}/>`;
+    })
     .join("\n");
   const spineRefs = spineItems
     .filter((item) => item.mediaType === "application/xhtml+xml")
@@ -109,35 +112,37 @@ export const renderEpub: RendererFn = async (data, settings) => {
 
   // Cover image
   if (settings.includeCoverImage) {
-    let coverData: Uint8Array;
-    let coverMediaType: string;
+    let coverData: Uint8Array | null = null;
+    let coverMediaType = "image/png";
 
     const { coverImageUrl } = data.core;
     if (coverImageUrl) {
-      const response = await fetch(coverImageUrl);
-      if (response.ok) {
-        const buffer = await response.arrayBuffer();
-        coverData = new Uint8Array(buffer);
-        coverMediaType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
-      } else {
-        const blob = await generateCoverImage(data.core.title, data.core.author);
-        coverData = await blobToU8(blob);
-        coverMediaType = "image/png";
+      try {
+        const response = await fetch(coverImageUrl);
+        if (response.ok) {
+          const buffer = await response.arrayBuffer();
+          coverData = new Uint8Array(buffer);
+          coverMediaType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
+        }
+      } catch {
+        // CDN domain may not be in host_permissions — fall through to generated cover
       }
-    } else {
+    }
+
+    if (!coverData) {
       const blob = await generateCoverImage(data.core.title, data.core.author);
       coverData = await blobToU8(blob);
       coverMediaType = "image/png";
     }
 
-    const coverExtension = coverMediaType.split("/")[1] ?? "png";
+    const coverExtension = coverMediaType === "image/jpeg" ? "jpg" : (coverMediaType.split("/")[1] ?? "png");
     const coverFilename = `cover.${coverExtension}`;
     files[`OEBPS/${coverFilename}`] = coverData;
     files["OEBPS/cover.xhtml"] = xhtmlPage(
       "Cover",
       `<div><img src="${coverFilename}" alt="Cover" style="max-width:100%;"/></div>`,
     );
-    spineItems.push({ id: "cover-image", href: coverFilename, mediaType: coverMediaType });
+    spineItems.push({ id: "cover-image", href: coverFilename, mediaType: coverMediaType, properties: "cover-image" });
     spineItems.push({ id: "cover", href: "cover.xhtml", mediaType: "application/xhtml+xml" });
   }
 
@@ -153,19 +158,17 @@ export const renderEpub: RendererFn = async (data, settings) => {
 
   if (settings.includeToc) {
     files["OEBPS/nav.xhtml"] = navXhtml(data, chapterHrefs);
-    spineItems.push({ id: "nav", href: "nav.xhtml", mediaType: "application/xhtml+xml" });
+    spineItems.push({ id: "nav", href: "nav.xhtml", mediaType: "application/xhtml+xml", properties: "nav" });
   }
 
-  // Embedded images
+  // Embedded images — embed whatever was fetched (controlled by settings.includeImages at parse time)
   const imageMap = new Map<string, string>(); // original URL → epub path
-  if (settings.includeImages) {
-    for (const [index, image] of data.core.images.entries()) {
-      const extension = image.mimeType.split("/")[1] ?? "jpg";
-      const path = `OEBPS/images/img-${index}.${extension}`;
-      files[path] = new Uint8Array(image.data);
-      imageMap.set(image.url, `images/img-${index}.${extension}`);
-      spineItems.push({ id: `img-${index}`, href: path.replace("OEBPS/", ""), mediaType: image.mimeType });
-    }
+  for (const [index, image] of data.core.images.entries()) {
+    const extension = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "jpg");
+    const path = `OEBPS/images/img-${index}.${extension}`;
+    files[path] = new Uint8Array(image.data);
+    imageMap.set(image.url, `images/img-${index}.${extension}`);
+    spineItems.push({ id: `img-${index}`, href: path.replace("OEBPS/", ""), mediaType: image.mimeType });
   }
 
   // Chapters

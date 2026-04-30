@@ -192,9 +192,8 @@ async function runDownload(id: string, url: string, overrides?: Partial<Settings
     if (isCancelled(id)) return;
     await updateJob(id, { status: "saving" });
 
-    const extension = settings.chapterSplit && settings.format !== "epub"
-      ? "zip"
-      : FORMAT_EXTENSIONS[settings.format];
+    const isZip = blob.type === "application/zip" || (settings.chapterSplit && settings.format !== "epub");
+    const extension = isZip ? "zip" : FORMAT_EXTENSIONS[settings.format];
     const baseName = formatFilename(settings.filenameTemplate, ficData);
     const filename = `${baseName}.${extension}`;
 

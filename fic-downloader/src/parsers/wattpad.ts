@@ -4,6 +4,7 @@ import {
   fetchHtml,
   ogImage,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   parseCount,
   parseDate,
@@ -155,7 +156,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
         htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
       }
 
-      return { index, title: part.title, htmlContent };
+      return { index, title: part.title, htmlContent: resolveImageSrcs(htmlContent, part.url) };
     }),
   );
 

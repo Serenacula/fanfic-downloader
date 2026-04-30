@@ -5,6 +5,7 @@ import {
   ogImage,
   fetchImages,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   parseCount,
   parseDate,
@@ -107,7 +108,8 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const chapters: FicChapter[] = await Promise.all(
     chapterListing.map(async (listing, index) => {
-      const chapterDoc = await fetchHtml(chapterUrl(listing.path));
+      const chapterPageUrl = chapterUrl(listing.path);
+      const chapterDoc = await fetchHtml(chapterPageUrl);
       const content = chapterDoc.querySelector(".chapter-content");
       if (content) {
         // Watermark spans injected at paragraph level — remove before sanitizing
@@ -115,7 +117,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
           span.remove();
         }
       }
-      const htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
+      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), chapterPageUrl) : "";
       return { index, title: listing.title, htmlContent };
     }),
   );

@@ -32,7 +32,23 @@ ${body}
 </html>`;
 }
 
-function renderChapterSection(data: FicData, chapterIndex: number, settings: Settings): string {
+function buildImageMap(data: FicData): Map<string, string> {
+  const imageMap = new Map<string, string>();
+  for (const [index, image] of data.core.images.entries()) {
+    const extension = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "jpg");
+    imageMap.set(image.url, `images/img-${index}.${extension}`);
+  }
+  return imageMap;
+}
+
+function remapImageSrcs(html: string, imageMap: Map<string, string>): string {
+  for (const [originalUrl, localPath] of imageMap) {
+    html = html.split(originalUrl).join(localPath);
+  }
+  return html;
+}
+
+function renderChapterSection(data: FicData, chapterIndex: number, settings: Settings, imageMap: Map<string, string>): string {
   const chapter = data.core.chapters[chapterIndex];
   if (!chapter) throw new Error(`Chapter ${chapterIndex} not found`);
 
@@ -41,14 +57,25 @@ function renderChapterSection(data: FicData, chapterIndex: number, settings: Set
       ? `<h2 class="chapter-title">Chapter ${chapter.index + 1}: ${chapter.title}</h2>\n`
       : "";
 
-  return `<div class="chapter">\n${titleHtml}${chapter.htmlContent}\n</div>`;
+  const html = imageMap.size > 0 ? remapImageSrcs(chapter.htmlContent, imageMap) : chapter.htmlContent;
+  return `<div class="chapter">\n${titleHtml}${html}\n</div>`;
 }
 
 export const renderHtml: RendererFn = async (data, settings) => {
   const infoHtml = settings.includeCoverPage ? renderStoryInfoHtml(data, settings) : "";
+  const imageMap = buildImageMap(data);
+
+  const files: Record<string, Uint8Array | string> = {};
+
+  // Embed downloaded images
+  if (imageMap.size > 0) {
+    for (const [url, localPath] of imageMap) {
+      const image = data.core.images.find((img) => img.url === url);
+      if (image) files[localPath] = new Uint8Array(image.data);
+    }
+  }
 
   if (settings.chapterSplit) {
-    const files: Record<string, string> = {};
     if (infoHtml) {
       files["00-info.html"] = htmlPage(data.core.title, infoHtml);
     }
@@ -57,7 +84,7 @@ export const renderHtml: RendererFn = async (data, settings) => {
       const paddedIndex = String(index + 1).padStart(3, "0");
       const chapterTitle = data.core.chapters[index]?.title ?? `Chapter ${index + 1}`;
       files[`${paddedIndex}-${chapterTitle.replace(/[<>:"/\\|?*]/g, "_").slice(0, 40)}.html`] =
-        htmlPage(chapterTitle, renderChapterSection(data, index, settings));
+        htmlPage(chapterTitle, renderChapterSection(data, index, settings, imageMap));
     }
     return zipFiles(files);
   }
@@ -74,11 +101,18 @@ export const renderHtml: RendererFn = async (data, settings) => {
 
   const chapterSections = data.core.chapters
     .map((chapter, index) => {
-      const section = renderChapterSection(data, index, settings);
+      const section = renderChapterSection(data, index, settings, imageMap);
       return `<section id="chapter-${chapter.index}">\n${section}\n</section>`;
     })
     .join("\n\n");
 
   const body = [infoHtml, tocHtml, chapterSections].filter(Boolean).join("\n\n");
-  return new Blob([htmlPage(data.core.title, body)], { type: "text/html" });
+  const html = htmlPage(data.core.title, body);
+
+  files["story.html"] = html;
+
+  if (imageMap.size > 0) {
+    return zipFiles(files);
+  }
+  return new Blob([html], { type: "text/html" });
 };

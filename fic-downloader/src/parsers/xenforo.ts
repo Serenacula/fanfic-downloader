@@ -9,6 +9,7 @@ import {
   fetchHtml,
   ogImage,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   parseDate,
   collectImageUrls,
@@ -105,7 +106,7 @@ function createXenForoParser(
               `#js-${anchor} .messageContent`,
             )
           : postDoc.querySelector(".message-body .bbWrapper, .messageContent");
-        const htmlContent = postEl ? sanitizeHtml(postEl.innerHTML) : "";
+        const htmlContent = postEl ? resolveImageSrcs(sanitizeHtml(postEl.innerHTML), listing.url) : "";
         return { index, title: listing.title, htmlContent };
       }),
     );

@@ -4,6 +4,7 @@ import {
   fetchHtml,
   ogImage,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   parseCount,
   parseDate,
@@ -87,7 +88,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     listings.reverse().map(async (listing, index) => {
       const chapterDoc = await fetchHtml(listing.url);
       const content = chapterDoc.querySelector(".wi_fic_text, .chp-raw");
-      const htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
+      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
       return { index, title: listing.title, htmlContent };
     }),
   );
