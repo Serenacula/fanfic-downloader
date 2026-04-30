@@ -1,7 +1,7 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
 import { renderStoryInfoHtml } from "./story-info.js";
-import { zipFiles } from "./utils.js";
+import { zipFiles, fetchCoverImage } from "./utils.js";
 
 const HTML_STYLE = `
   body { max-width: 700px; margin: 0 auto; padding: 2em; font-family: Georgia, serif; line-height: 1.6; }
@@ -62,18 +62,27 @@ function renderChapterSection(data: FicData, chapterIndex: number, settings: Set
 }
 
 export const renderHtml: RendererFn = async (data, settings) => {
-  const infoHtml = settings.includeCoverPage ? renderStoryInfoHtml(data, settings) : "";
   const imageMap = buildImageMap(data);
 
   const files: Record<string, Uint8Array | string> = {};
 
-  // Embed downloaded images
-  if (imageMap.size > 0) {
-    for (const [url, localPath] of imageMap) {
-      const image = data.core.images.find((img) => img.url === url);
-      if (image) files[localPath] = new Uint8Array(image.data);
-    }
+  // Embed downloaded chapter images
+  for (const [url, localPath] of imageMap) {
+    const image = data.core.images.find((img) => img.url === url);
+    if (image) files[localPath] = new Uint8Array(image.data);
   }
+
+  // Fetch and embed cover image
+  const cover = settings.includeCoverImage ? await fetchCoverImage(data.core.coverImageUrl) : null;
+  const coverPath = cover ? `images/cover.${cover.extension}` : null;
+  if (cover && coverPath) files[coverPath] = cover.data;
+
+  const coverHtml = coverPath
+    ? `<div class="cover"><img src="${coverPath}" alt="Cover" style="max-width:100%;"/></div>`
+    : "";
+  const infoHtml = settings.includeCoverPage
+    ? coverHtml + renderStoryInfoHtml(data, settings)
+    : coverHtml;
 
   if (settings.chapterSplit) {
     if (infoHtml) {
@@ -111,7 +120,7 @@ export const renderHtml: RendererFn = async (data, settings) => {
 
   files["story.html"] = html;
 
-  if (imageMap.size > 0) {
+  if (Object.keys(files).length > 1) {
     return zipFiles(files);
   }
   return new Blob([html], { type: "text/html" });

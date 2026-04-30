@@ -72,6 +72,22 @@ export function zipFiles(files: Record<string, Uint8Array | string>): Promise<Bl
   });
 }
 
+export async function fetchCoverImage(
+  coverImageUrl: string | null,
+): Promise<{ data: Uint8Array; extension: string } | null> {
+  if (!coverImageUrl) return null;
+  try {
+    const response = await fetch(coverImageUrl);
+    if (!response.ok) return null;
+    const buffer = await response.arrayBuffer();
+    const mimeType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
+    const extension = mimeType === "image/jpeg" ? "jpg" : (mimeType.split("/")[1] ?? "jpg");
+    return { data: new Uint8Array(buffer), extension };
+  } catch {
+    return null;
+  }
+}
+
 export function formatFilename(template: string, data: FicData): string {
   const now = new Date();
   const pad = (value: number): string => String(value).padStart(2, "0");

@@ -1,6 +1,6 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
-import { htmlToMarkdown, zipFiles } from "./utils.js";
+import { htmlToMarkdown, zipFiles, fetchCoverImage } from "./utils.js";
 
 function buildFrontmatter(data: FicData): string {
   const { core } = data;
@@ -61,25 +61,30 @@ export const renderMarkdown: RendererFn = async (data, settings) => {
 
   const files: Record<string, Uint8Array | string> = {};
 
-  // Embed downloaded images
-  if (imageMap.size > 0) {
-    for (const [url, localPath] of imageMap) {
-      const image = data.core.images.find((img) => img.url === url);
-      if (image) files[localPath] = new Uint8Array(image.data);
-    }
+  // Embed downloaded chapter images
+  for (const [url, localPath] of imageMap) {
+    const image = data.core.images.find((img) => img.url === url);
+    if (image) files[localPath] = new Uint8Array(image.data);
   }
+
+  // Fetch and embed cover image
+  const cover = settings.includeCoverImage ? await fetchCoverImage(data.core.coverImageUrl) : null;
+  const coverPath = cover ? `images/cover.${cover.extension}` : null;
+  if (cover && coverPath) files[coverPath] = cover.data;
 
   if (settings.chapterSplit) {
     for (let index = 0; index < data.core.chapters.length; index++) {
       const paddedIndex = String(index + 1).padStart(3, "0");
       const header = index === 0 && frontmatter ? frontmatter + "\n\n" : "";
-      files[`${paddedIndex}-chapter.md`] = header + renderChapterMd(data, index, settings, imageMap);
+      const coverLine = index === 0 && coverPath ? `![Cover](${coverPath})\n\n` : "";
+      files[`${paddedIndex}-chapter.md`] = header + coverLine + renderChapterMd(data, index, settings, imageMap);
     }
     return zipFiles(files);
   }
 
   const parts: string[] = [];
   if (frontmatter) parts.push(frontmatter);
+  if (coverPath) parts.push(`![Cover](${coverPath})`);
   if (settings.includeToc) {
     parts.push(`# Table of Contents\n`);
     for (const chapter of data.core.chapters) {
@@ -96,7 +101,7 @@ export const renderMarkdown: RendererFn = async (data, settings) => {
   const text = parts.join("\n\n");
   files["story.md"] = text;
 
-  if (imageMap.size > 0) {
+  if (Object.keys(files).length > 1) {
     return zipFiles(files);
   }
   return new Blob([text], { type: "text/plain" });

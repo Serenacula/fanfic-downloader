@@ -2,6 +2,7 @@ import type { FicData, FicImage } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
 import { renderStoryInfoHtml } from "./story-info.js";
 import { generateCoverImage } from "./cover.js";
+import { fetchCoverImage } from "./utils.js";
 import { strToU8, zip as fflateZip } from "fflate";
 
 function escXml(text: string): string {
@@ -10,6 +11,15 @@ function escXml(text: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// XHTML requires void elements to be self-closing; sanitized HTML uses HTML syntax
+function toXhtml(html: string): string {
+  return html
+    .replace(/<(br|hr)(\s[^>]*)?\s*\/?>/gi, "<$1/>")
+    .replace(/<img(\s[^>]*?)?\s*\/?>/gi, (_, attrs: string | undefined) =>
+      `<img${(attrs ?? "").replace(/\s*\/$/, "")}/>`
+    );
 }
 
 function xhtmlPage(title: string, body: string): string {
@@ -112,30 +122,22 @@ export const renderEpub: RendererFn = async (data, settings) => {
 
   // Cover image
   if (settings.includeCoverImage) {
-    let coverData: Uint8Array | null = null;
-    let coverMediaType = "image/png";
+    const fetched = await fetchCoverImage(data.core.coverImageUrl);
+    let coverData: Uint8Array;
+    let coverExtension: string;
+    let coverMediaType: string;
 
-    const { coverImageUrl } = data.core;
-    if (coverImageUrl) {
-      try {
-        const response = await fetch(coverImageUrl);
-        if (response.ok) {
-          const buffer = await response.arrayBuffer();
-          coverData = new Uint8Array(buffer);
-          coverMediaType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
-        }
-      } catch {
-        // CDN domain may not be in host_permissions — fall through to generated cover
-      }
-    }
-
-    if (!coverData) {
+    if (fetched) {
+      coverData = fetched.data;
+      coverExtension = fetched.extension;
+      coverMediaType = fetched.extension === "jpg" ? "image/jpeg" : `image/${fetched.extension}`;
+    } else {
       const blob = await generateCoverImage(data.core.title, data.core.author);
       coverData = await blobToU8(blob);
+      coverExtension = "png";
       coverMediaType = "image/png";
     }
 
-    const coverExtension = coverMediaType === "image/jpeg" ? "jpg" : (coverMediaType.split("/")[1] ?? "png");
     const coverFilename = `cover.${coverExtension}`;
     files[`OEBPS/${coverFilename}`] = coverData;
     files["OEBPS/cover.xhtml"] = xhtmlPage(
@@ -149,7 +151,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
   // Story info page
   const hasInfo = settings.includeCoverPage;
   if (hasInfo) {
-    files["OEBPS/info.xhtml"] = xhtmlPage("Story Information", renderStoryInfoHtml(data, settings));
+    files["OEBPS/info.xhtml"] = xhtmlPage("Story Information", toXhtml(renderStoryInfoHtml(data, settings)));
     spineItems.push({ id: "info", href: "info.xhtml", mediaType: "application/xhtml+xml" });
   }
 
@@ -187,7 +189,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
     const href = `chapter-${chapter.index}.xhtml`;
     files[`OEBPS/${href}`] = xhtmlPage(
       chapter.title ?? `Chapter ${chapter.index + 1}`,
-      titleHtml + html,
+      titleHtml + toXhtml(html),
     );
     spineItems.push({ id: `chapter-${chapter.index}`, href, mediaType: "application/xhtml+xml" });
   }
