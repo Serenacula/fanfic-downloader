@@ -3,6 +3,8 @@ import { send } from "../messaging.js";
 import { isFicPage } from "../../parsers/index.js";
 import { getSettings } from "../../shared/settings.js";
 
+const FOLDER_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>`;
+
 function statusLabel(job: DownloadJob): string {
   switch (job.status) {
     case "queued": return "Queued";
@@ -25,60 +27,118 @@ function isActive(job: DownloadJob): boolean {
   return ["queued", "fetching-metadata", "fetching-chapters", "rendering", "saving"].includes(job.status);
 }
 
+function buildJobElement(job: DownloadJob): HTMLElement {
+  const active = isActive(job);
+  const title = job.title ?? new URL(job.url).hostname;
+
+  const el = document.createElement("div");
+  el.classList.add("job", job.status);
+  el.dataset["id"] = job.id;
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "job-title";
+  titleEl.textContent = title;
+
+  const statusEl = document.createElement("div");
+  statusEl.className = "job-status";
+  statusEl.textContent = statusLabel(job);
+
+  el.append(titleEl, statusEl);
+
+  if (active) {
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn-cancel";
+    cancelBtn.dataset["id"] = job.id;
+    cancelBtn.textContent = "✕";
+    el.appendChild(cancelBtn);
+  }
+
+  if (job.status === "complete" && job.downloadId != null) {
+    const openBtn = document.createElement("button");
+    openBtn.className = "btn-open";
+    openBtn.dataset["id"] = job.id;
+    openBtn.title = "Show in folder";
+    openBtn.innerHTML = FOLDER_SVG;
+    el.appendChild(openBtn);
+  }
+
+  if (job.status === "failed") {
+    const retryBtn = document.createElement("button");
+    retryBtn.className = "btn-retry";
+    retryBtn.dataset["id"] = job.id;
+    retryBtn.textContent = "↺ Retry";
+    el.appendChild(retryBtn);
+  }
+
+  return el;
+}
+
 export async function renderDownloadList(
   container: HTMLElement,
   onNavigateUrl: () => void,
 ): Promise<() => void> {
-  // Check if current tab is a fic page
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   const currentUrl = tab?.url ?? "";
   const isOnFicPage = isFicPage(currentUrl);
 
-  container.innerHTML = `
-    <div class="screen" id="screen-list">
-      <div class="toolbar">
-        <button id="btn-download" class="btn-primary" ${isOnFicPage ? "" : "disabled"} title="${isOnFicPage ? "Download this fic" : "Not a supported fic page"}">
-          Download
-        </button>
-        <button id="btn-url" class="btn-secondary">URL</button>
-        <a id="btn-settings" href="#" class="btn-icon" title="Settings">⚙</a>
-      </div>
-      <div id="job-list" class="job-list"></div>
-    </div>
-  `;
+  const screen = document.createElement("div");
+  screen.id = "screen-list";
+  screen.className = "screen";
 
-  const jobListEl = container.querySelector<HTMLElement>("#job-list")!;
+  const toolbar = document.createElement("div");
+  toolbar.className = "toolbar";
+
+  const downloadBtn = document.createElement("button");
+  downloadBtn.id = "btn-download";
+  downloadBtn.className = "btn-primary";
+  downloadBtn.textContent = "Download";
+  if (!isOnFicPage) {
+    downloadBtn.disabled = true;
+    downloadBtn.title = "Not a supported fic page";
+  } else {
+    downloadBtn.title = "Download this fic";
+  }
+
+  const urlBtn = document.createElement("button");
+  urlBtn.id = "btn-url";
+  urlBtn.className = "btn-secondary";
+  urlBtn.textContent = "URL";
+
+  const settingsLink = document.createElement("a");
+  settingsLink.id = "btn-settings";
+  settingsLink.href = "#";
+  settingsLink.className = "btn-icon";
+  settingsLink.title = "Settings";
+  settingsLink.textContent = "⚙";
+
+  toolbar.append(downloadBtn, urlBtn, settingsLink);
+
+  const jobListEl = document.createElement("div");
+  jobListEl.id = "job-list";
+  jobListEl.className = "job-list";
+
+  screen.append(toolbar, jobListEl);
+  container.replaceChildren(screen);
 
   async function refreshJobs(): Promise<void> {
     const response = await send({ type: "getJobs" });
     if (response.type !== "jobs") return;
 
     if (response.jobs.length === 0) {
-      jobListEl.innerHTML = `<p class="empty">No downloads yet.</p>`;
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "No downloads yet.";
+      jobListEl.replaceChildren(empty);
       return;
     }
 
-    jobListEl.innerHTML = response.jobs
-      .map((job) => {
-        const active = isActive(job);
-        const title = job.title ?? new URL(job.url).hostname;
-        return `
-          <div class="job ${job.status}" data-id="${job.id}">
-            <div class="job-title">${title}</div>
-            <div class="job-status">${statusLabel(job)}</div>
-            ${active ? `<button class="btn-cancel" data-id="${job.id}">✕</button>` : ""}
-            ${job.status === "complete" && job.downloadId != null ? `<button class="btn-open" data-id="${job.id}" title="Show in folder"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg></button>` : ""}
-            ${job.status === "failed" ? `<button class="btn-retry" data-id="${job.id}">↺ Retry</button>` : ""}
-          </div>
-        `;
-      })
-      .join("");
+    jobListEl.replaceChildren(...response.jobs.map(buildJobElement));
   }
 
   const interval = setInterval(() => void refreshJobs(), 800);
   void refreshJobs();
 
-  container.querySelector("#btn-download")?.addEventListener("click", async () => {
+  downloadBtn.addEventListener("click", async () => {
     if (!isOnFicPage) return;
     const settings = await getSettings();
     if (settings.confirmationDialogue) {
@@ -91,9 +151,9 @@ export async function renderDownloadList(
     }
   });
 
-  container.querySelector("#btn-url")?.addEventListener("click", onNavigateUrl);
+  urlBtn.addEventListener("click", onNavigateUrl);
 
-  container.querySelector("#btn-settings")?.addEventListener("click", (event) => {
+  settingsLink.addEventListener("click", (event) => {
     event.preventDefault();
     void browser.runtime.openOptionsPage();
   });
