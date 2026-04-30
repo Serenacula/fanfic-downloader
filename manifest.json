@@ -6,7 +6,10 @@
 
     "browser_specific_settings": {
         "gecko": {
-            "id": "fic-downloader@serenacula"
+            "id": "fic-downloader@serenacula",
+            "data_collection_permissions": {
+                "required": ["none"]
+            }
         }
     },
 

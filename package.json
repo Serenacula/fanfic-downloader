@@ -1,29 +1,29 @@
 {
-  "name": "fic-downloader",
-  "version": "1.0.0",
-  "description": "A Firefox plugin for downloading fan fiction from popular sites.",
-  "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch",
-    "test": "vitest run"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
-  "devDependencies": {
-    "@types/firefox-webext-browser": "^143.0.0",
-    "@types/jsdom": "^28.0.1",
-    "@types/pdfmake": "^0.3.2",
-    "jsdom": "^29.1.0",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.10",
-    "vite-plugin-web-extension": "^4.5.1",
-    "vitest": "^4.1.5"
-  },
-  "dependencies": {
-    "docx": "^9.6.1",
-    "fflate": "^0.8.2",
-    "pdfmake": "^0.3.7"
-  }
+    "name": "fic-downloader",
+    "version": "1.0.0",
+    "description": "A Firefox plugin for downloading fan fiction from popular sites.",
+    "scripts": {
+        "build": "vite build && cd dist && zip -r fic-downloader.xpi .",
+        "dev": "vite build --watch",
+        "test": "vitest run"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "module",
+    "devDependencies": {
+        "@types/firefox-webext-browser": "^143.0.0",
+        "@types/jsdom": "^28.0.1",
+        "@types/pdfmake": "^0.3.2",
+        "jsdom": "^29.1.0",
+        "typescript": "^6.0.3",
+        "vite": "^8.0.10",
+        "vite-plugin-web-extension": "^4.5.1",
+        "vitest": "^4.1.5"
+    },
+    "dependencies": {
+        "docx": "^9.6.1",
+        "fflate": "^0.8.2",
+        "pdfmake": "^0.3.7"
+    }
 }

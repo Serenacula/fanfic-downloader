@@ -12,7 +12,9 @@
       "WebFetch(domain:forums.sufficientvelocity.com)",
       "WebFetch(domain:www.fanfiction.net)",
       "WebFetch(domain:forum.questionablequesting.com)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(curl -s \"https://forums.spacebattles.com/threads/murc-and-zoe-cause-chaos.1293543/threadmarks\" -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36\")"
     ]
   }
 }

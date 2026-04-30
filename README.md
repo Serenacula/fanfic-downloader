@@ -1,5 +1,7 @@
 # Sere's Fic Downloader
 
+`VERSION: 1.0.0`
+
 A Firefox extension for downloading fan fiction from popular sites in your preferred format.
 
 ## Supported Sites
