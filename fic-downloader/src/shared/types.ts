@@ -51,9 +51,11 @@ export interface FFNMetadata {
 
 export interface RoyalRoadMetadata {
   tags: string[];
-  followers: number | null;
   rating: number | null;
+  ratingCount: number | null;
   views: number | null;
+  followers: number | null;
+  favorites: number | null;
 }
 
 export interface TapasMetadata {

@@ -136,8 +136,8 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   if (parts.length === 0) throw new Error("No chapters found on Wattpad story page");
 
-  const publishDate = parseDate(parts[0]?.date?.toISOString() ?? "");
-  const updateDate = parseDate(parts[parts.length - 1]?.date?.toISOString() ?? "");
+  const publishDate = parts[0]?.date ?? null;
+  const updateDate = parts[parts.length - 1]?.date ?? null;
 
   const chapters: FicChapter[] = await Promise.all(
     parts.map(async (part, index) => {

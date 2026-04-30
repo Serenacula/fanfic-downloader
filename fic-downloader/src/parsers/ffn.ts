@@ -13,6 +13,34 @@ import {
 
 const STORY_ID_PATTERN = /fanfiction\.net\/s\/(\d+)/;
 
+const FFN_GENRES = new Set([
+  "Adventure", "Angst", "Crime", "Drama", "Fantasy", "Friendship", "General",
+  "Horror", "Humor", "Hurt/Comfort", "Mystery", "Parody", "Poetry", "Romance",
+  "Sci-Fi", "Spiritual", "Supernatural", "Suspense", "Tragedy", "Western",
+]);
+
+const FFN_LANGUAGES = new Set([
+  "English", "French", "Spanish", "German", "Japanese", "Chinese", "Korean",
+  "Italian", "Portuguese", "Russian", "Dutch", "Norwegian", "Swedish", "Danish",
+  "Finnish", "Polish", "Indonesian", "Turkish", "Arabic", "Hebrew",
+]);
+
+function parseGenrePart(part: string): string[] | null {
+  if (FFN_GENRES.has(part)) return [part];
+  const subParts = part.split("/");
+  if (subParts.every((subPart) => FFN_GENRES.has(subPart))) return subParts;
+  // Handle compound genres like "Hurt/Comfort/Adventure" where "Hurt/Comfort" is one genre
+  for (let splitAt = subParts.length - 1; splitAt >= 1; splitAt--) {
+    const left = subParts.slice(0, splitAt).join("/");
+    const right = subParts.slice(splitAt).join("/");
+    if (FFN_GENRES.has(left)) {
+      const rightParsed = parseGenrePart(right);
+      if (rightParsed) return [left, ...rightParsed];
+    }
+  }
+  return null;
+}
+
 function chapterUrl(storyId: string, chapter: number): string {
   return `https://www.fanfiction.net/s/${storyId}/${chapter}/`;
 }
@@ -68,17 +96,6 @@ function parseMetaBar(doc: Document): StoryMeta {
   for (const part of parts) {
     if (part.startsWith("Rated:")) {
       rating = part.replace("Rated:", "").trim();
-    } else if (
-      part === "English" ||
-      part === "French" ||
-      part === "Spanish" ||
-      part === "German" ||
-      part === "Japanese" ||
-      part.length < 20
-    ) {
-      if (!rating && !language && /^[A-Z]/.test(part)) {
-        language = part;
-      }
     } else if (part.startsWith("Words:")) {
       wordCount = parseCount(part.replace("Words:", "").trim());
     } else if (part.startsWith("Chapters:")) {
@@ -87,10 +104,25 @@ function parseMetaBar(doc: Document): StoryMeta {
       favs = parseCount(part.replace("Favs:", "").trim());
     } else if (part.startsWith("Follows:")) {
       follows = parseCount(part.replace("Follows:", "").trim());
+    } else if (part.startsWith("Reviews:") || part.startsWith("Updated:") || part.startsWith("Published:")) {
+      // Dates are parsed from data-xutime span attributes below
+    } else if (part.startsWith("Status:")) {
+      const statusVal = part.replace("Status:", "").trim().toLowerCase();
+      if (statusVal.includes("complet")) status = "complete";
+      else if (statusVal.includes("progress")) status = "in-progress";
     } else if (part === "Complete") {
       status = "complete";
     } else if (part === "In-Progress") {
       status = "in-progress";
+    } else if (part.length > 0) {
+      const parsedGenres = parseGenrePart(part);
+      if (parsedGenres) {
+        genres.push(...parsedGenres);
+      } else if (!language && FFN_LANGUAGES.has(part)) {
+        language = part;
+      } else if (!/^\d/.test(part)) {
+        characters.push(...part.split(",").map((s) => s.trim()).filter(Boolean));
+      }
     }
   }
 
@@ -172,7 +204,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     wordCount: meta.wordCount,
     publishDate: meta.publishDate,
     updateDate: meta.updateDate,
-    sourceUrl: chapterUrl(storyId, 1),
+    sourceUrl: `https://www.fanfiction.net/s/${storyId}/`,
   };
 
   const ffnMeta: FFNMetadata = {

@@ -1,14 +1,9 @@
-import type { SiteId, FicData } from "./types.js";
+import type { FicData } from "./types.js";
 
 export type DownloadFormat = "epub" | "pdf" | "docx" | "html" | "markdown" | "txt";
 
 export type FilenameTemplateVar = "title" | "author" | "currentDate" | "publishDate" | "updateDate";
 
-export interface StoryInfoFieldConfig {
-  show: boolean;
-}
-
-export type StoryInfoFields = Partial<Record<string, StoryInfoFieldConfig>>;
 
 export interface Settings {
   version: 1;
@@ -22,8 +17,9 @@ export interface Settings {
   includeChapterTitles: boolean;
   confirmationDialogue: boolean;
   rateLimitMs: number;
+  maxConcurrentDownloads: number;
   filenameTemplate: string;
-  storyInfoFields: Partial<Record<SiteId, StoryInfoFields>>;
+  storyInfoFields: Partial<Record<string, boolean>>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -38,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   includeChapterTitles: true,
   confirmationDialogue: false,
   rateLimitMs: 500,
+  maxConcurrentDownloads: 3,
   filenameTemplate: "{title} - {author}",
   storyInfoFields: {},
 };

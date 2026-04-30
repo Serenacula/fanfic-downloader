@@ -1,6 +1,5 @@
 import { getSettings } from "../shared/settings.js";
 
-const MAX_CONCURRENT = 3;
 const MAX_RETRIES = 3;
 
 type QueueEntry = {
@@ -56,13 +55,16 @@ export function createQueue(): RequestQueue {
   }
 
   async function drain(): Promise<void> {
-    if (draining || pending.length === 0 || inFlight >= MAX_CONCURRENT) return;
+    if (draining || pending.length === 0) return;
     draining = true;
 
     try {
       const settings = await getSettings();
+      const limit = settings.maxConcurrentDownloads === 0 ? Infinity : settings.maxConcurrentDownloads;
 
-      while (pending.length > 0 && inFlight < MAX_CONCURRENT) {
+      if (inFlight >= limit) return;
+
+      while (pending.length > 0 && inFlight < limit) {
         const now = Date.now();
         const elapsed = now - lastDispatchTime;
         const waitMs = Math.max(0, settings.rateLimitMs - elapsed);

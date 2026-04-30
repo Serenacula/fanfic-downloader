@@ -2,7 +2,17 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:registry.npmjs.org)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "WebFetch(domain:www.royalroad.com)",
+      "WebFetch(domain:www.scribblehub.com)",
+      "WebFetch(domain:forums.spacebattles.com)",
+      "WebFetch(domain:www.wattpad.com)",
+      "WebFetch(domain:archiveofourown.org)",
+      "WebFetch(domain:tapas.io)",
+      "WebFetch(domain:forums.sufficientvelocity.com)",
+      "WebFetch(domain:www.fanfiction.net)",
+      "WebFetch(domain:forum.questionablequesting.com)",
+      "Bash(npm run *)"
     ]
   }
 }

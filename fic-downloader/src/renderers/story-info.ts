@@ -1,21 +1,29 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 
-type FieldConfig = { show?: boolean };
-type SiteFields = Record<string, FieldConfig | undefined>;
+const NO_WARNING_VALUES = new Set([
+  "No Archive Warnings Apply",
+]);
 
-function isVisible(fields: SiteFields | undefined, key: string): boolean {
-  return fields?.[key]?.show !== false;
+function isVisible(fields: Partial<Record<string, boolean>> | undefined, key: string): boolean {
+  return fields?.[key] !== false;
 }
+
+const TH = `style="text-align:left;font-weight:normal;vertical-align:top;padding:0.2em 1em 0.2em 0;color:#666"`;
 
 function row(label: string, value: string | null | undefined, visible = true): string {
   if (!visible || value == null || value === "") return "";
-  return `<tr><th>${escHtml(label)}</th><td>${escHtml(value)}</td></tr>`;
+  return `<tr><th ${TH}>${escHtml(label)}</th><td>${escHtml(value)}</td></tr>`;
 }
 
 function tagRow(label: string, tags: string[], visible = true): string {
   if (!visible || tags.length === 0) return "";
-  return `<tr><th>${escHtml(label)}</th><td>${tags.map((tag) => `<span class="tag">${escHtml(tag)}</span>`).join(" ")}</td></tr>`;
+  return `<tr><th ${TH}>${escHtml(label)}</th><td>${tags.map(escHtml).join(", ")}</td></tr>`;
+}
+
+function linkRow(label: string, url: string, visible = true): string {
+  if (!visible) return "";
+  return `<tr><th ${TH}>${escHtml(label)}</th><td><a href="${escHtml(url)}">${escHtml(url)}</a></td></tr>`;
 }
 
 function escHtml(text: string): string {
@@ -33,49 +41,82 @@ function formatDate(date: Date | null): string | null {
 
 export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
   const { core } = data;
-  const siteFields = settings.storyInfoFields[data.site] as SiteFields | undefined;
+  const fields = settings.storyInfoFields;
 
   let metaRows = "";
 
-  metaRows += row("Title", core.title);
-  metaRows += row("Author", core.author);
-  metaRows += row("Status", core.status === "complete" ? "Complete" : core.status === "in-progress" ? "In Progress" : null);
-  metaRows += row("Words", core.wordCount?.toLocaleString() ?? null, isVisible(siteFields, "wordCount"));
-  metaRows += row("Published", formatDate(core.publishDate), isVisible(siteFields, "publishDate"));
-  metaRows += row("Updated", formatDate(core.updateDate), isVisible(siteFields, "updateDate"));
+  metaRows += row("Status", core.status === "complete" ? "Complete" : core.status === "in-progress" ? "In Progress" : null, isVisible(fields, "status"));
+  metaRows += row("Words", core.wordCount?.toLocaleString() ?? null, isVisible(fields, "wordCount"));
+  metaRows += row("Published", formatDate(core.publishDate), isVisible(fields, "publishDate"));
+  metaRows += row("Updated", formatDate(core.updateDate), isVisible(fields, "updateDate"));
 
   if (data.site === "ao3") {
     const { meta } = data;
-    metaRows += tagRow("Fandom", meta.fandoms, isVisible(siteFields, "fandoms"));
-    metaRows += row("Rating", meta.rating, isVisible(siteFields, "rating"));
-    metaRows += tagRow("Warnings", meta.warnings, isVisible(siteFields, "warnings"));
-    metaRows += tagRow("Relationships", meta.relationships, isVisible(siteFields, "relationships"));
-    metaRows += tagRow("Characters", meta.characters, isVisible(siteFields, "characters"));
-    metaRows += tagRow("Additional Tags", meta.additionalTags, isVisible(siteFields, "additionalTags"));
-    metaRows += row("Language", meta.language, isVisible(siteFields, "language"));
-    if (meta.series.length > 0 && isVisible(siteFields, "series")) {
+    metaRows += tagRow("Fandom", meta.fandoms, isVisible(fields, "fandoms"));
+    metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
+    const shownWarnings = meta.warnings.filter((w) => !NO_WARNING_VALUES.has(w));
+    metaRows += tagRow("Warnings", shownWarnings, isVisible(fields, "warnings"));
+    metaRows += tagRow("Relationships", meta.relationships, isVisible(fields, "relationships"));
+    metaRows += tagRow("Characters", meta.characters, isVisible(fields, "characters"));
+    metaRows += tagRow("Additional Tags", meta.additionalTags, isVisible(fields, "tags"));
+    metaRows += row("Language", meta.language, isVisible(fields, "language"));
+    metaRows += row("Views", meta.hits?.toLocaleString() ?? null, isVisible(fields, "views"));
+    if (meta.series.length > 0 && isVisible(fields, "series")) {
       const seriesText = meta.series.map((s) => `${s.name} (Part ${s.part})`).join(", ");
       metaRows += row("Series", seriesText);
     }
-    metaRows += row("Kudos", meta.kudos?.toLocaleString() ?? null, isVisible(siteFields, "kudos"));
-    metaRows += row("Bookmarks", meta.bookmarks?.toLocaleString() ?? null, isVisible(siteFields, "bookmarks"));
+    metaRows += row("Kudos", meta.kudos?.toLocaleString() ?? null, isVisible(fields, "kudos"));
+    metaRows += row("Bookmarks", meta.bookmarks?.toLocaleString() ?? null, isVisible(fields, "bookmarks"));
   } else if (data.site === "ffn") {
     const { meta } = data;
-    metaRows += tagRow("Genre", meta.genres, isVisible(siteFields, "genres"));
-    metaRows += row("Rating", meta.rating, isVisible(siteFields, "rating"));
-    metaRows += row("Language", meta.language, isVisible(siteFields, "language"));
-    metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(siteFields, "follows"));
-    metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(siteFields, "favs"));
+    metaRows += tagRow("Genre", meta.genres, isVisible(fields, "genres"));
+    metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
+    metaRows += row("Language", meta.language, isVisible(fields, "language"));
+    metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(fields, "followers"));
+    metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+  } else if (data.site === "royalroad") {
+    const { meta } = data;
+    metaRows += tagRow("Tags", meta.tags, isVisible(fields, "tags"));
+    metaRows += row("Overall Rating", meta.rating !== null ? meta.rating.toFixed(2) : null, isVisible(fields, "rating"));
+    metaRows += row("Ratings", meta.ratingCount?.toLocaleString() ?? null, isVisible(fields, "ratingCount"));
+    metaRows += row("Views", meta.views?.toLocaleString() ?? null, isVisible(fields, "views"));
+    metaRows += row("Followers", meta.followers?.toLocaleString() ?? null, isVisible(fields, "followers"));
+    metaRows += row("Favourites", meta.favorites?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+  } else if (data.site === "scribblehub") {
+    const { meta } = data;
+    metaRows += tagRow("Genres", meta.genres, isVisible(fields, "genres"));
+    metaRows += tagRow("Tags", meta.tags, isVisible(fields, "tags"));
+    metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
+    metaRows += row("Views", meta.views?.toLocaleString() ?? null, isVisible(fields, "views"));
+    metaRows += row("Favourites", meta.favorites?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+  } else if (data.site === "wattpad") {
+    const { meta } = data;
+    metaRows += row("Genre", meta.genre, isVisible(fields, "genres"));
+    metaRows += row("Reads", meta.reads?.toLocaleString() ?? null, isVisible(fields, "views"));
+    metaRows += row("Votes", meta.votes?.toLocaleString() ?? null, isVisible(fields, "votes"));
+  } else if (data.site === "tapas") {
+    const { meta } = data;
+    metaRows += row("Genre", meta.genre, isVisible(fields, "genres"));
+  } else if (
+    data.site === "spacebattles" ||
+    data.site === "sufficientvelocity" ||
+    data.site === "questionablequesting"
+  ) {
+    const { meta } = data;
+    metaRows += row("Forum", meta.subForum, isVisible(fields, "subForum"));
   }
 
-  const summaryHtml =
-    core.summary
-      ? `<div class="summary"><h2>Summary</h2><div>${core.summary}</div></div>`
-      : "";
+  metaRows += linkRow("Source", core.sourceUrl, isVisible(fields, "sourceUrl"));
+
+  const titleHtml = isVisible(fields, "title") ? `<h1>${escHtml(core.title)}</h1>` : "";
+  const authorHtml = isVisible(fields, "author") ? `<p class="author"><em>by ${escHtml(core.author)}</em></p>` : "";
+  const summaryHtml = core.summary && isVisible(fields, "summary")
+    ? `<div class="summary"><h2>Summary</h2><div>${core.summary}</div></div>`
+    : "";
 
   return `<div class="story-info">
-  <h1>${escHtml(core.title)}</h1>
-  <p class="author">by ${escHtml(core.author)}</p>
+  ${titleHtml}
+  ${authorHtml}
   ${summaryHtml}
   ${metaRows ? `<table class="meta">${metaRows}</table>` : ""}
 </div>`;
@@ -83,7 +124,7 @@ export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
 
 export function renderStoryInfoText(data: FicData, settings: Settings): string {
   const { core } = data;
-  const siteFields = settings.storyInfoFields[data.site] as SiteFields | undefined;
+  const fields = settings.storyInfoFields;
   const lines: string[] = [];
 
   lines.push(core.title);
@@ -98,21 +139,21 @@ export function renderStoryInfoText(data: FicData, settings: Settings): string {
 
   if (data.site === "ao3") {
     const { meta } = data;
-    if (meta.fandoms.length > 0 && isVisible(siteFields, "fandoms")) {
+    if (meta.fandoms.length > 0 && isVisible(fields, "fandoms")) {
       lines.push(`Fandom: ${meta.fandoms.join(", ")}`);
     }
-    if (meta.rating && isVisible(siteFields, "rating")) lines.push(`Rating: ${meta.rating}`);
-    if (meta.relationships.length > 0 && isVisible(siteFields, "relationships")) {
+    if (meta.rating && isVisible(fields, "rating")) lines.push(`Rating: ${meta.rating}`);
+    if (meta.relationships.length > 0 && isVisible(fields, "relationships")) {
       lines.push(`Relationships: ${meta.relationships.join(", ")}`);
     }
   } else if (data.site === "ffn") {
     const { meta } = data;
-    if (meta.genres.length > 0 && isVisible(siteFields, "genres")) {
-      lines.push(`Genre: ${meta.genres.join(", ")}`);
+    if (meta.genres.length > 0 && isVisible(fields, "genres")) {
+      lines.push(`Genres: ${meta.genres.join(", ")}`);
     }
   }
 
-  if (core.wordCount && isVisible(siteFields, "wordCount")) {
+  if (core.wordCount && isVisible(fields, "wordCount")) {
     lines.push(`Words: ${core.wordCount.toLocaleString()}`);
   }
   if (core.status !== "unknown") {

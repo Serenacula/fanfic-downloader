@@ -82,6 +82,14 @@ Files created: `src/background/orchestrator.ts` (job lifecycle management, messa
 
 ---
 
+## 2026-04-28T00:04:00
+
+**Event:** Completed work items `0026-royal-road-parser` and `0027-remaining-site-parsers` — all 9 site parsers implemented
+
+Files created: `src/parsers/royalroad.ts`, `src/parsers/tapas.ts`, `src/parsers/scribblehub.ts`, `src/parsers/wattpad.ts`, `src/parsers/xenforo.ts` (shared XenForo factory exporting SpaceBattles, SufficientVelocity, and QuestionableQuesting parsers). All parsers registered in `src/parsers/index.ts`. Host permissions and content_script matches added to `manifest.json` for all sites. Also corrected `types.ts`: replaced `fanficsdotnet`/`FanficsDotNetMetadata` with `scribblehub`/`ScribbleHubMetadata`. Full project type-checks clean; 13/13 tests pass.
+
+---
+
 ## 2026-04-28T00:03:00
 
 **Event:** Completed work items `0004`, `0020`–`0025` — popup UI and completion signals

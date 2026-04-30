@@ -31,20 +31,31 @@ export interface DownloadJob {
   error: string | null;
   startedAt: number;
   completedAt: number | null;
+  downloadId: number | null;
+}
+
+export interface DataOverrides {
+  title?: string;
+  author?: string;
+  tags?: string[];
 }
 
 export type OrchestratorMessage =
   | { type: "getJobs" }
-  | { type: "startDownload"; url: string; overrides?: Partial<Settings> }
-  | { type: "startDownloadByUrl"; url: string; overrides?: Partial<Settings> }
+  | { type: "startDownload"; url: string; overrides?: Partial<Settings>; dataOverrides?: DataOverrides }
+  | { type: "startDownloadByUrl"; url: string; overrides?: Partial<Settings>; dataOverrides?: DataOverrides }
+  | { type: "getPreviewMetadata"; url: string }
   | { type: "cancelJob"; id: string }
-  | { type: "retryJob"; id: string };
+  | { type: "retryJob"; id: string }
+  | { type: "openDownload"; id: string };
 
 export type OrchestratorResponse =
   | { type: "jobs"; jobs: DownloadJob[] }
   | { type: "started"; id: string }
   | { type: "cancelled"; id: string }
   | { type: "retried"; id: string }
+  | { type: "opened"; id: string }
+  | { type: "previewMetadata"; title: string; author: string; tags: string[] }
   | { type: "error"; message: string }
   | { type: "validationError"; reason: "unsupported-site" | "invalid-url" };
 
@@ -68,6 +79,7 @@ const FORMAT_EXTENSIONS: Record<DownloadFormat, string> = {
 
 const SESSION_KEY = "downloadJobs";
 const cancelledJobs = new Set<string>();
+const pendingObjectUrls = new Map<number, string>();
 
 function generateId(): string {
   return crypto.randomUUID();
@@ -102,6 +114,7 @@ export async function getJobs(): Promise<DownloadJob[]> {
 export async function startDownload(
   url: string,
   overrides?: Partial<Settings>,
+  dataOverrides?: DataOverrides,
 ): Promise<string> {
   const id = generateId();
   const job: DownloadJob = {
@@ -115,9 +128,10 @@ export async function startDownload(
     error: null,
     startedAt: Date.now(),
     completedAt: null,
+    downloadId: null,
   };
   await saveJob(job);
-  void runDownload(id, url, overrides);
+  void runDownload(id, url, overrides, dataOverrides);
   return id;
 }
 
@@ -145,7 +159,7 @@ function isCancelled(id: string): boolean {
   return cancelledJobs.has(id);
 }
 
-async function runDownload(id: string, url: string, overrides?: Partial<Settings>): Promise<void> {
+async function runDownload(id: string, url: string, overrides?: Partial<Settings>, dataOverrides?: DataOverrides): Promise<void> {
   try {
     const settings = { ...(await getSettings()), ...overrides };
     const parser = detectParser(url);
@@ -154,7 +168,10 @@ async function runDownload(id: string, url: string, overrides?: Partial<Settings
     await updateJob(id, { status: "fetching-metadata" });
     if (isCancelled(id)) return;
 
-    const ficData: FicData = await parser.parse(url, settings);
+    const parsed: FicData = await parser.parse(url, settings);
+    const ficData: FicData = dataOverrides
+      ? { ...parsed, core: { ...parsed.core, title: dataOverrides.title ?? parsed.core.title, author: dataOverrides.author ?? parsed.core.author, tags: dataOverrides.tags ?? parsed.core.tags } }
+      : parsed;
     if (isCancelled(id)) return;
 
     await updateJob(id, {
@@ -170,23 +187,29 @@ async function runDownload(id: string, url: string, overrides?: Partial<Settings
 
     const renderer = RENDERERS[settings.format];
     const blob = await renderer(ficData, settings);
+    console.log(`[fic-downloader] rendered ${settings.format}: ${blob.size} bytes, type="${blob.type}"`);
 
     if (isCancelled(id)) return;
     await updateJob(id, { status: "saving" });
 
-    const extension = FORMAT_EXTENSIONS[settings.format];
+    const extension = settings.chapterSplit && settings.format !== "epub"
+      ? "zip"
+      : FORMAT_EXTENSIONS[settings.format];
     const baseName = formatFilename(settings.filenameTemplate, ficData);
     const filename = `${baseName}.${extension}`;
 
     const objectUrl = URL.createObjectURL(blob);
-    await browser.downloads.download({ url: objectUrl, filename, saveAs: false });
-    URL.revokeObjectURL(objectUrl);
+    console.log(`[fic-downloader] downloading as "${filename}" from ${objectUrl}`);
+    const downloadId = await browser.downloads.download({ url: objectUrl, filename, saveAs: false });
+    console.log(`[fic-downloader] download initiated, id=${downloadId}`);
+    pendingObjectUrls.set(downloadId, objectUrl);
 
-    await updateJob(id, { status: "complete", completedAt: Date.now() });
+    await updateJob(id, { status: "complete", completedAt: Date.now(), downloadId });
     await notifyCompletion(ficData.core.title, true);
   } catch (error) {
     if (!isCancelled(id)) {
       const message = error instanceof Error ? error.message : String(error);
+      console.error(`[fic-downloader] download failed for job ${id}:`, error);
       await updateJob(id, { status: "failed", error: message, completedAt: Date.now() });
       const jobs = await loadJobs();
       const failedTitle = jobs[id]?.title ?? url;
@@ -269,7 +292,7 @@ export function startDownloadByUrl(
   return startDownload(url, overrides).then((id) => ({ type: "started" as const, id }));
 }
 
-export function handleMessage(
+export async function handleMessage(
   message: OrchestratorMessage,
 ): Promise<OrchestratorResponse> {
   switch (message.type) {
@@ -277,7 +300,7 @@ export function handleMessage(
       return getJobs().then((jobs) => ({ type: "jobs" as const, jobs }));
 
     case "startDownload":
-      return startDownload(message.url, message.overrides).then((id) => ({
+      return startDownload(message.url, message.overrides, message.dataOverrides).then((id) => ({
         type: "started" as const,
         id,
       }));
@@ -297,7 +320,65 @@ export function handleMessage(
         id: message.id,
       }));
 
+    case "openDownload": {
+      const jobs = await loadJobs();
+      const job = jobs[message.id];
+      if (job?.downloadId != null) {
+        await browser.downloads.show(job.downloadId);
+      }
+      return { type: "opened" as const, id: message.id };
+    }
+
+    case "getPreviewMetadata": {
+      try {
+        const parser = detectParser(message.url);
+        if (!parser) return { type: "error" as const, message: "Unsupported site" };
+        const settings = await getSettings();
+        const data = await parser.parse(message.url, { ...settings, includeImages: false });
+        return {
+          type: "previewMetadata" as const,
+          title: data.core.title,
+          author: data.core.author,
+          tags: data.core.tags,
+        };
+      } catch (error) {
+        return { type: "error" as const, message: error instanceof Error ? error.message : String(error) };
+      }
+    }
+
     default:
       return Promise.resolve({ type: "error" as const, message: "Unknown message type" });
+  }
+}
+
+export function handleDownloadChange(delta: { id: number; state?: { current?: string } }): void {
+  const state = delta.state?.current;
+  console.log(`[fic-downloader] download ${delta.id} state: ${state ?? "(unchanged)"}`);
+
+  const objectUrl = pendingObjectUrls.get(delta.id);
+  if (state === "complete" || state === "interrupted") {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+      pendingObjectUrls.delete(delta.id);
+    }
+  }
+
+  if (state === "interrupted") {
+    void (async () => {
+      try {
+        const jobs = await loadJobs();
+        const job = Object.values(jobs).find((job) => job.downloadId === delta.id);
+        if (job && job.status === "complete") {
+          console.log(`[fic-downloader] marking job ${job.id} as failed due to interrupted download`);
+          await updateJob(job.id, {
+            status: "failed",
+            error: "Download was interrupted",
+            completedAt: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error("[fic-downloader] handleDownloadChange error:", error);
+      }
+    })();
   }
 }

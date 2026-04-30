@@ -1,6 +1,7 @@
 import type { DownloadJob } from "../../background/orchestrator.js";
 import { send } from "../messaging.js";
 import { isFicPage } from "../../parsers/index.js";
+import { getSettings } from "../../shared/settings.js";
 
 function statusLabel(job: DownloadJob): string {
   switch (job.status) {
@@ -66,6 +67,7 @@ export async function renderDownloadList(
             <div class="job-title">${title}</div>
             <div class="job-status">${statusLabel(job)}</div>
             ${active ? `<button class="btn-cancel" data-id="${job.id}">✕</button>` : ""}
+            ${job.status === "complete" && job.downloadId != null ? `<button class="btn-open" data-id="${job.id}" title="Show in folder"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg></button>` : ""}
             ${job.status === "failed" ? `<button class="btn-retry" data-id="${job.id}">↺ Retry</button>` : ""}
           </div>
         `;
@@ -76,8 +78,17 @@ export async function renderDownloadList(
   const interval = setInterval(() => void refreshJobs(), 800);
   void refreshJobs();
 
-  container.querySelector("#btn-download")?.addEventListener("click", () => {
-    if (isOnFicPage) void send({ type: "startDownload", url: currentUrl });
+  container.querySelector("#btn-download")?.addEventListener("click", async () => {
+    if (!isOnFicPage) return;
+    const settings = await getSettings();
+    if (settings.confirmationDialogue) {
+      await browser.tabs.create({
+        url: browser.runtime.getURL("src/confirmation/index.html") +
+          `?url=${encodeURIComponent(currentUrl)}`,
+      });
+    } else {
+      void send({ type: "startDownload", url: currentUrl });
+    }
   });
 
   container.querySelector("#btn-url")?.addEventListener("click", onNavigateUrl);
@@ -97,6 +108,9 @@ export async function renderDownloadList(
     }
     if (target.classList.contains("btn-retry")) {
       void send({ type: "retryJob", id: jobId }).then(() => void refreshJobs());
+    }
+    if (target.classList.contains("btn-open")) {
+      void send({ type: "openDownload", id: jobId });
     }
   });
 

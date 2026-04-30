@@ -13,7 +13,9 @@
   "type": "module",
   "devDependencies": {
     "@types/firefox-webext-browser": "^143.0.0",
+    "@types/jsdom": "^28.0.1",
     "@types/pdfmake": "^0.3.2",
+    "jsdom": "^29.1.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.10",
     "vite-plugin-web-extension": "^4.5.1",

@@ -84,8 +84,10 @@ label { font-size: 11px; color: #9980cc; }
 .job-status { font-size: 11px; color: #9980cc; grid-column: 1; }
 .job.complete .job-status { color: #7ecf7e; }
 .job.failed .job-status { color: #e07070; }
-.btn-cancel, .btn-retry { grid-column: 2; grid-row: 1 / 3; background: transparent; color: #9980cc; padding: 4px; font-size: 14px; }
-.btn-cancel:hover, .btn-retry:hover { color: #e0d6ff; }
+.btn-cancel, .btn-retry, .btn-open { grid-column: 2; grid-row: 1 / 3; background: transparent; color: #9980cc; padding: 4px; display: flex; align-items: center; justify-content: center; }
+.btn-open svg { pointer-events: none; }
+.btn-cancel, .btn-retry { font-size: 14px; }
+.btn-cancel:hover, .btn-retry:hover, .btn-open:hover { color: #e0d6ff; }
 
 .empty { color: #6a6090; text-align: center; padding: 24px 0; font-size: 12px; }
 .error { color: #e07070; font-size: 11px; }

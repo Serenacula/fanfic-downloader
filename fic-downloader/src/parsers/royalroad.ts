@@ -25,6 +25,17 @@ function extractFictionId(url: string): string | null {
   return FICTION_ID_PATTERN.exec(url)?.[1] ?? null;
 }
 
+// Stats are label/value alternating <li> pairs under .stats-content
+function findStatValue(doc: Document, label: string): string {
+  const items = Array.from(doc.querySelectorAll(".stats-content li"));
+  for (let i = 0; i < items.length - 1; i++) {
+    if (items[i]?.textContent?.trim().startsWith(label)) {
+      return items[i + 1]?.textContent?.trim() ?? "";
+    }
+  }
+  return "";
+}
+
 interface ChapterListing {
   title: string;
   path: string;
@@ -50,8 +61,9 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const fictionDoc = await fetchHtml(fictionUrl(fictionId));
   const sourceUrl = fictionUrl(fictionId);
 
-  const title = textContent(fictionDoc.querySelector(".fiction-title h1, h1.font-white"));
-  const author = textContent(fictionDoc.querySelector(".fiction-title .author span, a[href*='/profile/']"));
+  const title = textContent(fictionDoc.querySelector(".fic-title h1, h1.font-white"));
+  // .fic-title is the fiction header container; scoping avoids matching "My Profile" in nav
+  const author = textContent(fictionDoc.querySelector(".fic-title h4 a, h4.font-white a"));
   const summaryEl = fictionDoc.querySelector(".description .hidden-content, .description");
   const summary = summaryEl ? sanitizeHtml(summaryEl.innerHTML) : null;
 
@@ -68,10 +80,23 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     : statusText.includes("ongoing") ? "in-progress" as const
     : "unknown" as const;
 
-  // Followers/views/rating are JS-rendered on RR; these will be null from static HTML
-  const followersText = textContent(fictionDoc.querySelector(".fiction-stats .followers-count, .stats-followers"));
-  const ratingText = textContent(fictionDoc.querySelector(".fiction-stats .rating-score, .stats-rating"));
-  const viewsText = textContent(fictionDoc.querySelector(".fiction-stats .views-count, .stats-views"));
+  // Stats are in alternating label/value <li> pairs under .stats-content
+  const views = parseCount(findStatValue(fictionDoc, "Total Views"));
+  const followers = parseCount(findStatValue(fictionDoc, "Followers"));
+  const favorites = parseCount(findStatValue(fictionDoc, "Favorites"));
+  const ratingCount = parseCount(findStatValue(fictionDoc, "Ratings"));
+
+  // Overall Score is a decimal; may be absent if not enough ratings yet
+  const overallScoreText = findStatValue(fictionDoc, "Overall Score");
+  const ratingScore = parseFloat(overallScoreText);
+  const rating = isNaN(ratingScore) ? null : ratingScore;
+
+  // Word count is embedded in the Pages tooltip data-content attribute
+  const pagesDataContent = fictionDoc
+    .querySelector(".stats-content i[data-content*='words.']")
+    ?.getAttribute("data-content") ?? "";
+  const wordMatch = /calculated from ([\d,]+) words/i.exec(pagesDataContent);
+  const wordCount = wordMatch ? parseCount(wordMatch[1]!) : null;
 
   const chapterListing = extractChapterListing(fictionDoc);
   if (chapterListing.length === 0) throw new Error("No chapters found on Royal Road fiction page");
@@ -108,7 +133,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     images,
     tags,
     status,
-    wordCount: null,
+    wordCount,
     publishDate,
     updateDate,
     sourceUrl,
@@ -116,9 +141,11 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const meta: RoyalRoadMetadata = {
     tags,
-    followers: parseCount(followersText),
-    rating: parseCount(ratingText),
-    views: parseCount(viewsText),
+    rating,
+    ratingCount,
+    views,
+    followers,
+    favorites,
   };
 
   return { site: "royalroad", core, meta };

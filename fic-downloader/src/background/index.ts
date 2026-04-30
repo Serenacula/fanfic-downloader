@@ -1,4 +1,4 @@
-import { handleMessage, type OrchestratorMessage } from "./orchestrator.js";
+import { handleMessage, handleDownloadChange, type OrchestratorMessage } from "./orchestrator.js";
 
 browser.runtime.onInstalled.addListener(() => {
   // Create a periodic alarm to keep the service worker alive during downloads
@@ -15,3 +15,7 @@ browser.runtime.onMessage.addListener(
     return true; // Keep the message channel open for async response
   },
 );
+
+browser.downloads.onChanged.addListener((delta) => {
+  handleDownloadChange(delta);
+});

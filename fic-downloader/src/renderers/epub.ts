@@ -74,10 +74,8 @@ ${spineRefs}
 function navXhtml(
   data: FicData,
   chapterHrefs: string[],
-  hasInfo: boolean,
 ): string {
   const tocItems = [
-    hasInfo ? `<li><a href="info.xhtml">Story Information</a></li>` : "",
     ...data.core.chapters.map((chapter, index) => {
       const title = chapter.title ?? `Chapter ${chapter.index + 1}`;
       return `<li><a href="${chapterHrefs[index]}">${escXml(title)}</a></li>`;
@@ -132,7 +130,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
   const chapterHrefs = data.core.chapters.map((chapter) => `chapter-${chapter.index}.xhtml`);
 
   if (settings.includeToc) {
-    files["OEBPS/nav.xhtml"] = navXhtml(data, chapterHrefs, hasInfo);
+    files["OEBPS/nav.xhtml"] = navXhtml(data, chapterHrefs);
     spineItems.push({ id: "nav", href: "nav.xhtml", mediaType: "application/xhtml+xml" });
   }
 
@@ -153,7 +151,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
     let html = chapter.htmlContent;
     // Remap image URLs to local epub paths
     for (const [originalUrl, localPath] of imageMap) {
-      html = html.replace(new RegExp(escXml(originalUrl), "g"), localPath);
+      html = html.split(escXml(originalUrl)).join(localPath);
     }
 
     const titleHtml =

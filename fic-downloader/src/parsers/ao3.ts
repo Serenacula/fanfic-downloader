@@ -46,6 +46,7 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter
     // Single-chapter work — the content is directly in #chapters
     const content = doc.querySelector("#chapters .userstuff");
     if (content) {
+      for (const landmark of Array.from(content.querySelectorAll(".landmark"))) landmark.remove();
       chapters.push({ index: 0, title: null, htmlContent: sanitizeHtml(content.innerHTML) });
     }
     return chapters;
@@ -63,7 +64,10 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter
     }
 
     const content = chapterDiv.querySelector(".userstuff");
-    if (content) html += content.innerHTML;
+    if (content) {
+      for (const landmark of Array.from(content.querySelectorAll(".landmark"))) landmark.remove();
+      html += content.innerHTML;
+    }
 
     if (includeAuthorNotes) {
       const postNotes = chapterDiv.querySelector(".chapter.endnotes .userstuff");
@@ -81,7 +85,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   if (!workId) throw new Error(`Not a valid AO3 URL: ${url}`);
 
   const doc = await fetchHtml(workUrl(workId));
-  const sourceUrl = workUrl(workId);
+  const sourceUrl = `https://archiveofourown.org/works/${workId}`;
 
   const title = textContent(doc.querySelector("h2.title.heading"));
   const author = textContent(doc.querySelector("h3.byline.heading a"));
@@ -101,10 +105,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     doc.querySelector("dd.published")?.getAttribute("datetime") ??
     textContent(doc.querySelector("dd.published")),
   );
-  const updateDate = parseDate(
-    doc.querySelector("dd.status")?.previousElementSibling?.getAttribute("datetime") ??
-    textContent(doc.querySelector("dd.status")),
-  );
+  const updateDate = parseDate(textContent(doc.querySelector("dd.status")));
 
   const chapters = extractChapters(doc, settings.includeAuthorNotes);
 

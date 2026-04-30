@@ -54,6 +54,11 @@ function sanitizeNode(node: Node): void {
       }
     }
 
+    // Strip inline base64 images — they're pre-compressed and bloat EPUB XHTML enormously
+    if (tagName === "img" && element.getAttribute("src")?.startsWith("data:")) {
+      element.removeAttribute("src");
+    }
+
     sanitizeNode(element);
   }
 
@@ -109,7 +114,7 @@ export function collectImageUrls(html: string, baseUrl: string): string[] {
   const urls: string[] = [];
   for (const img of Array.from(doc.querySelectorAll("img"))) {
     const src = img.getAttribute("src");
-    if (!src) continue;
+    if (!src || src.startsWith("data:")) continue;
     try {
       urls.push(new URL(src, base).href);
     } catch {

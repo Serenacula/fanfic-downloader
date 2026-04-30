@@ -68,5 +68,5 @@ export const renderMarkdown: RendererFn = async (data, settings) => {
   }
 
   const text = parts.join("\n\n");
-  return new Blob([text], { type: "text/markdown" });
+  return new Blob([text], { type: "text/plain" });
 };
