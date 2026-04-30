@@ -162,3 +162,39 @@ describe("Wattpad parser — HTML fallback (no API)", () => {
     expect(data.core.chapters[0]!.htmlContent).toContain("bukot");
   });
 });
+
+describe("Wattpad parser — chapter URL entry point", () => {
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("api/v3/story_parts/1625014783") && url.includes("fields=group")) {
+        return new Response(JSON.stringify({ group: { id: 410660257 } }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (url.includes("wattpad.com/story/410660257") && !url.includes("api/")) {
+        return htmlResponse("wattpad-story.html");
+      }
+      if (url.includes("api/v3/stories/410660257")) {
+        return new Response(JSON.stringify(STORY_API), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (url.includes("api/v3/story_parts/1625014783")) {
+        return new Response(JSON.stringify(CHAPTER_TEXT_API), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("resolves story from chapter URL via API and downloads correctly", async () => {
+    const data = await wattpadParser.parse("https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue", DEFAULT_SETTINGS);
+    expect(data.site).toBe("wattpad");
+    expect(data.core.title).toBe("The First Rain of May");
+    expect(data.core.chapters).toHaveLength(1);
+  });
+});

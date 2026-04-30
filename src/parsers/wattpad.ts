@@ -13,6 +13,7 @@ import {
 import { enqueue } from "../background/request-queue.js";
 
 const STORY_PATTERN = /wattpad\.com\/story\/(\d+)/;
+const CHAPTER_URL_PATTERN = /wattpad\.com\/(\d+)-/;
 
 function storyUrl(storyId: string): string {
   return `https://www.wattpad.com/story/${storyId}`;
@@ -93,6 +94,35 @@ async function fetchChapterText(partId: string): Promise<string | null> {
   }
 }
 
+async function resolveStoryId(url: string): Promise<string> {
+  const storyMatch = STORY_PATTERN.exec(url);
+  if (storyMatch) return storyMatch[1]!;
+
+  const chapterMatch = CHAPTER_URL_PATTERN.exec(url);
+  if (!chapterMatch) throw new Error(`Not a valid Wattpad URL: ${url}`);
+  const partId = chapterMatch[1]!;
+
+  // Ask the API which story this chapter belongs to
+  const apiUrl = `https://www.wattpad.com/api/v3/story_parts/${partId}?fields=group(id)&_=${Date.now()}`;
+  try {
+    const response = await enqueue(apiUrl);
+    if (response.ok) {
+      const data = (await response.json()) as { group?: { id?: number | string } };
+      if (data.group?.id) return String(data.group.id);
+    }
+  } catch {
+    // fall through to HTML fallback
+  }
+
+  // HTML fallback: the chapter page always has a link back to the story
+  const doc = await fetchHtml(url);
+  const storyLink = doc.querySelector('a[href*="/story/"]') as HTMLAnchorElement | null;
+  const storyLinkMatch = storyLink ? STORY_PATTERN.exec(storyLink.href) : null;
+  if (storyLinkMatch) return storyLinkMatch[1]!;
+
+  throw new Error(`Could not resolve story ID from chapter URL: ${url}`);
+}
+
 function extractChapterContent(doc: Document): string {
   // Chapter paragraphs have a stable data-p-id attribute unique to Wattpad
   const paragraphs = Array.from(doc.querySelectorAll("p[data-p-id]"));
@@ -105,9 +135,7 @@ function extractChapterContent(doc: Document): string {
 }
 
 async function parse(url: string, settings: Settings): Promise<FicData> {
-  const match = STORY_PATTERN.exec(url);
-  if (!match) throw new Error(`Not a valid Wattpad URL: ${url}`);
-  const storyId = match[1]!;
+  const storyId = await resolveStoryId(url);
   const sourceUrl = storyUrl(storyId);
 
   const [doc, apiData] = await Promise.all([
@@ -235,6 +263,6 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 }
 
 export const wattpadParser: Parser = {
-  pattern: STORY_PATTERN,
+  pattern: /wattpad\.com\/(?:story\/\d+|\d+-)/,
   parse,
 };

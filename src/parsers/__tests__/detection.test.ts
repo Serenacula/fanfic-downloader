@@ -12,6 +12,12 @@ describe("detectParser", () => {
     expect(detectParser("https://www.fanfiction.net/s/12345/1/Story-Title")).not.toBeNull();
   });
 
+  it("matches Wattpad story and chapter URLs", () => {
+    expect(detectParser("https://www.wattpad.com/story/410660257-the-first-rain-of-may")).not.toBeNull();
+    expect(detectParser("https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue")).not.toBeNull();
+    expect(detectParser("https://www.wattpad.com/user/someauthor")).toBeNull();
+  });
+
   it("returns null for unsupported URLs", () => {
     expect(detectParser("https://example.com")).toBeNull();
     expect(detectParser("https://archiveofourown.org/users/someone")).toBeNull();
