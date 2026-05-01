@@ -10,6 +10,10 @@
     "keywords": [],
     "author": "",
     "license": "ISC",
+    "engines": {
+        "node": ">=20.0.0",
+        "npm": ">=10.0.0"
+    },
     "type": "module",
     "devDependencies": {
         "@types/firefox-webext-browser": "^143.0.0",
