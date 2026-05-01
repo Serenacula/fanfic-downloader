@@ -23,6 +23,7 @@ function htmlPage(title: string, body: string): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="Sere&#x27;s Fic Downloader (https://github.com/Serenacula/fic-downloader)">
 <title>${title.replace(/</g, "&lt;")}</title>
 <style>${HTML_STYLE}</style>
 </head>

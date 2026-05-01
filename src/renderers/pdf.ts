@@ -158,7 +158,7 @@ async function renderSinglePdf(data: FicData, settings: Settings): Promise<Blob>
   const docDefinition: TDocumentDefinitions = {
     content,
     defaultStyle: { font: "Roboto", fontSize: 11, lineHeight: 1.4 },
-    info: { title: data.core.title, author: data.core.author },
+    info: { title: data.core.title, author: data.core.author, creator: "Sere's Fic Downloader (https://github.com/Serenacula/fic-downloader)" },
   };
 
   return new Promise((resolve, reject) => {
