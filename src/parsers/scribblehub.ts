@@ -14,16 +14,26 @@ import {
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
 
-// Matches both series pages (/series/ID/) and chapter pages (/read/ID-)
-const SERIES_URL_PATTERN = /scribblehub\.com\/series\/(\d+)/;
-const CHAPTER_URL_PATTERN = /scribblehub\.com\/read\/(\d+)-/;
-
-function seriesUrl(seriesId: string): string {
-  return `https://www.scribblehub.com/series/${seriesId}/`;
+interface SeriesRef {
+  id: string;
+  seriesPageUrl: string;
 }
 
-function resolveSeriesId(url: string): string | null {
-  return SERIES_URL_PATTERN.exec(url)?.[1] ?? CHAPTER_URL_PATTERN.exec(url)?.[1] ?? null;
+function resolveSeriesRef(url: string): SeriesRef | null {
+  // Series page: use URL as-is — it already contains the title slug ScribbleHub requires
+  const seriesMatch = /scribblehub\.com(\/series\/(\d+)(?:\/[^/?#]*)?\/)/.exec(url);
+  if (seriesMatch) {
+    return { id: seriesMatch[2]!, seriesPageUrl: `https://www.scribblehub.com${seriesMatch[1]}` };
+  }
+  // Chapter URL: extract both ID and title slug to construct the full series URL
+  const chapterMatch = /scribblehub\.com\/read\/(\d+)-([^/]+)\//.exec(url);
+  if (chapterMatch) {
+    return {
+      id: chapterMatch[1]!,
+      seriesPageUrl: `https://www.scribblehub.com/series/${chapterMatch[1]}/${chapterMatch[2]}/`,
+    };
+  }
+  return null;
 }
 
 interface ChapterListing {
@@ -105,9 +115,9 @@ async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
 }
 
 async function parse(url: string, settings: Settings): Promise<FicData> {
-  const seriesId = resolveSeriesId(url);
-  if (!seriesId) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
-  const sourceUrl = seriesUrl(seriesId);
+  const ref = resolveSeriesRef(url);
+  if (!ref) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
+  const { id: seriesId, seriesPageUrl: sourceUrl } = ref;
   console.log(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
 
   const doc = await fetchHtml(sourceUrl);
