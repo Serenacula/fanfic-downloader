@@ -42,7 +42,7 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
         }
         return htmlResponse("scribblehub-toc.html");
       }
-      if (url.includes("/stats")) {
+      if (url.includes("series/2313252") && url.includes("/stats")) {
         return htmlResponse("scribblehub-stats.html");
       }
       if (CHAPTER_URLS.some((u) => url.includes(u.split("scribblehub.com")[1]!))) {
@@ -121,6 +121,33 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
     expect(data.site).toBe("scribblehub");
     expect(data.core.title).toBe("The Last Silence");
     expect(data.core.chapters).toHaveLength(2);
+  });
+});
+
+describe("ScribbleHub parser — static TOC fallback", () => {
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("scribblehub.com/series/2313252") && !url.includes("stats")) {
+        return htmlResponse("scribblehub-series.html");
+      }
+      if (url.includes("admin-ajax.php")) {
+        return new Response("", { status: 500 });
+      }
+      if (url.includes("series/2313252") && url.includes("/stats")) {
+        return htmlResponse("scribblehub-stats.html");
+      }
+      if (CHAPTER_URLS.some((u) => url.includes(u.split("scribblehub.com")[1]!))) {
+        return htmlResponse("scribblehub-chapter.html");
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("falls back to series page TOC when AJAX fails", async () => {
+    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(2);
+    expect(data.core.chapters[0]!.title).toContain("Chapter 01");
+    expect(data.core.chapters[1]!.title).toContain("Chapter 02");
   });
 });
 

@@ -50,17 +50,7 @@ function tableStatValue(doc: Document, label: string): number | null {
   return null;
 }
 
-async function fetchChapterList(seriesId: string): Promise<ChapterListing[]> {
-  // ScribbleHub loads its TOC via WordPress AJAX
-  const response = await enqueue("https://www.scribblehub.com/wp-admin/admin-ajax.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `action=wi_getreleases_long&pagenum=1&mypostid=${seriesId}`,
-  });
-  if (!response.ok) throw new Error(`Failed to fetch ScribbleHub chapter list: HTTP ${response.status}`);
-  const html = await response.text();
-  const doc = new DOMParser().parseFromString(html, "text/html");
-
+function parseListingsFromDoc(doc: Document): ChapterListing[] {
   return Array.from(doc.querySelectorAll("li.toc_w")).flatMap((item) => {
     const link = item.querySelector("a.toc_a");
     const url = link?.getAttribute("href") ?? "";
@@ -69,15 +59,34 @@ async function fetchChapterList(seriesId: string): Promise<ChapterListing[]> {
     const dateEl = item.querySelector("span.fic_date_pub");
     // Use title attribute for absolute dates; text content is often relative ("6 mins ago")
     const dateStr = dateEl?.getAttribute("title") ?? dateEl?.textContent ?? "";
-    const date = parseDate(dateStr);
-    return [{ title, url, date }];
+    return [{ title, url, date: parseDate(dateStr) }];
   });
 }
 
-async function fetchWordCount(slug: string): Promise<number | null> {
-  if (!slug) return null;
+async function fetchChapterList(seriesId: string, seriesDoc: Document): Promise<ChapterListing[]> {
   try {
-    const doc = await fetchHtml(`https://www.scribblehub.com${slug}stats/`);
+    // ScribbleHub loads its TOC via WordPress AJAX
+    const response = await enqueue("https://www.scribblehub.com/wp-admin/admin-ajax.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=wi_getreleases_long&pagenum=1&mypostid=${seriesId}`,
+    });
+    if (response.ok) {
+      const html = await response.text();
+      const tocDoc = new DOMParser().parseFromString(html, "text/html");
+      const listings = parseListingsFromDoc(tocDoc);
+      if (listings.length > 0) return listings;
+    }
+  } catch { }
+  // Fall back to TOC items embedded in the series page itself
+  return parseListingsFromDoc(seriesDoc);
+}
+
+async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
+  if (!canonicalUrl) return null;
+  try {
+    const statsUrl = canonicalUrl.endsWith("/") ? `${canonicalUrl}stats/` : `${canonicalUrl}/stats/`;
+    const doc = await fetchHtml(statsUrl);
     return tableStatValue(doc, "Word Count:");
   } catch {
     return null;
@@ -114,14 +123,12 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const views = statValue(doc, "Views");
   const favorites = statValue(doc, "Favorites");
 
-  // Slug from canonical link, used to construct the stats page URL
+  // Use canonical URL directly to construct stats page URL
   const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "";
-  const slugMatch = /\/series\/\d+(\/[^/?#]+\/)/.exec(canonical);
-  const slug = slugMatch?.[1] ?? "";
 
   const [listings, wordCount] = await Promise.all([
-    fetchChapterList(seriesId),
-    fetchWordCount(slug),
+    fetchChapterList(seriesId, doc),
+    fetchWordCount(canonical),
   ]);
   if (listings.length === 0) throw new Error("No chapters found on ScribbleHub series page");
 
