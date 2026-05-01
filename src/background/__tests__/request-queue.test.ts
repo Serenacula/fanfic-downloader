@@ -30,6 +30,7 @@ beforeEach(() => {
     includeChapterTitles: true,
     confirmationDialogue: false,
     rateLimitMs: 0,
+    maxConcurrentDownloads: 3,
     filenameTemplate: "{title} - {author}",
     storyInfoFields: {},
   });
@@ -55,7 +56,7 @@ describe("request queue", () => {
     const queue = createQueue();
 
     const promise = queue.enqueue("https://example.com/retry");
-    const assertion = expect(promise).rejects.toThrow("Request failed after 3 retries");
+    const assertion = expect(promise).rejects.toThrow("Request failed:");
     for (let i = 0; i < 10; i++) {
       await vi.runAllTimersAsync();
     }
@@ -99,6 +100,7 @@ describe("request queue", () => {
       includeChapterTitles: true,
       confirmationDialogue: false,
       rateLimitMs: 500,
+      maxConcurrentDownloads: 3,
       filenameTemplate: "{title} - {author}",
       storyInfoFields: {},
     });
@@ -121,5 +123,73 @@ describe("request queue", () => {
     expect(dispatchTimes).toHaveLength(2);
     const gap = (dispatchTimes[1] ?? 0) - (dispatchTimes[0] ?? 0);
     expect(gap).toBeGreaterThanOrEqual(500);
+  });
+
+  it("does not retry 404 responses", async () => {
+    const mockFetch = vi.fn().mockResolvedValue(makeResponse(false, 404));
+    vi.stubGlobal("fetch", mockFetch);
+    const queue = createQueue();
+
+    const promise = queue.enqueue("https://example.com/notfound");
+    const assertion = expect(promise).rejects.toThrow("HTTP 404");
+    await vi.runAllTimersAsync();
+    await assertion;
+    expect(mockFetch).toHaveBeenCalledTimes(1); // no retries
+  });
+
+  it("does not retry 403 responses", async () => {
+    const mockFetch = vi.fn().mockResolvedValue(makeResponse(false, 403));
+    vi.stubGlobal("fetch", mockFetch);
+    const queue = createQueue();
+
+    const promise = queue.enqueue("https://example.com/forbidden");
+    const assertion = expect(promise).rejects.toThrow("HTTP 403");
+    await vi.runAllTimersAsync();
+    await assertion;
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries 429 responses with the same retry count as 500", async () => {
+    const mockFetch = vi.fn().mockResolvedValue(makeResponse(false, 429));
+    vi.stubGlobal("fetch", mockFetch);
+    const queue = createQueue();
+
+    const promise = queue.enqueue("https://example.com/ratelimited");
+    const assertion = expect(promise).rejects.toThrow("HTTP 429");
+    for (let i = 0; i < 10; i++) {
+      await vi.runAllTimersAsync();
+    }
+    await assertion;
+    expect(mockFetch).toHaveBeenCalledTimes(4); // initial + 3 retries
+  });
+
+  it("retries on network exception and rejects with 'after N retries' message", async () => {
+    const mockFetch = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.stubGlobal("fetch", mockFetch);
+    const queue = createQueue();
+
+    const promise = queue.enqueue("https://example.com/network-error");
+    const assertion = expect(promise).rejects.toThrow("Request failed after 3 retries");
+    for (let i = 0; i < 10; i++) {
+      await vi.runAllTimersAsync();
+    }
+    await assertion;
+    expect(mockFetch).toHaveBeenCalledTimes(4);
+  });
+
+  it("resolves immediately on a successful response after a transient failure", async () => {
+    const mockFetch = vi.fn()
+      .mockResolvedValueOnce(makeResponse(false, 503))
+      .mockResolvedValueOnce(makeResponse(true));
+    vi.stubGlobal("fetch", mockFetch);
+    const queue = createQueue();
+
+    const promise = queue.enqueue("https://example.com/transient");
+    for (let i = 0; i < 5; i++) {
+      await vi.runAllTimersAsync();
+    }
+    const result = await promise;
+    expect(result.ok).toBe(true);
+    expect(mockFetch).toHaveBeenCalledTimes(2); // fail then succeed
   });
 });
