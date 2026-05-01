@@ -22,13 +22,17 @@ export function createQueue(): RequestQueue {
 
   async function dispatch(entry: QueueEntry): Promise<void> {
     try {
-      const response = await fetch(entry.url, entry.init);
+      // credentials: 'include' ensures browser cookies are sent with cross-origin requests,
+      // which is required for sites with bot/Cloudflare protection.
+      // Extensions with host_permissions bypass CORS, so this is safe.
+      const response = await fetch(entry.url, { credentials: "include", ...entry.init });
       if (!response.ok) {
+        console.warn(`[request-queue] HTTP ${response.status} for ${entry.url} (retry ${entry.retryCount}/${MAX_RETRIES})`);
         if (entry.retryCount < MAX_RETRIES) {
           scheduleRetry(entry);
           return;
         }
-        entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url}`));
+        entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url} (last status: ${response.status})`));
         return;
       }
       entry.resolve(response);
@@ -47,7 +51,7 @@ export function createQueue(): RequestQueue {
   function scheduleRetry(entry: QueueEntry): void {
     const delayMs = (entry.retryCount + 1) * 1000;
     entry.retryCount++;
-    inFlight--;
+    // Do not decrement inFlight here — the dispatch() finally block handles it
     setTimeout(() => {
       pending.unshift(entry);
       void drain();

@@ -65,30 +65,41 @@ function parseListingsFromDoc(doc: Document): ChapterListing[] {
 
 async function fetchChapterList(seriesId: string, seriesDoc: Document): Promise<ChapterListing[]> {
   try {
+    console.log(`[scribblehub] fetching AJAX chapter list for series ${seriesId}`);
     // ScribbleHub loads its TOC via WordPress AJAX
     const response = await enqueue("https://www.scribblehub.com/wp-admin/admin-ajax.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=wi_getreleases_long&pagenum=1&mypostid=${seriesId}`,
     });
+    console.log(`[scribblehub] AJAX response status: ${response.status}`);
     if (response.ok) {
       const html = await response.text();
       const tocDoc = new DOMParser().parseFromString(html, "text/html");
       const listings = parseListingsFromDoc(tocDoc);
+      console.log(`[scribblehub] AJAX returned ${listings.length} chapters`);
       if (listings.length > 0) return listings;
     }
-  } catch { }
+  } catch (error) {
+    console.warn(`[scribblehub] AJAX chapter list failed:`, error);
+  }
   // Fall back to TOC items embedded in the series page itself
-  return parseListingsFromDoc(seriesDoc);
+  const fallbackListings = parseListingsFromDoc(seriesDoc);
+  console.log(`[scribblehub] static HTML fallback: ${fallbackListings.length} chapters`);
+  return fallbackListings;
 }
 
 async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
   if (!canonicalUrl) return null;
+  const statsUrl = canonicalUrl.endsWith("/") ? `${canonicalUrl}stats/` : `${canonicalUrl}/stats/`;
+  console.log(`[scribblehub] fetching word count from ${statsUrl}`);
   try {
-    const statsUrl = canonicalUrl.endsWith("/") ? `${canonicalUrl}stats/` : `${canonicalUrl}/stats/`;
     const doc = await fetchHtml(statsUrl);
-    return tableStatValue(doc, "Word Count:");
-  } catch {
+    const count = tableStatValue(doc, "Word Count:");
+    console.log(`[scribblehub] word count: ${count}`);
+    return count;
+  } catch (error) {
+    console.warn(`[scribblehub] word count fetch failed:`, error);
     return null;
   }
 }
@@ -97,8 +108,10 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const seriesId = resolveSeriesId(url);
   if (!seriesId) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
   const sourceUrl = seriesUrl(seriesId);
+  console.log(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
 
   const doc = await fetchHtml(sourceUrl);
+  console.log(`[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`);
 
   const title = textContent(doc.querySelector(".fic_title")) || "Untitled";
   const author = textContent(doc.querySelector('[property="author"] .auth_name_fic, .auth_name_fic')) || "Unknown";
@@ -136,10 +149,13 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const publishDate = listings[listings.length - 1]?.date ?? null;
   const updateDate = listings[0]?.date ?? null;
 
+  console.log(`[scribblehub] fetching ${listings.length} chapters`);
   const chapters: FicChapter[] = await Promise.all(
     listings.reverse().map(async (listing, index) => {
+      console.log(`[scribblehub] fetching chapter ${index}: ${listing.url}`);
       const chapterDoc = await fetchHtml(listing.url);
       const content = chapterDoc.querySelector("#chp_raw, .chp_raw");
+      console.log(`[scribblehub] chapter ${index} content found: ${!!content}`);
       const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
       return { index, title: listing.title, htmlContent };
     }),
