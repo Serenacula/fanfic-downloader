@@ -108,8 +108,34 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
     expect(data.core.publishDate!.getFullYear()).toBe(2026);
   });
 
-  it("fetches word count from stats page", async () => {
+  it("fetches word count from stats page table", async () => {
     const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
-    expect(data.core.wordCount).toBe(2847);
+    expect(data.core.wordCount).toBe(7705);
+  });
+
+  it("resolves correctly when entered from a chapter URL", async () => {
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/read/2313252-the-last-silence/chapter/2313268/",
+      DEFAULT_SETTINGS,
+    );
+    expect(data.site).toBe("scribblehub");
+    expect(data.core.title).toBe("The Last Silence");
+    expect(data.core.chapters).toHaveLength(2);
+  });
+});
+
+describe("ScribbleHub parser — URL detection", () => {
+  it("matches series page URLs", () => {
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/series/2313252/the-last-silence/")).toBe(true);
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/series/2313252/")).toBe(true);
+  });
+
+  it("matches chapter reader URLs", () => {
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/read/2313252-the-last-silence/chapter/2314736/")).toBe(true);
+  });
+
+  it("does not match profile or other pages", () => {
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/profile/259832/imadchelloufi/")).toBe(false);
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/")).toBe(false);
   });
 });

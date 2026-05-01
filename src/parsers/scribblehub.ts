@@ -14,10 +14,16 @@ import {
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
 
-const SERIES_PATTERN = /scribblehub\.com\/series\/(\d+)\//;
+// Matches both series pages (/series/ID/) and chapter pages (/read/ID-)
+const SERIES_URL_PATTERN = /scribblehub\.com\/series\/(\d+)/;
+const CHAPTER_URL_PATTERN = /scribblehub\.com\/read\/(\d+)-/;
 
 function seriesUrl(seriesId: string): string {
   return `https://www.scribblehub.com/series/${seriesId}/`;
+}
+
+function resolveSeriesId(url: string): string | null {
+  return SERIES_URL_PATTERN.exec(url)?.[1] ?? CHAPTER_URL_PATTERN.exec(url)?.[1] ?? null;
 }
 
 interface ChapterListing {
@@ -30,6 +36,15 @@ function statValue(doc: Document, label: string): number | null {
   for (const item of Array.from(doc.querySelectorAll(".st_item"))) {
     if (item.querySelector(".mb_stat")?.textContent?.trim() === label) {
       return parseCount(item.textContent ?? "");
+    }
+  }
+  return null;
+}
+
+function tableStatValue(doc: Document, label: string): number | null {
+  for (const th of Array.from(doc.querySelectorAll("th"))) {
+    if (th.textContent?.trim() === label) {
+      return parseCount(th.nextElementSibling?.textContent ?? "");
     }
   }
   return null;
@@ -52,7 +67,7 @@ async function fetchChapterList(seriesId: string): Promise<ChapterListing[]> {
     if (!url) return [];
     const title = link?.textContent?.trim() ?? "Untitled";
     const dateEl = item.querySelector("span.fic_date_pub");
-    // Use title attribute for absolute dates; text is often relative ("6 mins ago")
+    // Use title attribute for absolute dates; text content is often relative ("6 mins ago")
     const dateStr = dateEl?.getAttribute("title") ?? dateEl?.textContent ?? "";
     const date = parseDate(dateStr);
     return [{ title, url, date }];
@@ -63,16 +78,15 @@ async function fetchWordCount(slug: string): Promise<number | null> {
   if (!slug) return null;
   try {
     const doc = await fetchHtml(`https://www.scribblehub.com${slug}stats/`);
-    return statValue(doc, "Words");
+    return tableStatValue(doc, "Word Count:");
   } catch {
     return null;
   }
 }
 
 async function parse(url: string, settings: Settings): Promise<FicData> {
-  const match = SERIES_PATTERN.exec(url);
-  if (!match) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
-  const seriesId = match[1]!;
+  const seriesId = resolveSeriesId(url);
+  if (!seriesId) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
   const sourceUrl = seriesUrl(seriesId);
 
   const doc = await fetchHtml(sourceUrl);
@@ -157,6 +171,6 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 }
 
 export const scribbleHubParser: Parser = {
-  pattern: SERIES_PATTERN,
+  pattern: /scribblehub\.com\/(?:series\/\d+|read\/\d+-)/,
   parse,
 };
