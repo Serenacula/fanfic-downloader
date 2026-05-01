@@ -27,7 +27,9 @@ EPUB, HTML, Markdown, plain text, PDF, DOCX
 
 ## Installation
 
-Coming soon on [Firefox Add-ons (AMO)](https://addons.mozilla.org).
+Coming soon on [Firefox Addons](https://addons.mozilla.org/en-US/firefox/addon/sere-s-fanfic-downloader/).
+
+To install temporarily, you can use the [the release](https://github.com/Serenacula/fanfic-downloader/releases/latest). Install it via `about:debugging` → "Load Temporary Add-on" → click the file.
 
 ## Development
 
