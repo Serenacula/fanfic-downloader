@@ -76,7 +76,7 @@
 **Question:** `0003-out-of-scope`
 **Decision:** In-browser reader, cloud sync, chapter-level downloads, cross-browser, translation are all out of scope. Images and story info text are in scope with configurable settings.
 **Rationale:** User confirmed each item explicitly.
-**Affects:** Settings node (image toggle, story info toggle); fic-downloader-expanded (calibre/translation maybe in scope there).
+**Affects:** Settings node (image toggle, story info toggle); fanfic-downloader-expanded (calibre/translation maybe in scope there).
 
 ---
 
@@ -86,7 +86,7 @@
 **Question:** `0002-success-criteria`
 **Decision:** Initial = AO3 + FFN + ePub. Feature-complete = 9 sites + 8 formats (ePub, PDF, MOBI, HTML, Markdown, DOCX, TXT, ODT). Site list may flex.
 **Rationale:** User specified targets explicitly; acknowledged anti-scrape unknowns may force adjustments.
-**Affects:** `fic-downloader` site-support nodes, format conversion node.
+**Affects:** `fanfic-downloader` site-support nodes, format conversion node.
 
 ---
 
@@ -114,9 +114,9 @@
 
 **Node:** `root-7f3a`
 **Question:** (stated by user in project description)
-**Decision:** Rust for the native messaging host in fic-downloader-expanded.
+**Decision:** Rust for the native messaging host in fanfic-downloader-expanded.
 **Rationale:** User explicitly chose Rust; needed to bypass Firefox filesystem sandbox.
-**Affects:** `fic-downloader-expanded`, native host node (TBD).
+**Affects:** `fanfic-downloader-expanded`, native host node (TBD).
 
 ---
 

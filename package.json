@@ -1,9 +1,9 @@
 {
-    "name": "fic-downloader",
+    "name": "fanfic-downloader",
     "version": "1.0.0",
     "description": "A Firefox plugin for downloading fan fiction from popular sites.",
     "scripts": {
-        "build": "vite build && cd dist && zip -r fic-downloader.xpi .",
+        "build": "vite build && cd dist && zip -r fanfic-downloader.xpi .",
         "dev": "vite build --watch",
         "test": "vitest run"
     },

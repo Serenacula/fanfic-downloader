@@ -24,15 +24,17 @@ resolved: 2026-04-27
 
 **Initial version (done enough to use):** AO3 and FFN supported; download to ePub.
 
-**Feature complete (fic-downloader):**
+**Feature complete (fanfic-downloader):**
+
 - Sites: AO3, FFN, Royal Road, Tapas, Scribble Hub, Wattpad, SpaceBattles, Sufficient Velocity, QuestionableQuesting
 - Formats: ePub, PDF, HTML, Markdown, DOCX, TXT (MOBI/AZW3 dropped — no viable browser-extension generator; ODT dropped — hand-roll effort not justified until someone asks)
 - User may adjust site targets based on real-world difficulty (e.g. anti-scrape measures)
 
 **Future upgrade site priority order:**
+
 1. AO3, 2. Royal Road, 3. FFN, 4. Tapas (novels), 5. Scribble Hub, 6. Wattpad,
-7. SpaceBattles, 8. Sufficient Velocity, 9. QuestionableQuesting, 10. Webnovel,
-11. Honeyfeed, 12. Inkitt, 13. Quotev
+2. SpaceBattles, 8. Sufficient Velocity, 9. QuestionableQuesting, 10. Webnovel,
+3. Honeyfeed, 12. Inkitt, 13. Quotev
 
 ## Rationale
 

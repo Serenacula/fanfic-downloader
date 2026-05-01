@@ -1,51 +1,56 @@
-export {};
+export {}
 
-import { getSettings, saveSettings, DEFAULT_SETTINGS, type Settings } from "../shared/settings.js";
+import {
+    getSettings,
+    saveSettings,
+    DEFAULT_SETTINGS,
+    type Settings,
+} from "../shared/settings.js"
 
 const STORY_INFO_FIELDS: Array<{ key: string; label: string }> = [
-  { key: "title", label: "Title" },
-  { key: "author", label: "Author" },
-  { key: "summary", label: "Summary" },
-  { key: "status", label: "Status" },
-  { key: "wordCount", label: "Word count" },
-  { key: "publishDate", label: "Published date" },
-  { key: "updateDate", label: "Updated date" },
-  { key: "rating", label: "Rating" },
-  { key: "ratingCount", label: "Rating count" },
-  { key: "language", label: "Language" },
-  { key: "fandoms", label: "Fandoms" },
-  { key: "warnings", label: "Warnings" },
-  { key: "relationships", label: "Relationships" },
-  { key: "characters", label: "Characters" },
-  { key: "tags", label: "Tags" },
-  { key: "genres", label: "Genres" },
-  { key: "series", label: "Series" },
-  { key: "followers", label: "Followers" },
-  { key: "favorites", label: "Favourites" },
-  { key: "views", label: "Views" },
-  { key: "kudos", label: "Kudos" },
-  { key: "bookmarks", label: "Bookmarks" },
-  { key: "votes", label: "Votes" },
-  { key: "subForum", label: "Forum section" },
-  { key: "sourceUrl", label: "Source URL" },
-];
+    { key: "title", label: "Title" },
+    { key: "author", label: "Author" },
+    { key: "summary", label: "Summary" },
+    { key: "status", label: "Status" },
+    { key: "wordCount", label: "Word count" },
+    { key: "publishDate", label: "Published date" },
+    { key: "updateDate", label: "Updated date" },
+    { key: "rating", label: "Rating" },
+    { key: "ratingCount", label: "Rating count" },
+    { key: "language", label: "Language" },
+    { key: "fandoms", label: "Fandoms" },
+    { key: "warnings", label: "Warnings" },
+    { key: "relationships", label: "Relationships" },
+    { key: "characters", label: "Characters" },
+    { key: "tags", label: "Tags" },
+    { key: "genres", label: "Genres" },
+    { key: "series", label: "Series" },
+    { key: "followers", label: "Followers" },
+    { key: "favorites", label: "Favourites" },
+    { key: "views", label: "Views" },
+    { key: "kudos", label: "Kudos" },
+    { key: "bookmarks", label: "Bookmarks" },
+    { key: "votes", label: "Votes" },
+    { key: "subForum", label: "Forum section" },
+    { key: "sourceUrl", label: "Source URL" },
+]
 
 const FORMATS: Array<{ value: Settings["format"]; label: string }> = [
-  { value: "epub", label: "ePub (.epub)" },
-  { value: "html", label: "HTML (.html)" },
-  { value: "markdown", label: "Markdown (.md)" },
-  { value: "txt", label: "Plain Text (.txt)" },
-  { value: "pdf", label: "PDF (.pdf)" },
-  { value: "docx", label: "Word Document (.docx)" },
-];
+    { value: "epub", label: "ePub (.epub)" },
+    { value: "html", label: "HTML (.html)" },
+    { value: "markdown", label: "Markdown (.md)" },
+    { value: "txt", label: "Plain Text (.txt)" },
+    { value: "pdf", label: "PDF (.pdf)" },
+    { value: "docx", label: "Word Document (.docx)" },
+]
 
 function render(settings: Settings): void {
-  const app = document.getElementById("app");
-  if (!app) return;
+    const app = document.getElementById("app")
+    if (!app) return
 
-  app.innerHTML = `
+    app.innerHTML = `
     <div class="settings">
-      <h1>Fic Downloader — Settings</h1>
+      <h1>Sere's Fanfic Downloader — Settings</h1>
 
       <section>
         <h2>Download Format</h2>
@@ -64,12 +69,14 @@ function render(settings: Settings): void {
         ${toggle("includeCoverPage", "Include story info page", settings.includeCoverPage)}
         <div id="story-info-fields" class="${settings.includeCoverPage ? "" : "hidden"}" style="margin: 0 0 4px 24px">
           <p class="note" style="margin-bottom:6px">Fields to show on story info page:</p>
-          ${STORY_INFO_FIELDS.map(({ key, label }) => `
+          ${STORY_INFO_FIELDS.map(
+              ({ key, label }) => `
             <label class="toggle-row">
               <input type="checkbox" data-story-field="${key}" ${settings.storyInfoFields[key] !== false ? "checked" : ""} />
               <span>${label}</span>
             </label>
-          `).join("")}
+          `,
+          ).join("")}
         </div>
         ${toggle("includeToc", "Include table of contents", settings.includeToc)}
         ${toggle("includeChapterTitles", "Include chapter titles", settings.includeChapterTitles)}
@@ -112,92 +119,142 @@ function render(settings: Settings): void {
         <button id="btn-reset" class="btn-secondary">Reset to defaults</button>
       </div>
     </div>
-  `;
+  `
 
-  wireEvents();
+    wireEvents()
 }
 
 function toggle(key: keyof Settings, label: string, value: boolean): string {
-  return `
+    return `
     <label class="toggle-row">
       <input type="checkbox" data-key="${key}" ${value ? "checked" : ""} />
       <span>${label}</span>
     </label>
-  `;
+  `
 }
 
 function escAttr(text: string): string {
-  return text.replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    return text.replace(/"/g, "&quot;").replace(/</g, "&lt;")
 }
 
-let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+let saveTimeout: ReturnType<typeof setTimeout> | null = null
 
 function wireEvents(): void {
-  async function save(): Promise<void> {
-    const format = (document.getElementById("format") as HTMLSelectElement).value as Settings["format"];
-    const rateLimitMs = parseInt((document.getElementById("rateLimitMs") as HTMLInputElement).value, 10);
-    const maxConcurrentDownloads = parseInt((document.getElementById("maxConcurrentDownloads") as HTMLInputElement).value, 10);
-    const filenameTemplate = (document.getElementById("filenameTemplate") as HTMLInputElement).value;
+    async function save(): Promise<void> {
+        const format = (document.getElementById("format") as HTMLSelectElement)
+            .value as Settings["format"]
+        const rateLimitMs = parseInt(
+            (document.getElementById("rateLimitMs") as HTMLInputElement).value,
+            10,
+        )
+        const maxConcurrentDownloads = parseInt(
+            (
+                document.getElementById(
+                    "maxConcurrentDownloads",
+                ) as HTMLInputElement
+            ).value,
+            10,
+        )
+        const filenameTemplate = (
+            document.getElementById("filenameTemplate") as HTMLInputElement
+        ).value
 
-    const concurrentSymbol = document.getElementById("concurrent-symbol");
-    if (concurrentSymbol) concurrentSymbol.textContent = maxConcurrentDownloads === 0 ? "∞" : "";
+        const concurrentSymbol = document.getElementById("concurrent-symbol")
+        if (concurrentSymbol)
+            concurrentSymbol.textContent =
+                maxConcurrentDownloads === 0 ? "∞" : ""
 
-    const checkboxPatch: Partial<Settings> = {};
-    for (const checkbox of Array.from(document.querySelectorAll<HTMLInputElement>("input[data-key]"))) {
-      const key = checkbox.dataset["key"] as keyof Settings;
-      (checkboxPatch as Record<string, unknown>)[key] = checkbox.checked;
+        const checkboxPatch: Partial<Settings> = {}
+        for (const checkbox of Array.from(
+            document.querySelectorAll<HTMLInputElement>("input[data-key]"),
+        )) {
+            const key = checkbox.dataset["key"] as keyof Settings
+            ;(checkboxPatch as Record<string, unknown>)[key] = checkbox.checked
+        }
+
+        const storyInfoFields: Partial<Record<string, boolean>> = {}
+        for (const checkbox of Array.from(
+            document.querySelectorAll<HTMLInputElement>(
+                "input[data-story-field]",
+            ),
+        )) {
+            if (!checkbox.checked)
+                storyInfoFields[checkbox.dataset["storyField"]!] = false
+        }
+
+        await saveSettings({
+            format,
+            rateLimitMs: isNaN(rateLimitMs)
+                ? DEFAULT_SETTINGS.rateLimitMs
+                : rateLimitMs,
+            maxConcurrentDownloads: isNaN(maxConcurrentDownloads)
+                ? DEFAULT_SETTINGS.maxConcurrentDownloads
+                : Math.max(0, maxConcurrentDownloads),
+            filenameTemplate:
+                filenameTemplate || DEFAULT_SETTINGS.filenameTemplate,
+            storyInfoFields,
+            ...checkboxPatch,
+        })
+
+        const coverPageChecked =
+            document.querySelector<HTMLInputElement>(
+                'input[data-key="includeCoverPage"]',
+            )?.checked ?? false
+        document
+            .getElementById("story-info-fields")
+            ?.classList.toggle("hidden", !coverPageChecked)
+
+        const statusEl = document.getElementById("save-status")
+        if (statusEl) {
+            statusEl.textContent = "Saved"
+            if (saveTimeout) clearTimeout(saveTimeout)
+            saveTimeout = setTimeout(() => {
+                statusEl.textContent = ""
+            }, 1500)
+        }
+
+        // Update ePub-related UI
+        const isEpub = format === "epub"
+        document
+            .getElementById("chapter-split-note")
+            ?.classList.toggle("hidden", !isEpub)
+        document
+            .getElementById("split-epub-note")
+            ?.classList.toggle("hidden", !isEpub)
+        const splitCheckbox = document.querySelector<HTMLInputElement>(
+            'input[data-key="chapterSplit"]',
+        )
+        if (splitCheckbox) {
+            splitCheckbox.disabled = isEpub
+            splitCheckbox
+                .closest("div")
+                ?.classList.toggle("disabled-row", isEpub)
+        }
     }
 
-    const storyInfoFields: Partial<Record<string, boolean>> = {};
-    for (const checkbox of Array.from(document.querySelectorAll<HTMLInputElement>("input[data-story-field]"))) {
-      if (!checkbox.checked) storyInfoFields[checkbox.dataset["storyField"]!] = false;
-    }
+    document.addEventListener("change", () => void save())
+    document
+        .getElementById("filenameTemplate")
+        ?.addEventListener("input", () => void save())
+    document
+        .getElementById("rateLimitMs")
+        ?.addEventListener("input", () => void save())
+    document
+        .getElementById("maxConcurrentDownloads")
+        ?.addEventListener("input", () => void save())
 
-    await saveSettings({
-      format,
-      rateLimitMs: isNaN(rateLimitMs) ? DEFAULT_SETTINGS.rateLimitMs : rateLimitMs,
-      maxConcurrentDownloads: isNaN(maxConcurrentDownloads) ? DEFAULT_SETTINGS.maxConcurrentDownloads : Math.max(0, maxConcurrentDownloads),
-      filenameTemplate: filenameTemplate || DEFAULT_SETTINGS.filenameTemplate,
-      storyInfoFields,
-      ...checkboxPatch,
-    });
-
-    const coverPageChecked = (document.querySelector<HTMLInputElement>('input[data-key="includeCoverPage"]'))?.checked ?? false;
-    document.getElementById("story-info-fields")?.classList.toggle("hidden", !coverPageChecked);
-
-    const statusEl = document.getElementById("save-status");
-    if (statusEl) {
-      statusEl.textContent = "Saved";
-      if (saveTimeout) clearTimeout(saveTimeout);
-      saveTimeout = setTimeout(() => { statusEl.textContent = ""; }, 1500);
-    }
-
-    // Update ePub-related UI
-    const isEpub = format === "epub";
-    document.getElementById("chapter-split-note")?.classList.toggle("hidden", !isEpub);
-    document.getElementById("split-epub-note")?.classList.toggle("hidden", !isEpub);
-    const splitCheckbox = document.querySelector<HTMLInputElement>('input[data-key="chapterSplit"]');
-    if (splitCheckbox) {
-      splitCheckbox.disabled = isEpub;
-      splitCheckbox.closest("div")?.classList.toggle("disabled-row", isEpub);
-    }
-  }
-
-  document.addEventListener("change", () => void save());
-  document.getElementById("filenameTemplate")?.addEventListener("input", () => void save());
-  document.getElementById("rateLimitMs")?.addEventListener("input", () => void save());
-  document.getElementById("maxConcurrentDownloads")?.addEventListener("input", () => void save());
-
-  document.getElementById("btn-reset")?.addEventListener("click", async () => {
-    await saveSettings({ ...DEFAULT_SETTINGS });
-    const current = await getSettings();
-    render(current);
-  });
+    document
+        .getElementById("btn-reset")
+        ?.addEventListener("click", async () => {
+            await saveSettings({ ...DEFAULT_SETTINGS })
+            const current = await getSettings()
+            render(current)
+        })
 }
 
 async function init(): Promise<void> {
-  const settings = await getSettings();
-  render(settings);
+    const settings = await getSettings()
+    render(settings)
 }
 
-void init();
+void init()

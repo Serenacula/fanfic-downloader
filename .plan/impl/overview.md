@@ -4,11 +4,11 @@ updated: 2026-04-27
 spec_root: root-7f3a
 ---
 
-# Implementation Plan: fic-downloader
+# Implementation Plan: fanfic-downloader
 
 ## Approach
 
-We build the `fic-downloader` Firefox plugin in layers, from the inside out: shared types first, then services (settings, request queue), then parsers and renderers as parallel tracks, then the orchestrator that ties them together, then the UI on top.
+We build the `fanfic-downloader` Firefox plugin in layers, from the inside out: shared types first, then services (settings, request queue), then parsers and renderers as parallel tracks, then the orchestrator that ties them together, then the UI on top.
 
 The initial build targets AO3 + FFN + ePub only — the minimum viable product. Each subsequent site and format is a self-contained addition that slots into the existing architecture without changing the core. Forum sites (SB/SV/QQ) and the remaining formats are planned work items that can be tackled in any order after the initial build is proven.
 

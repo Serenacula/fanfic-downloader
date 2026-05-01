@@ -5,7 +5,7 @@
   <rect x="3.3814e-7" width="135.47" height="135.47" fill="#4d255b"/>
  </g>
  <g transform="translate(.20013 9.2061)">
-  <g fill="#ffe508">
+  <g transform="matrix(1.131 0 0 1.1432 -8.5482 -9.8379)" fill="#ffe508">
    <g transform="matrix(1.4515 0 0 .94209 -15.226 -4.4466)">
     <path x="17.813271" y="45.831707" width="39.022999" height="58.235237" d="m17.813 45.832h39.023v58.235h-39.023zm78.048 0h-39.023v58.235h39.023z" stroke="#000" stroke-linecap="round" stroke-width="4.2333"/>
     <g stroke-linecap="square">

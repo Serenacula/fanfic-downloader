@@ -1,6 +1,6 @@
 ---
 id: settings-8d4b
-parent: fic-downloader-3a8f
+parent: fanfic-downloader-3a8f
 slug: settings
 status: planning
 atomic: false
@@ -18,6 +18,7 @@ The options page and preference storage layer. Exposes all user-configurable beh
 ## Scope
 
 **In scope:**
+
 - Output format selection (ePub, PDF, HTML, Markdown, DOCX, TXT)
 - Include inline images toggle (greyed out / note for TXT — deferred)
 - Include cover image toggle (independent of inline images)
@@ -34,13 +35,14 @@ The options page and preference storage layer. Exposes all user-configurable beh
 - "Reset to defaults" button
 
 **Out of scope:**
-- Custom download folder (fic-downloader-expanded)
-- Auto-download triggers (fic-downloader-expanded)
+
+- Custom download folder (fanfic-downloader-expanded)
+- Auto-download triggers (fanfic-downloader-expanded)
 
 ## Decisions
 
 - **Settings page location** (from `0001-settings-page-location`): Full tab via `browser.runtime.openOptionsPage()`. Popup slot is used by download manager.
-- **Storage backend** (from `0002-storage-backend`): `browser.storage.local`. Device-specific settings, consistent with fic-downloader-expanded (folder paths differ per device). Also keeps both plugins consistent if they're ever merged.
+- **Storage backend** (from `0002-storage-backend`): `browser.storage.local`. Device-specific settings, consistent with fanfic-downloader-expanded (folder paths differ per device). Also keeps both plugins consistent if they're ever merged.
 
 ## Children
 
@@ -56,4 +58,4 @@ _None._
 
 ## Notes
 
-_User is considering potentially merging fic-downloader and fic-downloader-expanded into a single plugin. Storage and settings architecture should remain consistent between the two._
+_User is considering potentially merging fanfic-downloader and fanfic-downloader-expanded into a single plugin. Storage and settings architecture should remain consistent between the two._

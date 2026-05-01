@@ -1,6 +1,6 @@
 ---
 id: download-flow-2e6c
-parent: fic-downloader-3a8f
+parent: fanfic-downloader-3a8f
 slug: download-flow
 status: planning
 atomic: false
@@ -18,6 +18,7 @@ The end-to-end user interaction for downloading a fic: detecting that the user i
 ## Scope
 
 **In scope:**
+
 - Download manager popup (browser action): active/recent download list, "Download" button, "Download by URL" button
 - Per-download progress display (e.g. "Fetching chapter 12/50", complete, failed)
 - Pre-download confirmation dialogue as inline popup screen (when enabled in settings)
@@ -25,11 +26,12 @@ The end-to-end user interaction for downloading a fic: detecting that the user i
 - Multiple concurrent downloads
 - Error handling: user-facing messages for extraction failures, unsupported sites/URLs, network errors
 - Handing finished file to `browser.downloads.download()`
-- Firefox's default download folder (no custom folder — that's fic-downloader-expanded)
+- Firefox's default download folder (no custom folder — that's fanfic-downloader-expanded)
 
 **Out of scope:**
-- Custom folder routing (fic-downloader-expanded)
-- Auto-download triggers (fic-downloader-expanded)
+
+- Custom folder routing (fanfic-downloader-expanded)
+- Auto-download triggers (fanfic-downloader-expanded)
 - Actual extraction and format logic (content-extraction, format-generation)
 
 ## Decisions

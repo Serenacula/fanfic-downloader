@@ -7,8 +7,6 @@ atomic: false
 depends_on: []
 created: 2026-04-27
 updated: 2026-04-27
-
-
 ---
 
 # Root — Fic Downloader Suite
@@ -20,13 +18,15 @@ Top-level node covering the full project: two Firefox WebExtension plugins and a
 ## Scope
 
 **In scope:**
-- `fic-downloader/` Firefox plugin — manual downloads from AO3, FFN, RoyalRoads, Tapas, and similar sites
-- `fic-downloader-expanded/` Firefox plugin — automated downloads (on bookmark, kudos, view), custom folder routing, native host integration
+
+- `fanfic-downloader/` Firefox plugin — manual downloads from AO3, FFN, RoyalRoads, Tapas, and similar sites
+- `fanfic-downloader-expanded/` Firefox plugin — automated downloads (on bookmark, kudos, view), custom folder routing, native host integration
 - `shared/` — opportunistic shared code between the two plugins
 - Rust native messaging host for filesystem access beyond Firefox sandboxing
 - README.md and GitHub repository setup
 
 **Out of scope:**
+
 - TBD (question 0003)
 
 ## Decisions
@@ -44,8 +44,8 @@ Top-level node covering the full project: two Firefox WebExtension plugins and a
 
 ## Children
 
-- `fic-downloader-3a8f` — The basic fic-downloader Firefox plugin (planning in progress)
-- `fic-downloader-expanded` — Future planning session; not in scope now.
+- `fanfic-downloader-3a8f` — The basic fanfic-downloader Firefox plugin (planning in progress)
+- `fanfic-downloader-expanded` — Future planning session; not in scope now.
 
 ## Open threads
 
@@ -61,7 +61,7 @@ _None — all root questions answered or deferred._
 
 ## Notes
 
-- GitHub repo: https://github.com/Serenacula/fic-downloader
-- **Planning scope**: This planning session covers `fic-downloader` only. `fic-downloader-expanded` is noted for future planning.
+- GitHub repo: https://github.com/Serenacula/fanfic-downloader
+- **Planning scope**: This planning session covers `fanfic-downloader` only. `fanfic-downloader-expanded` is noted for future planning.
 - The expanded plugin is partially independent of Firefox (the Rust native host runs outside the browser).
-- **Planned future project**: `fic-downloader-cli` — a CLI tool that downloads fics to a chosen folder, defaulting to the current directory. Noted in README. Not part of this planning session.
+- **Planned future project**: `fanfic-downloader-cli` — a CLI tool that downloads fics to a chosen folder, defaulting to the current directory. Noted in README. Not part of this planning session.

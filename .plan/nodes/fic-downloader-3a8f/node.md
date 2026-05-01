@@ -1,7 +1,7 @@
 ---
-id: fic-downloader-3a8f
+id: fanfic-downloader-3a8f
 parent: root-7f3a
-slug: fic-downloader
+slug: fanfic-downloader
 status: planning
 atomic: false
 depends_on: []
@@ -9,7 +9,7 @@ created: 2026-04-27
 updated: 2026-04-27
 ---
 
-# fic-downloader (plugin)
+# fanfic-downloader (plugin)
 
 ## Purpose
 
@@ -18,6 +18,7 @@ The basic Firefox plugin. Detects fic pages, lets users trigger a download, extr
 ## Scope
 
 **In scope:**
+
 - Manual download triggered by the user on a fic page
 - Site support: AO3, FFN (initial); full feature-complete site list per root decisions
 - All 8 output formats
@@ -27,8 +28,9 @@ The basic Firefox plugin. Detects fic pages, lets users trigger a download, extr
 - Story info text (with field configuration)
 
 **Out of scope:**
-- Automation / auto-download (fic-downloader-expanded)
-- Native host / custom folder (fic-downloader-expanded)
+
+- Automation / auto-download (fanfic-downloader-expanded)
+- Native host / custom folder (fanfic-downloader-expanded)
 - In-browser reader, cloud sync, cross-browser, translation
 
 ## Decisions
@@ -53,4 +55,4 @@ _None._
 
 ## Notes
 
-_Planning this plugin first; fic-downloader-expanded is a separate future planning session._
+_Planning this plugin first; fanfic-downloader-expanded is a separate future planning session._

@@ -7,8 +7,8 @@ created: 2026-04-27
 
 Two Firefox plugins for downloading fan fiction from sites like AO3, FFN, RoyalRoads, and Tapas.
 
-**fic-downloader**: A standard plugin for manually downloading fics in a configurable format (ePub, PDF, etc.).
+**fanfic-downloader**: A standard plugin for manually downloading fics in a configurable format (ePub, PDF, etc.).
 
-**fic-downloader-expanded**: An extended plugin with automation features — auto-download on bookmark, kudos, or view (history-saver mode); saves to custom folders per function; supported by a Rust native host client to bypass Firefox's file-system security restrictions.
+**fanfic-downloader-expanded**: An extended plugin with automation features — auto-download on bookmark, kudos, or view (history-saver mode); saves to custom folders per function; supported by a Rust native host client to bypass Firefox's file-system security restrictions.
 
 Shared functionality lives in a `shared/` folder where practical; sharing is opportunistic, not a design constraint.

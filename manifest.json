@@ -1,12 +1,12 @@
 {
     "manifest_version": 3,
-    "name": "Sere's Fic Downloader",
+    "name": "Sere's Fanfic Downloader",
     "version": "1.0.0",
-    "description": "Download fan fiction from AO3, FFN, and more in your preferred format.",
+    "description": "Download fanfiction from AO3, FFN, and more in your preferred format.",
 
     "browser_specific_settings": {
         "gecko": {
-            "id": "fic-downloader@serenacula",
+            "id": "fanfic-downloader@serenacula",
             "data_collection_permissions": {
                 "required": ["none"]
             }
@@ -34,7 +34,7 @@
 
     "action": {
         "default_popup": "src/popup/index.html",
-        "default_title": "Fic Downloader",
+        "default_title": "Sere's Fanfic Downloader",
         "default_icon": {
             "16": "icons/icon.svg",
             "32": "icons/icon.svg",

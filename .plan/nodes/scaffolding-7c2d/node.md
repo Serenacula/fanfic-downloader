@@ -1,6 +1,6 @@
 ---
 id: scaffolding-7c2d
-parent: fic-downloader-3a8f
+parent: fanfic-downloader-3a8f
 slug: scaffolding
 status: planning
 atomic: false
@@ -18,6 +18,7 @@ Everything that makes the plugin a valid, installable Firefox WebExtension: mani
 ## Scope
 
 **In scope:**
+
 - `manifest.json` (Manifest V3) — extension metadata, permissions, content script patterns
 - Background service worker / background script
 - Content script injection strategy (which pages, when)
@@ -25,6 +26,7 @@ Everything that makes the plugin a valid, installable Firefox WebExtension: mani
 - AMO compliance: no remote code execution, permission justifications, privacy policy stub
 
 **Out of scope:**
+
 - Actual content script logic (content-extraction, download-flow)
 - UI implementation (download-flow, settings)
 

@@ -1,4 +1,4 @@
-# Sere's Fic Downloader
+# Sere's Fanfic Downloader
 
 `VERSION: 1.0.0`
 

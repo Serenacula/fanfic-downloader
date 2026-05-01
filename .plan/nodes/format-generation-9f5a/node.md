@@ -1,6 +1,6 @@
 ---
 id: format-generation-9f5a
-parent: fic-downloader-3a8f
+parent: fanfic-downloader-3a8f
 slug: format-generation
 status: planning
 atomic: false
@@ -18,6 +18,7 @@ Takes the normalised fic data from content-extraction and produces a downloadabl
 ## Scope
 
 **In scope:**
+
 - ePub generation
 - PDF generation
 - HTML generation (single file)
@@ -31,6 +32,7 @@ Takes the normalised fic data from content-extraction and produces a downloadabl
 - TXT image handling (deferred, question 0006)
 
 **Out of scope:**
+
 - Content extraction (content-extraction)
 - Format selection UI (settings / download-flow)
 

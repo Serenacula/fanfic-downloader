@@ -1,6 +1,6 @@
 ---
 id: content-extraction-4b1e
-parent: fic-downloader-3a8f
+parent: fanfic-downloader-3a8f
 slug: content-extraction
 status: planning
 atomic: false
@@ -18,6 +18,7 @@ Site-specific parsers that extract structured fic data from a page: title, autho
 ## Scope
 
 **In scope:**
+
 - Normalised internal fic data model (the shape that all parsers must produce)
 - Per-site parsers: AO3, FFN (initial); RR, Tapas, SH, Wattpad, SB, SV, QQ (feature-complete)
 - Multi-chapter navigation (fetching all chapters, not just the current page)
@@ -26,6 +27,7 @@ Site-specific parsers that extract structured fic data from a page: title, autho
 - Site detection (which parser to activate on a given page)
 
 **Out of scope:**
+
 - Format conversion (format-generation)
 - Anti-scrape handling strategy (deferred, question 0004)
 

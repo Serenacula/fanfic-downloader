@@ -26,21 +26,25 @@ Defining hard boundaries prevents scope creep and lets us drop questions early.
 
 ## Answer
 
-**Out of scope for fic-downloader (and no plans):**
+**Out of scope for fanfic-downloader (and no plans):**
+
 - In-browser reader
 - Cloud sync (Dropbox, Google Drive, etc.)
 - Chapter-level granular downloads
 - Cross-browser support — Firefox only
 - Translation
 
-**Out of scope for fic-downloader, possibly in scope for fic-downloader-expanded:**
+**Out of scope for fanfic-downloader, possibly in scope for fanfic-downloader-expanded:**
+
 - Calibre / reading app integration
 - Translation (noted as a maybe for expanded)
 
 **Needs clarification (open question 0007):**
+
 - Fic metadata editing — scope TBD
 
 **In scope (confirmed via this conversation):**
+
 - Images — included in downloads; settings option to disable; TXT handling deferred (question 0006)
 - Story info text — included; settings option to configure what's included
 
