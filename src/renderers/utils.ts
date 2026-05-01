@@ -1,5 +1,6 @@
 import type { FicData } from "../shared/types.js";
 import { strToU8, zip as fflateZip } from "fflate";
+import { enqueue } from "../background/request-queue.js";
 
 export function htmlToText(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
@@ -77,15 +78,22 @@ export async function fetchCoverImage(
 ): Promise<{ data: Uint8Array; extension: string } | null> {
   if (!coverImageUrl) return null;
   try {
-    const response = await fetch(coverImageUrl);
+    const response = await enqueue(coverImageUrl);
     if (!response.ok) return null;
     const buffer = await response.arrayBuffer();
     const mimeType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "image/jpeg";
-    const extension = mimeType === "image/jpeg" ? "jpg" : (mimeType.split("/")[1] ?? "jpg");
+    const rawExt = mimeType === "image/jpeg" ? "jpg" : (mimeType.split("/")[1] ?? "jpg");
+    // Strip MIME suffixes (e.g. "+xml") and any non-alphanumeric characters from extension
+    const extension = rawExt.replace(/\+.*$/, "").replace(/[^a-zA-Z0-9]/g, "") || "jpg";
     return { data: new Uint8Array(buffer), extension };
   } catch {
     return null;
   }
+}
+
+function sanitizeTemplateValue(value: string): string {
+  // Prevent story title/author from expanding other template variables
+  return value.replace(/\{[^}]*\}/g, "_");
 }
 
 export function formatFilename(template: string, data: FicData): string {
@@ -95,8 +103,8 @@ export function formatFilename(template: string, data: FicData): string {
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
   return template
-    .replace(/\{title\}/g, data.core.title)
-    .replace(/\{author\}/g, data.core.author)
+    .replace(/\{title\}/g, sanitizeTemplateValue(data.core.title))
+    .replace(/\{author\}/g, sanitizeTemplateValue(data.core.author))
     .replace(/\{currentDate\}/g, dateStr(now))
     .replace(/\{publishDate\}/g, data.core.publishDate ? dateStr(data.core.publishDate) : "")
     .replace(/\{updateDate\}/g, data.core.updateDate ? dateStr(data.core.updateDate) : "")
