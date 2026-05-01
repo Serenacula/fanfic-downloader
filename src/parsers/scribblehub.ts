@@ -19,6 +19,33 @@ interface SeriesRef {
   seriesPageUrl: string;
 }
 
+interface ProxyResponse {
+  ok: boolean;
+  status: number;
+  text: string;
+}
+
+// Cloudflare blocks direct service-worker fetches with a JS challenge (403 cf-mitigated).
+// Route through an active ScribbleHub tab so the request is same-origin and uses the
+// browser's existing Cloudflare clearance. Falls back to direct fetch in tests and when
+// no ScribbleHub tab is open.
+async function scribbleHubFetchHtml(url: string): Promise<Document> {
+  try {
+    if (typeof browser !== "undefined" && browser?.tabs) {
+      const tabs = await browser.tabs.query({ url: "*://*.scribblehub.com/*" });
+      const tabId = tabs.find((t) => t.id != null && !t.discarded)?.id;
+      if (tabId != null) {
+        const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return new DOMParser().parseFromString(resp.text, "text/html");
+      }
+    }
+  } catch (error) {
+    console.warn(`[scribblehub] tab proxy unavailable for ${url}:`, error);
+  }
+  return fetchHtml(url);
+}
+
 function resolveSeriesRef(url: string): SeriesRef | null {
   // Series page: use URL as-is — it already contains the title slug ScribbleHub requires
   const seriesMatch = /scribblehub\.com(\/series\/(\d+)(?:\/[^/?#]*)?\/)/.exec(url);
@@ -104,7 +131,7 @@ async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
   const statsUrl = canonicalUrl.endsWith("/") ? `${canonicalUrl}stats/` : `${canonicalUrl}/stats/`;
   console.log(`[scribblehub] fetching word count from ${statsUrl}`);
   try {
-    const doc = await fetchHtml(statsUrl);
+    const doc = await scribbleHubFetchHtml(statsUrl);
     const count = tableStatValue(doc, "Word Count:");
     console.log(`[scribblehub] word count: ${count}`);
     return count;
@@ -120,7 +147,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const { id: seriesId, seriesPageUrl: sourceUrl } = ref;
   console.log(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
 
-  const doc = await fetchHtml(sourceUrl);
+  const doc = await scribbleHubFetchHtml(sourceUrl);
   console.log(`[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`);
 
   const title = textContent(doc.querySelector(".fic_title")) || "Untitled";
@@ -163,7 +190,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const chapters: FicChapter[] = await Promise.all(
     listings.reverse().map(async (listing, index) => {
       console.log(`[scribblehub] fetching chapter ${index}: ${listing.url}`);
-      const chapterDoc = await fetchHtml(listing.url);
+      const chapterDoc = await scribbleHubFetchHtml(listing.url);
       const content = chapterDoc.querySelector("#chp_raw, .chp_raw");
       console.log(`[scribblehub] chapter ${index} content found: ${!!content}`);
       const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";

@@ -1,6 +1,8 @@
 import { getSettings } from "../shared/settings.js";
 
 const MAX_RETRIES = 3;
+// Only retry on transient server/network errors; permanent rejections (403, 404) are not retried.
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
 type QueueEntry = {
   url: string;
@@ -28,11 +30,11 @@ export function createQueue(): RequestQueue {
       const response = await fetch(entry.url, { credentials: "include", ...entry.init });
       if (!response.ok) {
         console.warn(`[request-queue] HTTP ${response.status} for ${entry.url} (retry ${entry.retryCount}/${MAX_RETRIES})`);
-        if (entry.retryCount < MAX_RETRIES) {
+        if (entry.retryCount < MAX_RETRIES && RETRYABLE_STATUS_CODES.has(response.status)) {
           scheduleRetry(entry);
           return;
         }
-        entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url} (last status: ${response.status})`));
+        entry.reject(new Error(`Request failed: ${entry.url} (HTTP ${response.status})`));
         return;
       }
       entry.resolve(response);
