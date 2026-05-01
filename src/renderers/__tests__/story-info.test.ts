@@ -70,10 +70,10 @@ describe("renderStoryInfoHtml", () => {
     expect(html).toContain("Test Fandom");
   });
 
-  it("hides fandom when storyInfoFields.ao3.fandoms.show is false", () => {
+  it("hides fandom when storyInfoFields.fandoms is false", () => {
     const settings = {
       ...DEFAULT_SETTINGS,
-      storyInfoFields: { ao3: { fandoms: { show: false } } },
+      storyInfoFields: { fandoms: false },
     };
     const html = renderStoryInfoHtml(ao3Data, settings);
     expect(html).not.toContain("Test Fandom");
