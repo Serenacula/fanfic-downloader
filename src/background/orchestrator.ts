@@ -32,6 +32,8 @@ export interface DownloadJob {
   startedAt: number;
   completedAt: number | null;
   downloadId: number | null;
+  overrides?: Partial<Settings>;
+  dataOverrides?: DataOverrides;
 }
 
 export interface DataOverrides {
@@ -85,11 +87,22 @@ function generateId(): string {
   return crypto.randomUUID();
 }
 
+function isJobRecord(value: unknown): value is Record<string, DownloadJob> {
+  if (typeof value !== "object" || value === null) return false;
+  return Object.values(value as Record<string, unknown>).every(
+    (item) =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as Record<string, unknown>).id === "string" &&
+      typeof (item as Record<string, unknown>).status === "string",
+  );
+}
+
 async function loadJobs(): Promise<Record<string, DownloadJob>> {
   const result = await browser.storage.session.get(SESSION_KEY);
   const stored = result[SESSION_KEY];
-  if (stored == null || typeof stored !== "object") return {};
-  return stored as Record<string, DownloadJob>;
+  if (!isJobRecord(stored)) return {};
+  return stored;
 }
 
 async function saveJob(job: DownloadJob): Promise<void> {
@@ -129,6 +142,8 @@ export async function startDownload(
     startedAt: Date.now(),
     completedAt: null,
     downloadId: null,
+    overrides,
+    dataOverrides,
   };
   await saveJob(job);
   void runDownload(id, url, overrides, dataOverrides);
@@ -152,7 +167,7 @@ export async function retryJob(id: string): Promise<void> {
     startedAt: Date.now(),
     completedAt: null,
   });
-  void runDownload(id, job.url);
+  void runDownload(id, job.url, job.overrides, job.dataOverrides);
 }
 
 function isCancelled(id: string): boolean {
@@ -247,28 +262,33 @@ function injectToast(message: string, success: boolean): void {
 
   const toast = document.createElement("div");
   toast.id = "fic-downloader-toast";
-  toast.attachShadow({ mode: "open" }).innerHTML = `
-    <style>
-      :host {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 2147483647;
-        background: ${success ? "#2a4a2a" : "#4a2a2a"};
-        color: ${success ? "#a0e0a0" : "#e0a0a0"};
-        border: 1px solid ${success ? "#5a9a5a" : "#9a5a5a"};
-        border-radius: 6px;
-        padding: 10px 16px;
-        font-family: system-ui, sans-serif;
-        font-size: 13px;
-        max-width: 300px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-        animation: fadein 0.2s ease;
-      }
-      @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
-    </style>
-    <span>${message.replace(/</g, "&lt;")}</span>
+  const shadow = toast.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = `
+    :host {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2147483647;
+      background: ${success ? "#2a4a2a" : "#4a2a2a"};
+      color: ${success ? "#a0e0a0" : "#e0a0a0"};
+      border: 1px solid ${success ? "#5a9a5a" : "#9a5a5a"};
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      animation: fadein 0.2s ease;
+    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; } }
   `;
+  const span = document.createElement("span");
+  span.textContent = message;
+
+  shadow.appendChild(style);
+  shadow.appendChild(span);
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2000);
 }
