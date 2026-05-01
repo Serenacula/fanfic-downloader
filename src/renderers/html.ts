@@ -3,6 +3,14 @@ import type { Settings, RendererFn } from "../shared/settings.js";
 import { renderStoryInfoHtml } from "./story-info.js";
 import { zipFiles, fetchCoverImage } from "./utils.js";
 
+function escHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 const HTML_STYLE = `
   body { max-width: 700px; margin: 0 auto; padding: 2em; font-family: Georgia, serif; line-height: 1.6; }
   h1 { margin-bottom: 0.2em; }
@@ -24,7 +32,7 @@ function htmlPage(title: string, body: string): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="Sere&#x27;s Fic Downloader (https://github.com/Serenacula/fic-downloader)">
-<title>${title.replace(/</g, "&lt;")}</title>
+<title>${escHtml(title)}</title>
 <style>${HTML_STYLE}</style>
 </head>
 <body>
@@ -36,7 +44,8 @@ ${body}
 function buildImageMap(data: FicData): Map<string, string> {
   const imageMap = new Map<string, string>();
   for (const [index, image] of data.core.images.entries()) {
-    const extension = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "jpg");
+    const rawExt = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "");
+    const extension = rawExt.replace(/\+.*$/, "").replace(/[^a-zA-Z0-9]/g, "") || "jpg";
     imageMap.set(image.url, `images/img-${index}.${extension}`);
   }
   return imageMap;
@@ -55,7 +64,7 @@ function renderChapterSection(data: FicData, chapterIndex: number, settings: Set
 
   const titleHtml =
     settings.includeChapterTitles && chapter.title
-      ? `<h2 class="chapter-title">Chapter ${chapter.index + 1}: ${chapter.title}</h2>\n`
+      ? `<h2 class="chapter-title">Chapter ${chapter.index + 1}: ${escHtml(chapter.title)}</h2>\n`
       : "";
 
   const html = imageMap.size > 0 ? remapImageSrcs(chapter.htmlContent, imageMap) : chapter.htmlContent;
@@ -104,7 +113,7 @@ export const renderHtml: RendererFn = async (data, settings) => {
       ? `<nav class="toc"><h2>Contents</h2><ol>${data.core.chapters
           .map((chapter) => {
             const title = chapter.title ?? `Chapter ${chapter.index + 1}`;
-            return `<li><a href="#chapter-${chapter.index}">${title}</a></li>`;
+            return `<li><a href="#chapter-${chapter.index}">${escHtml(title)}</a></li>`;
           })
           .join("\n")}</ol></nav>`
       : "";
