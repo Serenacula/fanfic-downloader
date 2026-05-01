@@ -209,10 +209,8 @@ export const renderEpub: RendererFn = async (data, settings) => {
     // Embedded images — embed whatever was fetched (controlled by settings.includeImages at parse time)
     const imageMap = new Map<string, string>() // original URL → epub path
     for (const [index, image] of data.core.images.entries()) {
-        const extension =
-            image.mimeType === "image/jpeg"
-                ? "jpg"
-                : (image.mimeType.split("/")[1] ?? "jpg")
+        const rawExt = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "")
+        const extension = rawExt.replace(/\+.*$/, "").replace(/[^a-zA-Z0-9]/g, "") || "jpg"
         const path = `OEBPS/images/img-${index}.${extension}`
         files[path] = new Uint8Array(image.data)
         imageMap.set(image.url, `images/img-${index}.${extension}`)

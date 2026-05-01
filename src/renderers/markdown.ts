@@ -29,7 +29,8 @@ function buildFrontmatter(data: FicData): string {
 function buildImageMap(data: FicData): Map<string, string> {
   const imageMap = new Map<string, string>();
   for (const [index, image] of data.core.images.entries()) {
-    const extension = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "jpg");
+    const rawExt = image.mimeType === "image/jpeg" ? "jpg" : (image.mimeType.split("/")[1] ?? "");
+    const extension = rawExt.replace(/\+.*$/, "").replace(/[^a-zA-Z0-9]/g, "") || "jpg";
     imageMap.set(image.url, `images/img-${index}.${extension}`);
   }
   return imageMap;
