@@ -5,8 +5,14 @@ browser.runtime.onMessage.addListener(
   (message: unknown): Promise<{ ok: boolean; status: number; text: string }> | undefined => {
     const msg = message as { type?: string; url?: string };
     if (msg.type !== "proxyFetch" || !msg.url) return undefined;
-    const url = msg.url;
-    return fetch(url).then(async (response) => ({
+    let parsed: URL;
+    try {
+      parsed = new URL(msg.url);
+    } catch {
+      return undefined;
+    }
+    if (!parsed.hostname.endsWith("scribblehub.com")) return undefined;
+    return fetch(msg.url).then(async (response) => ({
       ok: response.ok,
       status: response.status,
       text: await response.text(),
