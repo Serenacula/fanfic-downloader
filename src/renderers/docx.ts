@@ -142,7 +142,6 @@ async function renderSingleDocx(data: FicData, settings: Settings): Promise<Blob
 
   const doc = new Document({
     creator: data.core.author,
-    description: "Downloaded with Sere's Fic Downloader (https://github.com/Serenacula/fic-downloader)",
     title: data.core.title,
     sections: [{ properties: {}, children: allParagraphs }],
   });
