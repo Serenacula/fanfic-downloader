@@ -66,6 +66,14 @@ function sanitizeNode(node: Node): void {
       }
     }
 
+    // Strip dangerous href schemes (javascript:, data:, vbscript:, etc.)
+    if (tagName === "a") {
+      const href = element.getAttribute("href");
+      if (href && !/^(https?:|\/|#)/i.test(href)) {
+        element.removeAttribute("href");
+      }
+    }
+
     sanitizeNode(element);
   }
 
