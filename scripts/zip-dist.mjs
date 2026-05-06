@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, mkdirSync } from "fs";
 import { join, relative } from "path";
 import { zipSync } from "fflate";
 import { fileURLToPath } from "url";
@@ -6,7 +6,8 @@ import { dirname } from "path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = join(root, "dist");
-const outputPath = join(distDir, "fanfic-downloader.xpi");
+const releaseDir = join(root, "release");
+const outputPath = join(releaseDir, "fanfic-downloader.xpi");
 
 function collectFiles(dir) {
     const files = {};
@@ -16,14 +17,13 @@ function collectFiles(dir) {
             Object.assign(files, collectFiles(fullPath));
         } else {
             const relPath = relative(distDir, fullPath);
-            if (relPath !== "fanfic-downloader.xpi") {
-                files[relPath] = [readFileSync(fullPath), { level: 6 }];
-            }
+            files[relPath] = [readFileSync(fullPath), { level: 6 }];
         }
     }
     return files;
 }
 
+mkdirSync(releaseDir, { recursive: true });
 const zipped = zipSync(collectFiles(distDir));
 writeFileSync(outputPath, zipped);
-console.log(`Created fanfic-downloader.xpi (${(zipped.length / 1024).toFixed(1)} KB)`);
+console.log(`Created release/fanfic-downloader.xpi (${(zipped.length / 1024).toFixed(1)} KB)`);
