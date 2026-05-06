@@ -27,9 +27,7 @@ EPUB, HTML, Markdown, plain text, PDF, DOCX
 
 ## Installation
 
-Coming soon on [Firefox Addons](https://addons.mozilla.org/en-US/firefox/addon/sere-s-fanfic-downloader/).
-
-To install temporarily, you can use the [the release](https://github.com/Serenacula/fanfic-downloader/releases/latest). Install it via `about:debugging` → "Load Temporary Add-on" → click the file.
+Install from [Firefox Addons](https://addons.mozilla.org/en-US/firefox/addon/sere-s-fanfic-downloader/).
 
 ## Development
 
@@ -44,13 +42,6 @@ npm run build   # output in dist/
 npm run dev     # watch mode
 npm test        # run parser tests
 ```
-
-If you're not on macOS, you'll need to:
-
-- Change build line in package.json to `"build": "vite build"`
-- Run the npm commands above
-- Manually zip the contents of the `dist/` folder
-- Rename the zip file to `.xpi` extension
 
 Load the extension in Firefox: `about:debugging` → "Load Temporary Add-on" → pick any file in `dist/`.
 
