@@ -4,6 +4,7 @@
     "description": "A Firefox plugin for downloading fan fiction from popular sites.",
     "scripts": {
         "build": "vite build && node scripts/zip-dist.mjs",
+        "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0",
         "dev": "vite build --watch",
         "test": "vitest run"
     },
@@ -19,6 +20,7 @@
         "@types/firefox-webext-browser": "^143.0.0",
         "@types/jsdom": "^28.0.1",
         "@types/pdfmake": "^0.3.2",
+        "conventional-changelog-cli": "^5.0.0",
         "jsdom": "^29.1.0",
         "typescript": "^6.0.3",
         "vite": "^8.0.10",
