@@ -64,14 +64,14 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter
       if (preNotes) html += preNotes.innerHTML;
     }
 
-    const content = chapterDiv.querySelector(".userstuff");
+    const content = chapterDiv.querySelector(".userstuff.module");
     if (content) {
       for (const landmark of Array.from(content.querySelectorAll(".landmark"))) landmark.remove();
       html += content.innerHTML;
     }
 
     if (includeAuthorNotes) {
-      const postNotes = chapterDiv.querySelector(".chapter.endnotes .userstuff");
+      const postNotes = chapterDiv.querySelector(".end.notes .userstuff");
       if (postNotes) html += postNotes.innerHTML;
     }
 

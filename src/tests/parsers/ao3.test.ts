@@ -23,6 +23,37 @@ function htmlResponse(path: string): Response {
   });
 }
 
+describe("AO3 parser — multi-chapter work with author notes", () => {
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("archiveofourown.org/works/99999")) return htmlResponse("ao3-multichapter.html");
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("extracts chapter body without author notes by default", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(2);
+    expect(data.core.chapters[0]!.htmlContent).toContain("first chapter body text");
+    expect(data.core.chapters[0]!.htmlContent).not.toContain("pre-chapter author note");
+    expect(data.core.chapters[0]!.htmlContent).not.toContain("post-chapter author note");
+  });
+
+  it("includes author notes when setting is enabled", async () => {
+    const settings = { ...DEFAULT_SETTINGS, includeAuthorNotes: true };
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", settings);
+    expect(data.core.chapters[0]!.htmlContent).toContain("first chapter body text");
+    expect(data.core.chapters[0]!.htmlContent).toContain("pre-chapter author note");
+    expect(data.core.chapters[0]!.htmlContent).toContain("post-chapter author note");
+  });
+
+  it("extracts chapter titles", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", DEFAULT_SETTINGS);
+    expect(data.core.chapters[0]!.title).toBe("Beginning");
+    expect(data.core.chapters[1]!.title).toBe("End");
+  });
+});
+
 describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
