@@ -95,6 +95,7 @@ export interface WattpadMetadata {
 export type FicData =
   | { site: "ao3"; core: FicCore; meta: AO3Metadata }
   | { site: "ffn"; core: FicCore; meta: FFNMetadata }
+  | { site: "fictionpress"; core: FicCore; meta: FFNMetadata }
   | { site: "royalroad"; core: FicCore; meta: RoyalRoadMetadata }
   | { site: "tapas"; core: FicCore; meta: TapasMetadata }
   | { site: "scribblehub"; core: FicCore; meta: ScribbleHubMetadata }

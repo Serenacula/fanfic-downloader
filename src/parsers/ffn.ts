@@ -12,7 +12,8 @@ import {
   type Parser,
 } from "./common.js";
 
-const STORY_ID_PATTERN = /fanfiction\.net\/s\/(\d+)/;
+const FFN_PATTERN = /fanfiction\.net\/s\/(\d+)/;
+const FP_PATTERN = /fictionpress\.com\/s\/(\d+)/;
 
 const FFN_GENRES = new Set([
   "Adventure", "Angst", "Crime", "Drama", "Fantasy", "Friendship", "General",
@@ -42,12 +43,12 @@ function parseGenrePart(part: string): string[] | null {
   return null;
 }
 
-function chapterUrl(storyId: string, chapter: number): string {
-  return `https://www.fanfiction.net/s/${storyId}/${chapter}/`;
+function chapterUrl(domain: string, storyId: string, chapter: number): string {
+  return `https://www.${domain}/s/${storyId}/${chapter}/`;
 }
 
-function extractStoryId(url: string): string | null {
-  return STORY_ID_PATTERN.exec(url)?.[1] ?? null;
+function extractStoryId(pattern: RegExp, url: string): string | null {
+  return pattern.exec(url)?.[1] ?? null;
 }
 
 interface StoryMeta {
@@ -78,7 +79,6 @@ function parseMetaBar(doc: Document): StoryMeta {
   const metaSpan = doc.querySelector("#profile_top span.xgray.xcontrast_txt");
   const metaText = metaSpan?.textContent ?? "";
 
-  // Parse genre, characters from the meta bar text
   // Format: "Rated: T - English - Genre/Genre - Characters - Chapters: N - Words: N - ..."
   const parts = metaText.split(" - ").map((part) => part.trim());
 
@@ -155,18 +155,20 @@ function parseMetaBar(doc: Document): StoryMeta {
   };
 }
 
-async function parse(url: string, settings: Settings): Promise<FicData> {
-  const storyId = extractStoryId(url);
-  if (!storyId) throw new Error(`Not a valid FFN URL: ${url}`);
-
-  const firstDoc = await fetchHtml(chapterUrl(storyId, 1));
+async function parseStory(
+  domain: string,
+  site: "ffn" | "fictionpress",
+  storyId: string,
+  settings: Settings,
+): Promise<FicData> {
+  const firstDoc = await fetchHtml(chapterUrl(domain, storyId, 1));
   const meta = parseMetaBar(firstDoc);
 
   const chapterDocs: Document[] = [firstDoc];
   if (meta.chapterCount > 1) {
     const remainingDocs = await Promise.all(
       Array.from({ length: meta.chapterCount - 1 }, (_, index) =>
-        fetchHtml(chapterUrl(storyId, index + 2)),
+        fetchHtml(chapterUrl(domain, storyId, index + 2)),
       ),
     );
     chapterDocs.push(...remainingDocs);
@@ -185,9 +187,10 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     return { index, title, htmlContent };
   });
 
+  const sourceUrl = `https://www.${domain}/s/${storyId}/`;
+
   let images: FicCore["images"] = [];
   if (settings.includeImages) {
-    const sourceUrl = chapterUrl(storyId, 1);
     const imageUrls = chapters.flatMap((chapter) =>
       collectImageUrls(chapter.htmlContent, sourceUrl),
     );
@@ -206,10 +209,10 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     wordCount: meta.wordCount,
     publishDate: meta.publishDate,
     updateDate: meta.updateDate,
-    sourceUrl: `https://www.fanfiction.net/s/${storyId}/`,
+    sourceUrl,
   };
 
-  const ffnMeta: FFNMetadata = {
+  const siteMeta: FFNMetadata = {
     genres: meta.genres,
     universe: meta.universe,
     follows: meta.follows,
@@ -218,10 +221,23 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     language: meta.language,
   };
 
-  return { site: "ffn", core, meta: ffnMeta };
+  return { site, core, meta: siteMeta };
 }
 
 export const ffnParser: Parser = {
-  pattern: STORY_ID_PATTERN,
-  parse,
+  pattern: FFN_PATTERN,
+  async parse(url: string, settings: Settings): Promise<FicData> {
+    const storyId = extractStoryId(FFN_PATTERN, url);
+    if (!storyId) throw new Error(`Not a valid FFN URL: ${url}`);
+    return parseStory("fanfiction.net", "ffn", storyId, settings);
+  },
+};
+
+export const fictionPressParser: Parser = {
+  pattern: FP_PATTERN,
+  async parse(url: string, settings: Settings): Promise<FicData> {
+    const storyId = extractStoryId(FP_PATTERN, url);
+    if (!storyId) throw new Error(`Not a valid FictionPress URL: ${url}`);
+    return parseStory("fictionpress.com", "fictionpress", storyId, settings);
+  },
 };

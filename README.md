@@ -8,6 +8,7 @@ A Firefox extension for downloading fanfiction from popular sites in your prefer
 
 - Archive of Our Own (AO3)
 - FanFiction.net (FFN)
+- FictionPress
 - Royal Road
 - Tapas
 - ScribbleHub

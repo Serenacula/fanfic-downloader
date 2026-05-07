@@ -1,6 +1,6 @@
 import type { Parser } from "./common.js";
 import { ao3Parser } from "./ao3.js";
-import { ffnParser } from "./ffn.js";
+import { ffnParser, fictionPressParser } from "./ffn.js";
 import { royalRoadParser } from "./royalroad.js";
 import { tapasParser } from "./tapas.js";
 import { scribbleHubParser } from "./scribblehub.js";
@@ -10,6 +10,7 @@ import { spaceBattlesParser, sufficientVelocityParser, questionableQuestingParse
 const parsers: Parser[] = [
   ao3Parser,
   ffnParser,
+  fictionPressParser,
   royalRoadParser,
   tapasParser,
   scribbleHubParser,
@@ -30,6 +31,7 @@ export function isFicPage(url: string): boolean {
 export {
   ao3Parser,
   ffnParser,
+  fictionPressParser,
   royalRoadParser,
   tapasParser,
   scribbleHubParser,
