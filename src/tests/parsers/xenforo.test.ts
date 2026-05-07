@@ -12,7 +12,7 @@ vi.mock("../../background/request-queue.js", () => ({
 }));
 
 const { enqueue } = await import("../../background/request-queue.js");
-const { spaceBattlesParser, sufficientVelocityParser } = await import("../../parsers/xenforo.js");
+const { spaceBattlesParser, sufficientVelocityParser, questionableQuestingParser } = await import("../../parsers/xenforo.js");
 
 const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), "../fixtures");
 const BASE = "https://forums.spacebattles.com";
@@ -117,6 +117,20 @@ describe("XenForo / SufficientVelocity parser — URL detection", () => {
     )).toBe(true);
     expect(sufficientVelocityParser.pattern.test(
       "https://forums.spacebattles.com/threads/story.12345/",
+    )).toBe(false);
+  });
+});
+
+describe("XenForo / QuestionableQuesting parser — URL detection", () => {
+  it("matches QQ thread URLs and not SB or SV URLs", () => {
+    expect(questionableQuestingParser.pattern.test(
+      "https://forum.questionablequesting.com/threads/story.12345/",
+    )).toBe(true);
+    expect(questionableQuestingParser.pattern.test(
+      "https://forums.spacebattles.com/threads/story.12345/",
+    )).toBe(false);
+    expect(questionableQuestingParser.pattern.test(
+      "https://forums.sufficientvelocity.com/threads/story.12345/",
     )).toBe(false);
   });
 });

@@ -75,20 +75,19 @@ describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
 
   it("extracts summary", async () => {
     const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
-    expect(data.core.summary).not.toBeNull();
-    expect(data.core.summary!.length).toBeGreaterThan(0);
+    expect(data.core.summary).toContain("Praem is not quite as mature");
   });
 
   it("extracts chapter content", async () => {
     const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
     expect(data.core.chapters).toHaveLength(1);
-    expect(data.core.chapters[0]!.htmlContent.length).toBeGreaterThan(100);
+    expect(data.core.chapters[0]!.htmlContent).toContain("It was quite late");
   });
 
   it("extracts AO3-specific metadata", async () => {
     const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
     const meta = data.meta as AO3Metadata;
-    expect(meta.fandoms.length).toBeGreaterThan(0);
+    expect(meta.fandoms).toContain("Katalepsis - Hungry");
     expect(meta.rating).toBe("General Audiences");
   });
 

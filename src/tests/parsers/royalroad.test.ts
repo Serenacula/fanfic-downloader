@@ -43,15 +43,13 @@ describe("RoyalRoad parser — fiction/165189 (Okeanos: Returnal)", () => {
 
   it("extracts title and author", async () => {
     const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
-    expect(data.core.title).toContain("Okeanos");
-    expect(data.core.author).not.toBe("Unknown");
-    expect(data.core.author.length).toBeGreaterThan(0);
+    expect(data.core.title).toBe("Okeanos Returnal");
+    expect(data.core.author).toBe("qualiap");
   });
 
   it("extracts summary", async () => {
     const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
-    expect(data.core.summary).not.toBeNull();
-    expect(data.core.summary!.length).toBeGreaterThan(0);
+    expect(data.core.summary).toContain("Lorenz Phis");
   });
 
   it("extracts chapter content", async () => {

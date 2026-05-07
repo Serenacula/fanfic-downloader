@@ -64,8 +64,7 @@ describe("Tapas parser — series/The-Last-Story-TLS", () => {
 
   it("extracts summary", async () => {
     const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
-    expect(data.core.summary).not.toBeNull();
-    expect(data.core.summary!.length).toBeGreaterThan(0);
+    expect(data.core.summary).toContain("knighthood");
   });
 
   it("finds all 12 episodes", async () => {
@@ -87,6 +86,6 @@ describe("Tapas parser — series/The-Last-Story-TLS", () => {
   it("extracts Tapas-specific metadata", async () => {
     const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
     const meta = data.meta as TapasMetadata;
-    expect(meta.genre).not.toBeNull();
+    expect(meta.genre).toBe("GL");
   });
 });
