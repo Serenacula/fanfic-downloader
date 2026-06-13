@@ -7,6 +7,7 @@
 
 ### Bug Fixes
 
+* add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([b02db3d](https://github.com/Serenacula/fanfic-downloader/commit/b02db3d514082b3adb9dc31afa27c92e7135f11f))
 * AO3 chapter body selector matching author notes instead of content ([36e4b91](https://github.com/Serenacula/fanfic-downloader/commit/36e4b912cb5383f88dd97ccb96019309e10314ba))
 * cross-platform xpi build using fflate instead of shell zip ([d823742](https://github.com/Serenacula/fanfic-downloader/commit/d82374213c86d1ce18befccb3313acff8de571c0))
 

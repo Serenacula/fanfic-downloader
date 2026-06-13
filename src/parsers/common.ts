@@ -82,8 +82,14 @@ function sanitizeNode(node: Node): void {
   }
 }
 
+const HTML_HEADERS = {
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Upgrade-Insecure-Requests": "1",
+};
+
 export async function fetchHtml(url: string): Promise<Document> {
-  const response = await enqueue(url);
+  const response = await enqueue(url, { headers: HTML_HEADERS });
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
   }
