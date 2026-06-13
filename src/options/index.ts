@@ -186,7 +186,7 @@ function wireEvents(): void {
             format,
             rateLimitMs: isNaN(rateLimitMs)
                 ? DEFAULT_SETTINGS.rateLimitMs
-                : rateLimitMs,
+                : Math.min(Math.max(0, rateLimitMs), 10_000),
             maxConcurrentDownloads: isNaN(maxConcurrentDownloads)
                 ? DEFAULT_SETTINGS.maxConcurrentDownloads
                 : Math.max(0, maxConcurrentDownloads),
