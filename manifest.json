@@ -24,7 +24,8 @@
         "*://*.wattpad.com/*",
         "*://*.spacebattles.com/*",
         "*://*.sufficientvelocity.com/*",
-        "*://*.questionablequesting.com/*"
+        "*://*.questionablequesting.com/*",
+        "*://*.fictionpress.com/*"
     ],
 
     "background": {
@@ -60,7 +61,8 @@
                 "*://*.wattpad.com/story/*",
                 "*://*.spacebattles.com/threads/*",
                 "*://*.sufficientvelocity.com/threads/*",
-                "*://*.questionablequesting.com/threads/*"
+                "*://*.questionablequesting.com/threads/*",
+                "*://*.fictionpress.com/s/*"
             ],
             "js": ["src/content/index.ts"],
             "run_at": "document_idle"

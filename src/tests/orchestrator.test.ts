@@ -131,7 +131,8 @@ describe("retryJob — overrides pass-through", () => {
     // Wait for first attempt to fail
     await vi.waitFor(async () => {
       const jobs = await getJobs();
-      return jobs.find((j) => j.id === id && j.status === "failed") != null;
+      const failed = jobs.find((j) => j.id === id && j.status === "failed") != null;
+      if (!failed) throw new Error("Job has not failed yet");
     }, { timeout: 2000 });
 
     await retryJob(id);
@@ -140,7 +141,8 @@ describe("retryJob — overrides pass-through", () => {
     await vi.waitFor(async () => {
       const jobs = await getJobs();
       const job = jobs.find((j) => j.id === id);
-      return job?.status === "failed" && mockParse.mock.calls.length >= 2;
+      const ready = job?.status === "failed" && mockParse.mock.calls.length >= 2;
+      if (!ready) throw new Error("Retry has not completed yet");
     }, { timeout: 2000 });
 
     expect(mockParse.mock.calls.length).toBeGreaterThanOrEqual(2);

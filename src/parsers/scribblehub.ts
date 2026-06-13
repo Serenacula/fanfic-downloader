@@ -188,7 +188,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   console.log(`[scribblehub] fetching ${listings.length} chapters`);
   const chapters: FicChapter[] = await Promise.all(
-    listings.reverse().map(async (listing, index) => {
+    [...listings].reverse().map(async (listing, index) => {
       console.log(`[scribblehub] fetching chapter ${index}: ${listing.url}`);
       const chapterDoc = await scribbleHubFetchHtml(listing.url);
       const content = chapterDoc.querySelector("#chp_raw, .chp_raw");

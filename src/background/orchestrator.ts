@@ -187,8 +187,10 @@ export async function retryJob(id: string): Promise<void> {
     void runDownload(id, job.url, job.overrides, job.dataOverrides)
 }
 
-function isCancelled(id: string): boolean {
-    return cancelledJobs.has(id)
+async function isCancelled(id: string): Promise<boolean> {
+    if (cancelledJobs.has(id)) return true;
+    const jobs = await loadJobs();
+    return jobs[id]?.status === "cancelled";
 }
 
 async function runDownload(
@@ -203,7 +205,7 @@ async function runDownload(
         if (!parser) throw new Error(`Unsupported site: ${url}`)
 
         await updateJob(id, { status: "fetching-metadata" })
-        if (isCancelled(id)) return
+        if (await isCancelled(id)) return
 
         const parsed: FicData = await parser.parse(url, settings)
         const ficData: FicData = dataOverrides
@@ -217,18 +219,21 @@ async function runDownload(
                   },
               }
             : parsed
-        if (isCancelled(id)) return
+        if (await isCancelled(id)) return
 
         await updateJob(id, {
             title: ficData.core.title,
             author: ficData.core.author,
             status: "fetching-chapters",
             chaptersTotal: ficData.core.chapters.length,
-            chaptersFetched: ficData.core.chapters.length,
+            chaptersFetched: 0,
         })
 
-        if (isCancelled(id)) return
-        await updateJob(id, { status: "rendering" })
+        if (await isCancelled(id)) return
+        await updateJob(id, {
+            status: "rendering",
+            chaptersFetched: ficData.core.chapters.length,
+        })
 
         const renderer = RENDERERS[settings.format]
         const blob = await renderer(ficData, settings)
@@ -236,7 +241,7 @@ async function runDownload(
             `[fanfic-downloader] rendered ${settings.format}: ${blob.size} bytes, type="${blob.type}"`,
         )
 
-        if (isCancelled(id)) return
+        if (await isCancelled(id)) return
         await updateJob(id, { status: "saving" })
 
         const isZip =
@@ -265,7 +270,7 @@ async function runDownload(
         })
         await notifyCompletion(ficData.core.title, true)
     } catch (error) {
-        if (!isCancelled(id)) {
+        if (!(await isCancelled(id))) {
             const message =
                 error instanceof Error ? error.message : String(error)
             console.error(

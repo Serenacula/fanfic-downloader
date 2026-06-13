@@ -49,7 +49,7 @@ function sanitizeNode(node: Node): void {
     // Remove disallowed attributes
     const allowedForTag = ALLOWED_ATTRS[tagName] ?? new Set<string>();
     for (const attr of Array.from(element.attributes)) {
-      if (!allowedForTag.has(attr.name) || attr.name.startsWith("on")) {
+      if (attr.name.startsWith("on") || !allowedForTag.has(attr.name)) {
         element.removeAttribute(attr.name);
       }
     }

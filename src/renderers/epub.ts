@@ -230,7 +230,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
         let html = chapter.htmlContent
         // Remap image URLs to local epub paths
         for (const [originalUrl, localPath] of imageMap) {
-            html = html.split(escXml(originalUrl)).join(localPath)
+            html = html.split(escXml(originalUrl)).join(escXml(localPath))
         }
 
         const titleHtml =

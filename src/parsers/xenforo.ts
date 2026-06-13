@@ -124,7 +124,11 @@ function createXenForoParser(
 
     const subForum = extractSubForum(threadmarksDoc);
     const listings = extractThreadmarks(threadmarksDoc, baseUrl);
-    if (listings.length === 0) throw new Error(`No threadmarks found for ${url}`);
+    if (listings.length === 0) {
+      throw new Error(
+        `No threadmarks found. Thread URL: ${sourceUrl} — Threadmarks URL: ${threadmarksUrl(baseUrl, threadId)}`,
+      );
+    }
 
     const publishDate = listings[0]?.date ?? null;
     const updateDate = listings[listings.length - 1]?.date ?? null;

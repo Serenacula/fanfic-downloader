@@ -7,7 +7,6 @@ import {
   fetchImages,
   sanitizeHtml,
   parseCount,
-  parseDate,
   collectImageUrls,
   type Parser,
 } from "./common.js";
@@ -127,10 +126,21 @@ function parseMetaBar(doc: Document): StoryMeta {
     }
   }
 
-  // Parse dates from span elements within the meta
+  // Parse dates from span elements within the meta.
+  // data-xutime is a Unix timestamp in seconds on the live site; test fixtures may use ISO strings.
   const dateSpans = metaSpan ? Array.from(metaSpan.querySelectorAll("span[data-xutime]")) : [];
-  if (dateSpans[0]) publishDate = parseDate(dateSpans[0].getAttribute("data-xutime") ?? "");
-  if (dateSpans[1]) updateDate = parseDate(dateSpans[1].getAttribute("data-xutime") ?? "");
+  const toDate = (span: Element): Date | null => {
+    const raw = span.getAttribute("data-xutime") ?? "";
+    const trimmed = raw.trim();
+    if (/^\d+$/.test(trimmed) && trimmed !== "0") {
+      return new Date(Number(trimmed) * 1000);
+    }
+    // Fall back to ISO / free-form date string (e.g. test fixtures)
+    const date = new Date(trimmed);
+    return isNaN(date.getTime()) ? null : date;
+  };
+  if (dateSpans[0]) publishDate = toDate(dateSpans[0]);
+  if (dateSpans[1]) updateDate = toDate(dateSpans[1]);
   if (publishDate && !updateDate) updateDate = publishDate;
 
   // Universe from breadcrumb
