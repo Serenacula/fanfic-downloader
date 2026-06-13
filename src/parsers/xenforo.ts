@@ -27,10 +27,17 @@ interface ProxyResponse {
   text: string;
 }
 
-// Cloudflare blocks direct service-worker fetches with a JS challenge (503).
-// Route through an active XenForo tab so the request uses the browser's existing
-// Cloudflare clearance. Falls back to direct fetch in tests and when no tab is open.
+// Try a direct background fetch first; fall back to routing through an active XenForo
+// tab if Cloudflare blocks the service-worker request with a JS challenge.
 async function fetchHtmlViaProxy(url: string, tabQueryPattern: string): Promise<Document> {
+  let directError: unknown;
+  try {
+    return await fetchHtml(url);
+  } catch (error) {
+    directError = error;
+    console.warn(`[xenforo] direct fetch failed for ${url}, trying content script proxy:`, error);
+  }
+
   try {
     if (typeof browser !== "undefined" && browser?.tabs) {
       const tabs = await browser.tabs.query({ url: tabQueryPattern });
@@ -41,10 +48,11 @@ async function fetchHtmlViaProxy(url: string, tabQueryPattern: string): Promise<
         return new DOMParser().parseFromString(resp.text, "text/html");
       }
     }
-  } catch (error) {
-    console.warn(`[xenforo] content script proxy unavailable for ${url}:`, error);
+  } catch (proxyError) {
+    console.warn(`[xenforo] content script proxy also failed for ${url}:`, proxyError);
   }
-  return fetchHtml(url);
+
+  throw directError;
 }
 
 function threadmarksUrl(baseUrl: string, threadId: string): string {
