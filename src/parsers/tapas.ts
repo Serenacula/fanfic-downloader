@@ -14,6 +14,7 @@ import {
 import { enqueue } from "../background/request-queue.js";
 
 const SERIES_PATTERN = /tapas\.io\/series\/([^/?#]+)/;
+const MAX_PAGES = 10_000;
 
 function seriesInfoUrl(slug: string): string {
   return `https://tapas.io/series/${slug}/info`;
@@ -76,6 +77,11 @@ async function fetchAllEpisodes(seriesId: string): Promise<EpisodeListing[]> {
   let since: number | undefined;
 
   while (true) {
+    if (page > MAX_PAGES) {
+      console.warn(`[tapas] fetchAllEpisodes exceeded MAX_PAGES (${MAX_PAGES}), stopping pagination`);
+      break;
+    }
+
     let apiUrl = `https://tapas.io/series/${seriesId}/episodes?page=${page}&sort=OLDEST`;
     if (since !== undefined) apiUrl += `&since=${since}`;
 
@@ -93,7 +99,12 @@ async function fetchAllEpisodes(seriesId: string): Promise<EpisodeListing[]> {
     listings.push(...pageListings);
 
     if (!data.data.pagination?.has_next) break;
-    since = data.data.pagination.since;
+    const nextSince = data.data.pagination.since;
+    if (nextSince == null) {
+      console.warn("[tapas] has_next=true but no since cursor — stopping pagination");
+      break;
+    }
+    since = nextSince;
     page++;
   }
 

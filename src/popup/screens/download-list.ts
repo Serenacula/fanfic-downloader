@@ -29,7 +29,9 @@ function isActive(job: DownloadJob): boolean {
 
 function buildJobElement(job: DownloadJob): HTMLElement {
   const active = isActive(job);
-  const title = job.title ?? new URL(job.url).hostname;
+  let hostname = job.url;
+  try { hostname = new URL(job.url).hostname; } catch { /* malformed URL, fall back to raw string */ }
+  const title = job.title ?? hostname;
 
   const el = document.createElement("div");
   el.classList.add("job", job.status);

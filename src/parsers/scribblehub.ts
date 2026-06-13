@@ -71,9 +71,11 @@ interface ChapterListing {
 
 function statValue(doc: Document, label: string): number | null {
   for (const item of Array.from(doc.querySelectorAll(".st_item"))) {
-    if (item.querySelector(".mb_stat")?.textContent?.trim() === label) {
-      return parseCount(item.textContent ?? "");
-    }
+    const labelEl = item.querySelector(".mb_stat");
+    if (labelEl?.textContent?.trim() !== label) continue;
+    const fullText = item.textContent ?? "";
+    const labelText = labelEl.textContent ?? "";
+    return parseCount(fullText.replace(labelText, "").trim());
   }
   return null;
 }

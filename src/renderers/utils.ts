@@ -109,5 +109,5 @@ export function formatFilename(template: string, data: FicData): string {
     .replace(/\{publishDate\}/g, data.core.publishDate ? dateStr(data.core.publishDate) : "")
     .replace(/\{updateDate\}/g, data.core.updateDate ? dateStr(data.core.updateDate) : "")
     .replace(/[<>:"/\\|?*]/g, "_")
-    .trim();
+    .trim() || "download";
 }

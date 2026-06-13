@@ -91,8 +91,8 @@ describe("formatFilename", () => {
     expect(formatFilename("{updateDate}", data)).toBe("2024-06-01");
   });
 
-  it("produces empty string for {publishDate} when null", () => {
-    expect(formatFilename("{publishDate}", makeFicData("T", "A", null))).toBe("");
+  it("falls back to 'download' when template resolves to empty string", () => {
+    expect(formatFilename("{publishDate}", makeFicData("T", "A", null))).toBe("download");
   });
 
   it("trims leading and trailing whitespace from the result", () => {

@@ -19,7 +19,7 @@ import {
 
 type XenForoSite = "spacebattles" | "sufficientvelocity" | "questionablequesting";
 
-const THREAD_ID_PATTERN = /\/threads\/[^./]+\.(\d+)/;
+const THREAD_ID_PATTERN = /\/threads\/[^/]+\.(\d+)/;
 
 interface ProxyResponse {
   ok: boolean;
@@ -98,7 +98,7 @@ function createXenForoParser(
   hostPattern: string,
   tabQueryPattern: string,
 ): Parser {
-  const pattern = new RegExp(hostPattern.replace(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
+  const pattern = new RegExp(hostPattern.replaceAll(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
 
   async function parse(url: string, settings: Settings): Promise<FicData> {
     const threadIdMatch = THREAD_ID_PATTERN.exec(url);
@@ -138,7 +138,8 @@ function createXenForoParser(
         const postDoc = await fetchDoc(listing.url);
         // XF2: article has data-content="post-XXXX" and id="js-post-XXXX";
         // the anchor id "post-XXXX" is on a <span> inside the article, not the article itself
-        const anchor = new URL(listing.url).hash.replace("#", "");
+        let anchor = "";
+        try { anchor = new URL(listing.url).hash.replace("#", ""); } catch { /* malformed URL, no anchor */ }
         const postEl = anchor
           ? postDoc.querySelector(
               `[data-content="${anchor}"] .message-body .bbWrapper,` +
