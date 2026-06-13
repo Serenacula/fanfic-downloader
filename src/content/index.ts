@@ -1,6 +1,13 @@
 // Proxy fetch requests from the background service worker through this content script's
 // page context. This bypasses Cloudflare bot protection, which blocks direct service-worker
 // fetches by detecting the missing same-origin headers and browser JS challenge state.
+const PROXY_ALLOWED_HOSTS = new Set([
+  "www.scribblehub.com",
+  "forums.spacebattles.com",
+  "forums.sufficientvelocity.com",
+  "forum.questionablequesting.com",
+]);
+
 browser.runtime.onMessage.addListener(
   (message: unknown): Promise<{ ok: boolean; status: number; text: string }> | undefined => {
     const msg = message as { type?: string; url?: string };
@@ -11,7 +18,7 @@ browser.runtime.onMessage.addListener(
     } catch {
       return undefined;
     }
-    if (!parsed.hostname.endsWith("scribblehub.com")) return undefined;
+    if (!PROXY_ALLOWED_HOSTS.has(parsed.hostname)) return undefined;
     return fetch(msg.url).then(async (response) => ({
       ok: response.ok,
       status: response.status,

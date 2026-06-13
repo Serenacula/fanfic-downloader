@@ -21,6 +21,32 @@ type XenForoSite = "spacebattles" | "sufficientvelocity" | "questionablequesting
 
 const THREAD_ID_PATTERN = /\/threads\/[^./]+\.(\d+)/;
 
+interface ProxyResponse {
+  ok: boolean;
+  status: number;
+  text: string;
+}
+
+// Cloudflare blocks direct service-worker fetches with a JS challenge (503).
+// Route through an active XenForo tab so the request uses the browser's existing
+// Cloudflare clearance. Falls back to direct fetch in tests and when no tab is open.
+async function fetchHtmlViaProxy(url: string, tabQueryPattern: string): Promise<Document> {
+  try {
+    if (typeof browser !== "undefined" && browser?.tabs) {
+      const tabs = await browser.tabs.query({ url: tabQueryPattern });
+      const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
+      if (tabId != null) {
+        const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return new DOMParser().parseFromString(resp.text, "text/html");
+      }
+    }
+  } catch (error) {
+    console.warn(`[xenforo] content script proxy unavailable for ${url}:`, error);
+  }
+  return fetchHtml(url);
+}
+
 function threadmarksUrl(baseUrl: string, threadId: string): string {
   return `${baseUrl}/threads/${threadId}/threadmarks`;
 }
@@ -62,6 +88,7 @@ function createXenForoParser(
   site: XenForoSite,
   baseUrl: string,
   hostPattern: string,
+  tabQueryPattern: string,
 ): Parser {
   const pattern = new RegExp(hostPattern.replace(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
 
@@ -71,9 +98,11 @@ function createXenForoParser(
     const threadId = threadIdMatch[1]!;
     const sourceUrl = `${baseUrl}/threads/${threadId}/`;
 
+    const fetchDoc = (fetchUrl: string) => fetchHtmlViaProxy(fetchUrl, tabQueryPattern);
+
     const [threadDoc, threadmarksDoc] = await Promise.all([
-      fetchHtml(sourceUrl),
-      fetchHtml(threadmarksUrl(baseUrl, threadId)),
+      fetchDoc(sourceUrl),
+      fetchDoc(threadmarksUrl(baseUrl, threadId)),
     ]);
 
     const title = textContent(threadDoc.querySelector("h1.p-title-value, .threadTitle, h1")) || "Untitled";
@@ -94,7 +123,7 @@ function createXenForoParser(
 
     const chapters: FicChapter[] = await Promise.all(
       listings.map(async (listing, index) => {
-        const postDoc = await fetchHtml(listing.url);
+        const postDoc = await fetchDoc(listing.url);
         // XF2: article has data-content="post-XXXX" and id="js-post-XXXX";
         // the anchor id "post-XXXX" is on a <span> inside the article, not the article itself
         const anchor = new URL(listing.url).hash.replace("#", "");
@@ -151,16 +180,19 @@ export const spaceBattlesParser = createXenForoParser(
   "spacebattles",
   "https://forums.spacebattles.com",
   "forums.spacebattles.com",
+  "*://forums.spacebattles.com/threads/*",
 );
 
 export const sufficientVelocityParser = createXenForoParser(
   "sufficientvelocity",
   "https://forums.sufficientvelocity.com",
   "forums.sufficientvelocity.com",
+  "*://forums.sufficientvelocity.com/threads/*",
 );
 
 export const questionableQuestingParser = createXenForoParser(
   "questionablequesting",
   "https://forum.questionablequesting.com",
   "forum.questionablequesting.com",
+  "*://forum.questionablequesting.com/threads/*",
 );
