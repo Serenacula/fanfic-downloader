@@ -203,6 +203,7 @@ async function runDownload(
     dataOverrides?: DataOverrides,
 ): Promise<void> {
     try {
+        console.log(`[fanfic-downloader] starting download job=${id} url=${url}`)
         const settings = { ...(await getSettings()), ...overrides }
         const parser = detectParser(url)
         if (!parser) throw new Error(`Unsupported site: ${url}`)
@@ -217,7 +218,9 @@ async function runDownload(
         })
         if (await isCancelled(id)) return
 
+        console.log(`[fanfic-downloader] calling parser for ${url}`)
         const parsed: FicData = await parser.parse(url, settings)
+        console.log(`[fanfic-downloader] parser returned: title="${parsed.core.title}" chapters=${parsed.core.chapters.length}`)
         const ficData: FicData = dataOverrides
             ? {
                   ...parsed,

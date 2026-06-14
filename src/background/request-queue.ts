@@ -38,12 +38,14 @@ export function createQueue(): RequestQueue {
         return;
       }
       entry.resolve(response);
-    } catch {
+    } catch (fetchError) {
+      const cause = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      console.warn(`[request-queue] fetch threw for ${entry.url} (attempt ${entry.retryCount + 1}/${MAX_RETRIES + 1}): ${cause}`);
       if (entry.retryCount < MAX_RETRIES) {
         scheduleRetry(entry);
         return;
       }
-      entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url}`));
+      entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url} — ${cause}`));
     } finally {
       inFlight--;
       void drain();
