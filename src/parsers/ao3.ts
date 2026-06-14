@@ -1,7 +1,7 @@
 import type { FicData, FicCore, AO3Metadata, FicChapter } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 import {
-  fetchHtmlWithProxy,
+  fetchHtml,
   ogImage,
   fetchImages,
   sanitizeHtml,
@@ -12,8 +12,6 @@ import {
   collectImageUrls,
   type Parser,
 } from "./common.js";
-
-const AO3_TAB_PATTERN = "*://archiveofourown.org/works/*";
 
 const WORK_ID_PATTERN = /archiveofourown\.org\/works\/(\d+)/;
 
@@ -88,7 +86,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const workId = extractWorkId(url);
   if (!workId) throw new Error(`Not a valid AO3 URL: ${url}`);
 
-  const doc = await fetchHtmlWithProxy(workUrl(workId), AO3_TAB_PATTERN);
+  const doc = await fetchHtml(workUrl(workId));
   const sourceUrl = `https://archiveofourown.org/works/${workId}`;
 
   const title = textContent(doc.querySelector("h2.title.heading"));

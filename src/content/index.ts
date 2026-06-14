@@ -3,6 +3,11 @@
 // fetches by detecting the missing same-origin headers and browser JS challenge state.
 const PROXY_ALLOWED_HOSTS = new Set([
   "archiveofourown.org",
+  "www.fanfiction.net",
+  "www.fictionpress.com",
+  "www.royalroad.com",
+  "tapas.io",
+  "www.wattpad.com",
   "www.scribblehub.com",
   "forums.spacebattles.com",
   "forums.sufficientvelocity.com",

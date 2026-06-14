@@ -22,6 +22,7 @@
 * remove credentials:include from request queue — caused CORS preflight failures on Firefox for non-Cloudflare sites (e.g. AO3); replace synthetic AO3 multichapter fixture with real page dump and update tests ([0a9398b](https://github.com/Serenacula/fanfic-downloader/commit/0a9398b17704e4dbe28d1810ffee7b6d34a6ccf5))
 * remove Upgrade-Insecure-Requests header from fetchHtml ([37b54f3](https://github.com/Serenacula/fanfic-downloader/commit/37b54f37d294c2e666dbe182b26ae0fcb93a14a5))
 * request-queue drain stall, FFN summary escaping, AO3 updateDate, XenForo hostname guard, image remap dedup, misc cleanups ([769f566](https://github.com/Serenacula/fanfic-downloader/commit/769f5669c888091877664c8aa788a9f38622be3b))
+* route AO3 fetches through content script proxy to bypass Cloudflare ([91ca49d](https://github.com/Serenacula/fanfic-downloader/commit/91ca49dd8e07823f2aecef6a25e93d0b631c1756))
 * try direct fetch first, fall back to content script proxy on failure ([f66d95d](https://github.com/Serenacula/fanfic-downloader/commit/f66d95d854396deb5e697cf5730497eea50bd1e4))
 
 ## [1.0.0](https://github.com/Serenacula/fanfic-downloader/compare/3ea1e207d4aee163455edae7dfe2030be7bbb5e4...v1.0.0) (2026-05-01)

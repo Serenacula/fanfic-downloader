@@ -6,7 +6,7 @@ import type {
 } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 import {
-  fetchHtmlWithProxy,
+  fetchHtml,
   ogImage,
   sanitizeHtml,
   resolveImageSrcs,
@@ -76,7 +76,7 @@ function createXenForoParser(
     const threadId = threadIdMatch[1]!;
     const sourceUrl = `${baseUrl}/threads/${threadId}/`;
 
-    const fetchDoc = (fetchUrl: string) => fetchHtmlWithProxy(fetchUrl, tabQueryPattern);
+    const fetchDoc = (fetchUrl: string) => fetchHtml(fetchUrl);
 
     const [threadDoc, threadmarksDoc] = await Promise.all([
       fetchDoc(sourceUrl),

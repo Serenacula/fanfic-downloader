@@ -87,9 +87,8 @@ const HTML_HEADERS = {
   "Accept-Language": "en-US,en;q=0.9",
 };
 
-export async function fetchHtml(url: string): Promise<Document> {
+async function fetchHtmlDirect(url: string): Promise<Document> {
   const response = await enqueue(url, { headers: HTML_HEADERS });
-  // enqueue() already rejects non-OK responses after retries; this is a defensive backstop.
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
   }
@@ -111,7 +110,7 @@ async function tryContentScriptProxy(url: string, tabQueryPattern: string): Prom
   const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
   if (tabId == null) {
     throw new Error(
-      `No tab found matching ${tabQueryPattern} — open the page in Firefox first, then retry`,
+      `No open tab found for this site — open the page in Firefox first, then retry`,
     );
   }
   const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
@@ -127,19 +126,18 @@ async function tryContentScriptProxy(url: string, tabQueryPattern: string): Prom
   return new DOMParser().parseFromString(resp.text, "text/html");
 }
 
-export async function fetchHtmlWithProxy(url: string, tabQueryPattern: string): Promise<Document> {
-  let directError: unknown;
+export async function fetchHtml(url: string): Promise<Document> {
   try {
-    return await fetchHtml(url);
-  } catch (error) {
-    directError = error;
+    return await fetchHtmlDirect(url);
+  } catch (directError) {
     console.warn(`[fanfic-downloader] direct fetch failed for ${url}, trying content script proxy`);
-  }
-  try {
-    return await tryContentScriptProxy(url, tabQueryPattern);
-  } catch (proxyError) {
-    console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
-    throw proxyError;
+    const hostname = new URL(url).hostname;
+    try {
+      return await tryContentScriptProxy(url, `*://${hostname}/*`);
+    } catch (proxyError) {
+      console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
+      throw proxyError;
+    }
   }
 }
 
