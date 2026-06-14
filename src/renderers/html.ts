@@ -97,9 +97,10 @@ export const renderHtml: RendererFn = async (data, settings) => {
     const coverHtml = coverPath
         ? `<div class="cover"><img src="${coverPath}" alt="Cover" style="max-width:100%;"/></div>`
         : ""
-    const infoHtml = settings.includeCoverPage
-        ? coverHtml + renderStoryInfoHtml(data, settings)
-        : coverHtml
+    const storyInfoHtml = settings.includeCoverPage
+        ? remapImageSrcs(renderStoryInfoHtml(data, settings), imageMap)
+        : ""
+    const infoHtml = coverHtml + storyInfoHtml
 
     if (settings.chapterSplit) {
         if (infoHtml) {

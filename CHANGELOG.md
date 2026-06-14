@@ -15,6 +15,7 @@
 * cross-platform xpi build using fflate instead of shell zip ([d823742](https://github.com/Serenacula/fanfic-downloader/commit/d82374213c86d1ce18befccb3313acff8de571c0))
 * FictionPress metadata, concurrent job storage race, request-queue drain busy-loop ([b907e81](https://github.com/Serenacula/fanfic-downloader/commit/b907e81265198f49ce5758eae3897ae380b713a7))
 * guard against multiple edge-case crashes and an infinite loop (F-01, F-03, F-04, F-05, F-09) ([2f7fa64](https://github.com/Serenacula/fanfic-downloader/commit/2f7fa6457ec6a61674ab2a972e9779d0c4dbf8d9))
+* inline formatting in PDF/DOCX, image src absolutisation in AO3/FFN, scoped image remapping, YAML newline escaping, FFN date label matching ([1698f12](https://github.com/Serenacula/fanfic-downloader/commit/1698f12466af66749f67438edc825126fbf490ca))
 * proxy XenForo fetches through active tab to bypass Cloudflare JS challenge ([eefff28](https://github.com/Serenacula/fanfic-downloader/commit/eefff2841a42b429e24c7c6b1645b20eeea90f2e))
 * request-queue drain stall, FFN summary escaping, AO3 updateDate, XenForo hostname guard, image remap dedup, misc cleanups ([769f566](https://github.com/Serenacula/fanfic-downloader/commit/769f5669c888091877664c8aa788a9f38622be3b))
 * try direct fetch first, fall back to content script proxy on failure ([f66d95d](https://github.com/Serenacula/fanfic-downloader/commit/f66d95d854396deb5e697cf5730497eea50bd1e4))

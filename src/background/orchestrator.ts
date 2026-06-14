@@ -210,6 +210,13 @@ async function runDownload(
         await updateJob(id, { status: "fetching-metadata" })
         if (await isCancelled(id)) return
 
+        await updateJob(id, {
+            status: "fetching-chapters",
+            chaptersTotal: null,
+            chaptersFetched: 0,
+        })
+        if (await isCancelled(id)) return
+
         const parsed: FicData = await parser.parse(url, settings)
         const ficData: FicData = dataOverrides
             ? {
@@ -227,14 +234,8 @@ async function runDownload(
         await updateJob(id, {
             title: ficData.core.title,
             author: ficData.core.author,
-            status: "fetching-chapters",
-            chaptersTotal: ficData.core.chapters.length,
-            chaptersFetched: 0,
-        })
-
-        if (await isCancelled(id)) return
-        await updateJob(id, {
             status: "rendering",
+            chaptersTotal: ficData.core.chapters.length,
             chaptersFetched: ficData.core.chapters.length,
         })
 

@@ -114,18 +114,21 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const chapters = extractChapters(doc, settings.includeAuthorNotes, sourceUrl);
 
+  const sanitizedSummary = summary ? sanitizeHtml(summary) : null;
+
   let images: FicData["core"]["images"] = [];
   if (settings.includeImages) {
-    const imageUrls = chapters.flatMap((chapter) =>
-      collectImageUrls(chapter.htmlContent, sourceUrl),
-    );
+    const imageUrls = [
+      ...(sanitizedSummary ? collectImageUrls(sanitizedSummary, sourceUrl) : []),
+      ...chapters.flatMap((chapter) => collectImageUrls(chapter.htmlContent, sourceUrl)),
+    ];
     images = await fetchImages([...new Set(imageUrls)]);
   }
 
   const core: FicCore = {
     title: title || "Untitled",
     author: author || "Unknown",
-    summary: summary ? sanitizeHtml(summary) : null,
+    summary: sanitizedSummary,
     chapters,
     images,
     coverImageUrl: ogImage(doc),

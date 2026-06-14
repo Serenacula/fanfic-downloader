@@ -162,7 +162,10 @@ function createXenForoParser(
 
     let images: FicCore["images"] = [];
     if (settings.includeImages) {
-      const imageUrls = chapters.flatMap((chapter) => collectImageUrls(chapter.htmlContent, sourceUrl));
+      const imageUrls = [
+        ...(summary ? collectImageUrls(summary, sourceUrl) : []),
+        ...chapters.flatMap((chapter) => collectImageUrls(chapter.htmlContent, sourceUrl)),
+      ];
       images = await fetchImages([...new Set(imageUrls)]);
     }
 

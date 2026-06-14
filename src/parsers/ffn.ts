@@ -160,7 +160,15 @@ function parseMetaBar(doc: Document): StoryMeta {
   if (publishDate && !updateDate) updateDate = publishDate;
 
   // Universe from breadcrumb
-  const universeLink = doc.querySelector("#pre_story_links a[href*='/crossovers/'], #pre_story_links a:not([href*='/'])")?.textContent?.trim() ?? null;
+  const breadcrumbAnchors = Array.from(
+    doc.querySelectorAll("#pre_story_links a[href^='/']"),
+  );
+  const crossoverAnchor = breadcrumbAnchors.find((anchor) =>
+    (anchor.getAttribute("href") ?? "").includes("/crossovers/"),
+  );
+  const universe =
+    (crossoverAnchor ?? breadcrumbAnchors[breadcrumbAnchors.length - 1])
+      ?.textContent?.trim() ?? null;
 
   return {
     title: title || "Untitled",
@@ -168,7 +176,7 @@ function parseMetaBar(doc: Document): StoryMeta {
     summary,
     genres,
     characters,
-    universe: universeLink,
+    universe,
     wordCount,
     follows,
     favs,
@@ -218,9 +226,10 @@ async function parseStory(
 
   let images: FicCore["images"] = [];
   if (settings.includeImages) {
-    const imageUrls = chapters.flatMap((chapter) =>
-      collectImageUrls(chapter.htmlContent, sourceUrl),
-    );
+    const imageUrls = [
+      ...(meta.summary ? collectImageUrls(meta.summary, sourceUrl) : []),
+      ...chapters.flatMap((chapter) => collectImageUrls(chapter.htmlContent, sourceUrl)),
+    ];
     images = await fetchImages([...new Set(imageUrls)]);
   }
 

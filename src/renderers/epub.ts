@@ -180,10 +180,6 @@ export const renderEpub: RendererFn = async (data, settings) => {
     // Story info page
     const hasInfo = settings.includeCoverPage
     if (hasInfo) {
-        files["OEBPS/info.xhtml"] = xhtmlPage(
-            "Story Information",
-            toXhtml(renderStoryInfoHtml(data, settings)),
-        )
         spineItems.push({
             id: "info",
             href: "info.xhtml",
@@ -223,6 +219,22 @@ export const renderEpub: RendererFn = async (data, settings) => {
             href: path.replace("OEBPS/", ""),
             mediaType: image.mimeType,
         })
+    }
+
+    // Story info page — written after imageMap is built so summary images can be remapped
+    if (hasInfo) {
+        let infoHtml = renderStoryInfoHtml(data, settings)
+        if (imageMap.size > 0) {
+            const infoDoc = new DOMParser().parseFromString(infoHtml, "text/html")
+            for (const img of Array.from(infoDoc.querySelectorAll("img"))) {
+                const src = img.getAttribute("src")
+                if (src === null) continue
+                const localPath = imageMap.get(src) ?? imageMap.get(src.replace(/&amp;/g, "&"))
+                if (localPath !== undefined) img.setAttribute("src", localPath)
+            }
+            infoHtml = infoDoc.body.innerHTML
+        }
+        files["OEBPS/info.xhtml"] = xhtmlPage("Story Information", toXhtml(infoHtml))
     }
 
     // Chapters
