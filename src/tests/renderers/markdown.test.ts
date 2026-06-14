@@ -55,4 +55,21 @@ describe("buildFrontmatter — YAML scalar escaping", () => {
     // Ensure there is no raw newline between "Line One" and "Line Two" inside the quoted scalar
     expect(text).not.toMatch(/title: "Line One\nLine Two"/);
   });
+
+  it("escapes backslashes in the title so the YAML value is valid", async () => {
+    const settings = { ...DEFAULT_SETTINGS, includeCoverPage: true, includeCoverImage: false, includeToc: false };
+    const data = makeFicData('Path\\to\\story');
+    const blob = await renderMarkdown(data, settings);
+    const text = await blob.text();
+    // Each backslash must be doubled so the YAML scalar is legal
+    expect(text).toContain('title: "Path\\\\to\\\\story"');
+  });
+
+  it("escapes double-quotes in the title so the YAML value is valid", async () => {
+    const settings = { ...DEFAULT_SETTINGS, includeCoverPage: true, includeCoverImage: false, includeToc: false };
+    const data = makeFicData('She said "hello"');
+    const blob = await renderMarkdown(data, settings);
+    const text = await blob.text();
+    expect(text).toContain('title: "She said \\"hello\\""');
+  });
 });

@@ -95,6 +95,17 @@ function htmlToParagraphs(html: string): Paragraph[] {
       case "br":
         paragraphs.push(new Paragraph({ text: "" }));
         break;
+      case "ul":
+      case "ol": {
+        for (const child of Array.from(element.children)) {
+          if (child.tagName.toLowerCase() !== "li") continue;
+          const runs = inlineNodesToRuns(child);
+          if (runs.length > 0) {
+            paragraphs.push(new Paragraph({ children: runs, bullet: { level: 0 } }));
+          }
+        }
+        break;
+      }
       default: {
         const runs = inlineNodesToRuns(element);
         if (runs.length > 0) paragraphs.push(new Paragraph({ children: runs }));

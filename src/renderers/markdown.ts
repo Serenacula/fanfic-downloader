@@ -3,7 +3,11 @@ import type { Settings, RendererFn } from "../shared/settings.js";
 import { htmlToMarkdown, zipFiles, fetchCoverImage, remapImageSrcs } from "./utils.js";
 
 function yamlScalar(value: string): string {
-  return value.replace(/\r/g, "").replace(/\n/g, "\\n").replace(/"/g, '\\"');
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "\\n")
+    .replace(/"/g, '\\"');
 }
 
 function buildFrontmatter(data: FicData): string {

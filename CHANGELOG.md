@@ -4,6 +4,7 @@
 
 * add FictionPress support via shared FFN parser logic ([764fe4a](https://github.com/Serenacula/fanfic-downloader/commit/764fe4ac1876bb3f4b191e8cdb9c427e8d2335e7))
 * auto-build source zip to release/ as part of npm run build ([d9c867d](https://github.com/Serenacula/fanfic-downloader/commit/d9c867dbe67398f91a1adf473ec4a035634ed222))
+* show per-chapter fetch progress in download status ([c0e9f6f](https://github.com/Serenacula/fanfic-downloader/commit/c0e9f6fe816ab4cba5126aa93c751f1e3e7dec70))
 
 ### Bug Fixes
 

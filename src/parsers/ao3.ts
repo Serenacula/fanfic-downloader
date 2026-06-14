@@ -113,6 +113,9 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   );
 
   const chapters = extractChapters(doc, settings.includeAuthorNotes, sourceUrl);
+  if (chapters.length === 0) {
+    throw new Error(`No chapter content found in AO3 work: ${sourceUrl}`);
+  }
 
   const sanitizedSummary = summary ? sanitizeHtml(summary) : null;
 

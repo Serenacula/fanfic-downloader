@@ -226,6 +226,10 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
         htmlContent = raw ? sanitizeHtml(raw) : "";
       }
 
+      if (!htmlContent) {
+        console.warn(`[wattpad] chapter ${index + 1} ("${part.title}") has no content after all fetch attempts`);
+      }
+
       onProgress?.(++fetchedCount, parts.length);
       return {
         index,

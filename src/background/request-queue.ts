@@ -20,6 +20,7 @@ export function createQueue(): RequestQueue {
   let inFlight = 0;
   let lastDispatchTime = 0;
   let draining = false;
+  let rateLimitTimerPending = false;
   const pending: QueueEntry[] = [];
 
   async function dispatch(entry: QueueEntry): Promise<void> {
@@ -75,7 +76,13 @@ export function createQueue(): RequestQueue {
         const waitMs = Math.max(0, settings.rateLimitMs - elapsed);
 
         if (waitMs > 0) {
-          setTimeout(() => void drain(), waitMs);
+          if (!rateLimitTimerPending) {
+            rateLimitTimerPending = true;
+            setTimeout(() => {
+              rateLimitTimerPending = false;
+              void drain();
+            }, waitMs);
+          }
           return;
         }
 

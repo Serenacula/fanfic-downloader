@@ -63,7 +63,6 @@ function createXenForoParser(
   site: XenForoSite,
   baseUrl: string,
   hostPattern: string,
-  tabQueryPattern: string,
 ): Parser {
   const pattern = new RegExp(hostPattern.replaceAll(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
 
@@ -169,19 +168,16 @@ export const spaceBattlesParser = createXenForoParser(
   "spacebattles",
   "https://forums.spacebattles.com",
   "forums.spacebattles.com",
-  "*://forums.spacebattles.com/threads/*",
 );
 
 export const sufficientVelocityParser = createXenForoParser(
   "sufficientvelocity",
   "https://forums.sufficientvelocity.com",
   "forums.sufficientvelocity.com",
-  "*://forums.sufficientvelocity.com/threads/*",
 );
 
 export const questionableQuestingParser = createXenForoParser(
   "questionablequesting",
   "https://forum.questionablequesting.com",
   "forum.questionablequesting.com",
-  "*://forum.questionablequesting.com/threads/*",
 );

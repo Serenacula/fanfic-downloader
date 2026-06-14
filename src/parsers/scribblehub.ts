@@ -10,6 +10,7 @@ import {
   parseDate,
   collectImageUrls,
   fetchImages,
+  tryContentScriptProxy,
   type Parser,
   type OnProgress,
 } from "./common.js";
@@ -20,30 +21,13 @@ interface SeriesRef {
   seriesPageUrl: string;
 }
 
-interface ProxyResponse {
-  ok: boolean;
-  status: number;
-  text: string;
-}
-
 // Cloudflare blocks direct service-worker fetches with a JS challenge (403 cf-mitigated).
 // Route through an active ScribbleHub tab so the request is same-origin and uses the
 // browser's existing Cloudflare clearance. Falls back to direct fetch in tests and when
 // no ScribbleHub tab is open.
 async function scribbleHubFetchHtml(url: string): Promise<Document> {
   try {
-    if (typeof browser !== "undefined" && browser?.tabs) {
-      const tabs = await browser.tabs.query({ url: "*://*.scribblehub.com/*" });
-      const tabId = tabs.find((t) => t.id != null && !t.discarded)?.id;
-      if (tabId != null) {
-        const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
-        if (typeof (resp as { text?: unknown })?.text !== "string") {
-          throw new Error("Invalid proxy response: missing text field");
-        }
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return new DOMParser().parseFromString(resp.text, "text/html");
-      }
-    }
+    return await tryContentScriptProxy(url, "*://*.scribblehub.com/*");
   } catch (error) {
     console.warn(`[scribblehub] tab proxy unavailable for ${url}:`, error);
   }

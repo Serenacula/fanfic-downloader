@@ -149,3 +149,24 @@ describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
     expect(data.core.wordCount).toBeGreaterThan(0);
   });
 });
+
+describe("AO3 parser — empty chapter content guard", () => {
+  it("throws a clear error when no chapter content is found in the document", async () => {
+    const tab = { id: 1, discarded: false };
+    vi.spyOn(browser.tabs, "query").mockResolvedValue([tab] as never);
+    // Return a stub document that has no .userstuff or #chapters > .chapter elements
+    const stubHtml = `<!DOCTYPE html><html><body>
+      <h2 class="title heading">Empty Work</h2>
+      <h3 class="byline heading"><a>Author Name</a></h3>
+      <div id="chapters"></div>
+    </body></html>`;
+    vi.spyOn(browser.tabs, "sendMessage").mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: stubHtml,
+    } as never);
+    await expect(
+      ao3Parser.parse("https://archiveofourown.org/works/99999999", DEFAULT_SETTINGS),
+    ).rejects.toThrow(/No chapter content found in AO3 work/);
+  });
+});

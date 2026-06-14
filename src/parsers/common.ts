@@ -104,7 +104,7 @@ function isCloudflareChallenge(html: string): boolean {
 
 type ProxyResponse = { ok: boolean; status: number; text: string };
 
-async function tryContentScriptProxy(url: string, tabQueryPattern: string): Promise<Document> {
+export async function tryContentScriptProxy(url: string, tabQueryPattern: string): Promise<Document> {
   if (typeof browser === "undefined" || !browser?.tabs) {
     throw new Error("browser.tabs not available");
   }
