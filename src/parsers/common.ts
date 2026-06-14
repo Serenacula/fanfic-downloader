@@ -97,6 +97,52 @@ export async function fetchHtml(url: string): Promise<Document> {
   return new DOMParser().parseFromString(text, "text/html");
 }
 
+function isCloudflareChallenge(html: string): boolean {
+  return html.includes("_cf_chl_opt") || html.includes("challenges.cloudflare.com");
+}
+
+type ProxyResponse = { ok: boolean; status: number; text: string };
+
+async function tryContentScriptProxy(url: string, tabQueryPattern: string): Promise<Document> {
+  if (typeof browser === "undefined" || !browser?.tabs) {
+    throw new Error("browser.tabs not available");
+  }
+  const tabs = await browser.tabs.query({ url: tabQueryPattern });
+  const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
+  if (tabId == null) {
+    throw new Error(
+      `No tab found matching ${tabQueryPattern} — open the page in Firefox first, then retry`,
+    );
+  }
+  const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+  if (typeof (resp as { text?: unknown })?.text !== "string") {
+    throw new Error("Invalid response from content script proxy");
+  }
+  if (isCloudflareChallenge(resp.text)) {
+    throw new Error(
+      `Blocked by a Cloudflare challenge — reload the page in your Firefox tab, then retry`,
+    );
+  }
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} from ${url}`);
+  return new DOMParser().parseFromString(resp.text, "text/html");
+}
+
+export async function fetchHtmlWithProxy(url: string, tabQueryPattern: string): Promise<Document> {
+  let directError: unknown;
+  try {
+    return await fetchHtml(url);
+  } catch (error) {
+    directError = error;
+    console.warn(`[fanfic-downloader] direct fetch failed for ${url}, trying content script proxy`);
+  }
+  try {
+    return await tryContentScriptProxy(url, tabQueryPattern);
+  } catch (proxyError) {
+    console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
+    throw proxyError;
+  }
+}
+
 export async function fetchImages(urls: string[]): Promise<FicImage[]> {
   const results = await Promise.allSettled(
     urls.map(async (url): Promise<FicImage> => {

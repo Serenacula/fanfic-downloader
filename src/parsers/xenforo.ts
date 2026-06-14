@@ -6,7 +6,7 @@ import type {
 } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 import {
-  fetchHtml,
+  fetchHtmlWithProxy,
   ogImage,
   sanitizeHtml,
   resolveImageSrcs,
@@ -20,43 +20,6 @@ import {
 type XenForoSite = "spacebattles" | "sufficientvelocity" | "questionablequesting";
 
 const THREAD_ID_PATTERN = /\/threads\/[^/]+\.(\d+)/;
-
-interface ProxyResponse {
-  ok: boolean;
-  status: number;
-  text: string;
-}
-
-// Try a direct background fetch first; fall back to routing through an active XenForo
-// tab if Cloudflare blocks the service-worker request with a JS challenge.
-async function fetchHtmlViaProxy(url: string, tabQueryPattern: string): Promise<Document> {
-  let directError: unknown;
-  try {
-    return await fetchHtml(url);
-  } catch (error) {
-    directError = error;
-    console.warn(`[xenforo] direct fetch failed for ${url}, trying content script proxy:`, error);
-  }
-
-  try {
-    if (typeof browser !== "undefined" && browser?.tabs) {
-      const tabs = await browser.tabs.query({ url: tabQueryPattern });
-      const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
-      if (tabId != null) {
-        const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
-        if (typeof (resp as { text?: unknown })?.text !== "string") {
-          throw new Error("Invalid proxy response: missing text field");
-        }
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        return new DOMParser().parseFromString(resp.text, "text/html");
-      }
-    }
-  } catch (proxyError) {
-    console.warn(`[xenforo] content script proxy also failed for ${url}:`, proxyError);
-  }
-
-  throw directError;
-}
 
 function threadmarksUrl(baseUrl: string, threadId: string): string {
   return `${baseUrl}/threads/${threadId}/threadmarks`;
@@ -113,7 +76,7 @@ function createXenForoParser(
     const threadId = threadIdMatch[1]!;
     const sourceUrl = `${baseUrl}/threads/${threadId}/`;
 
-    const fetchDoc = (fetchUrl: string) => fetchHtmlViaProxy(fetchUrl, tabQueryPattern);
+    const fetchDoc = (fetchUrl: string) => fetchHtmlWithProxy(fetchUrl, tabQueryPattern);
 
     const [threadDoc, threadmarksDoc] = await Promise.all([
       fetchDoc(sourceUrl),

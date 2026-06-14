@@ -11,25 +11,28 @@ vi.mock("../../background/request-queue.js", () => ({
   createQueue: vi.fn(),
 }));
 
-const { enqueue } = await import("../../background/request-queue.js");
 const { ao3Parser } = await import("../../parsers/ao3.js");
 
 const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), "../fixtures");
 
-function htmlResponse(path: string): Response {
-  return new Response(readFileSync(join(fixtureDir, path), "utf8"), {
-    status: 200,
-    headers: { "content-type": "text/html" },
-  });
+function fixtureText(path: string): string {
+  return readFileSync(join(fixtureDir, path), "utf8");
+}
+
+function proxyResponse(path: string): { ok: boolean; status: number; text: string } {
+  return { ok: true, status: 200, text: fixtureText(path) };
 }
 
 // Fixture: real AO3 page dump of works/80642696 ("A Villain By Any Other Name..." by Silvia_Goddess_of_Being_Right)
 // 5-chapter completed work; Chapter 2 has pre-chapter author notes; all chapters have end notes.
 describe("AO3 parser — multi-chapter work (works/80642696)", () => {
   beforeEach(() => {
-    vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url.includes("archiveofourown.org/works/80642696")) return htmlResponse("ao3-multichapter.html");
-      throw new Error(`Unexpected fetch: ${url}`);
+    const tab = { id: 1, discarded: false };
+    vi.spyOn(browser.tabs, "query").mockResolvedValue([tab] as never);
+    vi.spyOn(browser.tabs, "sendMessage").mockImplementation(async (_tabId, msg) => {
+      const { url } = msg as { url: string };
+      if (url.includes("archiveofourown.org/works/80642696")) return proxyResponse("ao3-multichapter.html");
+      throw new Error(`Unexpected proxy fetch: ${url}`);
     });
   });
 
@@ -58,18 +61,14 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
 
   it("excludes author notes by default", async () => {
     const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
-    // Chapter 1 end notes
     expect(data.core.chapters[0]!.htmlContent).not.toContain("Wrote this fic after rereading");
-    // Chapter 2 pre-notes
     expect(data.core.chapters[1]!.htmlContent).not.toContain("Another round of thanks to HQM");
   });
 
   it("includes author notes when the setting is enabled", async () => {
     const settings = { ...DEFAULT_SETTINGS, includeAuthorNotes: true };
     const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", settings);
-    // Chapter 1 end notes
     expect(data.core.chapters[0]!.htmlContent).toContain("Wrote this fic after rereading");
-    // Chapter 2 pre-notes
     expect(data.core.chapters[1]!.htmlContent).toContain("Another round of thanks to HQM");
   });
 
@@ -77,17 +76,37 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
     const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
     expect(data.core.publishDate).toBeInstanceOf(Date);
     expect(data.core.updateDate).toBeInstanceOf(Date);
-    // Published 2026-03-04, Completed 2026-03-08
     expect(data.core.publishDate!.getFullYear()).toBe(2026);
     expect(data.core.updateDate!.getFullYear()).toBe(2026);
+  });
+
+  it("throws a clear error when no AO3 tab is open", async () => {
+    vi.spyOn(browser.tabs, "query").mockResolvedValue([] as never);
+    await expect(
+      ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS),
+    ).rejects.toThrow(/open the page in Firefox first/);
+  });
+
+  it("throws a clear error when Cloudflare blocks the tab response", async () => {
+    vi.spyOn(browser.tabs, "sendMessage").mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: '<html><script>window._cf_chl_opt = {}</script></html>',
+    } as never);
+    await expect(
+      ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS),
+    ).rejects.toThrow(/Cloudflare/);
   });
 });
 
 describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
   beforeEach(() => {
-    vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url.includes("archiveofourown.org/works/75693471")) return htmlResponse("ao3-work.html");
-      throw new Error(`Unexpected fetch: ${url}`);
+    const tab = { id: 1, discarded: false };
+    vi.spyOn(browser.tabs, "query").mockResolvedValue([tab] as never);
+    vi.spyOn(browser.tabs, "sendMessage").mockImplementation(async (_tabId, msg) => {
+      const { url } = msg as { url: string };
+      if (url.includes("archiveofourown.org/works/75693471")) return proxyResponse("ao3-work.html");
+      throw new Error(`Unexpected proxy fetch: ${url}`);
     });
   });
 

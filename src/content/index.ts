@@ -2,6 +2,7 @@
 // page context. This bypasses Cloudflare bot protection, which blocks direct service-worker
 // fetches by detecting the missing same-origin headers and browser JS challenge state.
 const PROXY_ALLOWED_HOSTS = new Set([
+  "archiveofourown.org",
   "www.scribblehub.com",
   "forums.spacebattles.com",
   "forums.sufficientvelocity.com",
