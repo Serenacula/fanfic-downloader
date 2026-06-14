@@ -8,7 +8,7 @@ vi.mock("../background/request-queue.js", () => ({
 }));
 
 const { enqueue } = await import("../background/request-queue.js");
-const { formatFilename, fetchCoverImage } = await import("../renderers/utils.js");
+const { formatFilename, fetchCoverImage, remapImageSrcs } = await import("../renderers/utils.js");
 
 function makeFicData(
   title: string,
@@ -171,5 +171,23 @@ describe("fetchCoverImage", () => {
     const result = await fetchCoverImage("https://example.com/cover.png");
     expect(result?.data).toBeInstanceOf(Uint8Array);
     expect(result?.data.length).toBe(3);
+  });
+});
+
+describe("remapImageSrcs", () => {
+  it("replaces img src attributes but leaves prose text mentioning the same URL unchanged", () => {
+    const imageUrl = "https://example.com/img.png";
+    const html = `<p>See https://example.com/img.png for details.</p><img src="https://example.com/img.png" alt="test"/>`;
+    const imageMap = new Map([[imageUrl, "images/img-0.png"]]);
+    const result = remapImageSrcs(html, imageMap);
+    // The img src should be remapped
+    expect(result).toContain('src="images/img-0.png"');
+    // The prose text should not be modified
+    expect(result).toContain("See https://example.com/img.png for details.");
+  });
+
+  it("returns the html unchanged when imageMap is empty", () => {
+    const html = `<p>Some text</p><img src="https://example.com/img.png"/>`;
+    expect(remapImageSrcs(html, new Map())).toBe(html);
   });
 });

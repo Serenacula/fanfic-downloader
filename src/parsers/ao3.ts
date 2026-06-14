@@ -5,6 +5,7 @@ import {
   ogImage,
   fetchImages,
   sanitizeHtml,
+  resolveImageSrcs,
   textContent,
   parseCount,
   parseDate,
@@ -39,7 +40,7 @@ function extractSeries(doc: Document): AO3Metadata["series"] {
   return series;
 }
 
-function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter[] {
+function extractChapters(doc: Document, includeAuthorNotes: boolean, sourceUrl: string): FicChapter[] {
   const chapters: FicChapter[] = [];
   const chapterDivs = doc.querySelectorAll("#chapters > .chapter");
 
@@ -48,7 +49,7 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter
     const content = doc.querySelector("#chapters .userstuff");
     if (content) {
       for (const landmark of Array.from(content.querySelectorAll(".landmark"))) landmark.remove();
-      chapters.push({ index: 0, title: null, htmlContent: sanitizeHtml(content.innerHTML) });
+      chapters.push({ index: 0, title: null, htmlContent: resolveImageSrcs(sanitizeHtml(content.innerHTML), sourceUrl) });
     }
     return chapters;
   }
@@ -75,7 +76,7 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean): FicChapter
       if (postNotes) html += postNotes.innerHTML;
     }
 
-    chapters.push({ index, title, htmlContent: sanitizeHtml(html) });
+    chapters.push({ index, title, htmlContent: resolveImageSrcs(sanitizeHtml(html), sourceUrl) });
   }
 
   return chapters;
@@ -111,7 +112,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     textContent(doc.querySelector("dd.status")),
   );
 
-  const chapters = extractChapters(doc, settings.includeAuthorNotes);
+  const chapters = extractChapters(doc, settings.includeAuthorNotes, sourceUrl);
 
   let images: FicData["core"]["images"] = [];
   if (settings.includeImages) {

@@ -110,6 +110,26 @@ describe("FFN parser — s/12345 (The Long Road Home)", () => {
   });
 });
 
+describe("FFN parser — reverse date order", () => {
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("fanfiction.net/s/99999/")) return htmlResponse("ffn-story-reversed-dates.html");
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("assigns publishDate and updateDate by label, not position, when Updated appears before Published", async () => {
+    const data = await ffnParser.parse("https://www.fanfiction.net/s/99999/1/", DEFAULT_SETTINGS);
+    expect(data.core.publishDate).toBeInstanceOf(Date);
+    expect(data.core.updateDate).toBeInstanceOf(Date);
+    expect(data.core.publishDate!.getFullYear()).toBe(2022);
+    expect(data.core.publishDate!.getMonth()).toBe(0); // January (0-indexed)
+    expect(data.core.updateDate!.getMonth()).toBe(5); // June (0-indexed)
+    // publish should be earlier than update
+    expect(data.core.publishDate!.getTime()).toBeLessThan(data.core.updateDate!.getTime());
+  });
+});
+
 describe("FFN parser — URL detection", () => {
   it("matches story URLs with a chapter number", () => {
     expect(ffnParser.pattern.test("https://www.fanfiction.net/s/12345/1/")).toBe(true);

@@ -228,9 +228,16 @@ export const renderEpub: RendererFn = async (data, settings) => {
     // Chapters
     for (const chapter of data.core.chapters) {
         let html = chapter.htmlContent
-        // Remap image URLs to local epub paths
-        for (const [originalUrl, localPath] of imageMap) {
-            html = html.split(escXml(originalUrl)).join(escXml(localPath))
+        // Remap image URLs to local epub paths (DOM-based to avoid touching prose text)
+        if (imageMap.size > 0) {
+            const imgDoc = new DOMParser().parseFromString(html, "text/html")
+            for (const img of Array.from(imgDoc.querySelectorAll("img"))) {
+                const src = img.getAttribute("src")
+                if (src === null) continue
+                const localPath = imageMap.get(src) ?? imageMap.get(src.replace(/&amp;/g, "&"))
+                if (localPath !== undefined) img.setAttribute("src", localPath)
+            }
+            html = imgDoc.body.innerHTML
         }
 
         const titleHtml =

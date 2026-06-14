@@ -2,13 +2,17 @@ import type { FicData } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
 import { htmlToMarkdown, zipFiles, fetchCoverImage, remapImageSrcs } from "./utils.js";
 
+function yamlScalar(value: string): string {
+  return value.replace(/\r/g, "").replace(/\n/g, "\\n").replace(/"/g, '\\"');
+}
+
 function buildFrontmatter(data: FicData): string {
   const { core } = data;
   const lines = [
     "---",
-    `title: "${core.title.replace(/"/g, '\\"')}"`,
-    `author: "${core.author.replace(/"/g, '\\"')}"`,
-    `source: "${core.sourceUrl}"`,
+    `title: "${yamlScalar(core.title)}"`,
+    `author: "${yamlScalar(core.author)}"`,
+    `source: "${yamlScalar(core.sourceUrl)}"`,
   ];
   if (core.publishDate) lines.push(`published: "${core.publishDate.toISOString().slice(0, 10)}"`);
   if (core.updateDate) lines.push(`updated: "${core.updateDate.toISOString().slice(0, 10)}"`);
@@ -18,7 +22,7 @@ function buildFrontmatter(data: FicData): string {
   if (data.site === "ao3" && data.meta.fandoms.length > 0) {
     lines.push(`fandoms:`);
     for (const fandom of data.meta.fandoms) {
-      lines.push(`  - "${fandom.replace(/"/g, '\\"')}"`);
+      lines.push(`  - "${yamlScalar(fandom)}"`);
     }
   }
 

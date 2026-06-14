@@ -92,11 +92,16 @@ export async function fetchCoverImage(
 }
 
 export function remapImageSrcs(html: string, imageMap: Map<string, string>): string {
-  for (const [originalUrl, localPath] of imageMap) {
-    const escapedUrl = originalUrl.replace(/&/g, "&amp;");
-    html = html.split(escapedUrl).join(localPath);
+  if (imageMap.size === 0) return html;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  for (const img of Array.from(doc.querySelectorAll("img"))) {
+    const src = img.getAttribute("src");
+    if (src === null) continue;
+    const escapedSrc = src.replace(/&/g, "&amp;");
+    const localPath = imageMap.get(src) ?? imageMap.get(escapedSrc);
+    if (localPath !== undefined) img.setAttribute("src", localPath);
   }
-  return html;
+  return doc.body.innerHTML;
 }
 
 function sanitizeTemplateValue(value: string): string {

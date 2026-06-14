@@ -6,6 +6,7 @@ import {
   ogImage,
   fetchImages,
   sanitizeHtml,
+  resolveImageSrcs,
   parseCount,
   collectImageUrls,
   type Parser,
@@ -139,8 +140,23 @@ function parseMetaBar(doc: Document): StoryMeta {
     const date = new Date(trimmed);
     return isNaN(date.getTime()) ? null : date;
   };
-  if (dateSpans[0]) publishDate = toDate(dateSpans[0]);
-  if (dateSpans[1]) updateDate = toDate(dateSpans[1]);
+  for (const span of dateSpans) {
+    let sibling: Node | null = span.previousSibling;
+    let labelText = "";
+    while (sibling) {
+      if (sibling.nodeType === Node.TEXT_NODE) {
+        labelText = (sibling.textContent ?? "").trim();
+        break;
+      }
+      sibling = sibling.previousSibling;
+    }
+    const date = toDate(span);
+    if (/published/i.test(labelText)) {
+      publishDate = date;
+    } else if (/updated/i.test(labelText)) {
+      updateDate = date;
+    }
+  }
   if (publishDate && !updateDate) updateDate = publishDate;
 
   // Universe from breadcrumb
@@ -192,7 +208,8 @@ async function parseStory(
 
   const chapters: FicChapter[] = chapterDocs.map((chapterDoc, index) => {
     const content = chapterDoc.querySelector("#storytext");
-    const htmlContent = content ? sanitizeHtml(content.innerHTML) : "";
+    const chUrl = chapterUrl(domain, storyId, index + 1);
+    const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), chUrl) : "";
     const title = chapterTitles[index] ?? null;
     return { index, title, htmlContent };
   });

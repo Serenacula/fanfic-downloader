@@ -13,6 +13,25 @@ import {
 import { renderStoryInfoText } from "./story-info.js";
 import { htmlToText } from "./utils.js";
 
+function inlineNodesToRuns(node: Node, bold = false, italics = false): TextRun[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent ?? "";
+    if (!text) return [];
+    const options: { text: string; bold?: boolean; italics?: boolean } = { text };
+    if (bold) options.bold = true;
+    if (italics) options.italics = true;
+    return [new TextRun(options)];
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return [];
+  const element = node as Element;
+  const tag = element.tagName.toLowerCase();
+  const childBold = bold || tag === "strong" || tag === "b";
+  const childItalics = italics || tag === "em" || tag === "i";
+  return Array.from(element.childNodes).flatMap((child) =>
+    inlineNodesToRuns(child, childBold, childItalics),
+  );
+}
+
 function htmlToParagraphs(html: string): Paragraph[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   const paragraphs: Paragraph[] = [];
@@ -27,34 +46,45 @@ function htmlToParagraphs(html: string): Paragraph[] {
 
     const element = node as Element;
     const tag = element.tagName.toLowerCase();
-    const text = element.textContent?.trim() ?? "";
 
     switch (tag) {
-      case "p":
-        paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+      case "p": {
+        const runs = inlineNodesToRuns(element);
+        if (runs.length > 0) paragraphs.push(new Paragraph({ children: runs }));
         break;
-      case "h1":
-        paragraphs.push(new Paragraph({ text, heading: HeadingLevel.HEADING_1 }));
+      }
+      case "h1": {
+        const runs = inlineNodesToRuns(element);
+        paragraphs.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_1 }));
         break;
-      case "h2":
-        paragraphs.push(new Paragraph({ text, heading: HeadingLevel.HEADING_2 }));
+      }
+      case "h2": {
+        const runs = inlineNodesToRuns(element);
+        paragraphs.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_2 }));
         break;
-      case "h3":
-        paragraphs.push(new Paragraph({ text, heading: HeadingLevel.HEADING_3 }));
+      }
+      case "h3": {
+        const runs = inlineNodesToRuns(element);
+        paragraphs.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_3 }));
         break;
+      }
       case "h4":
       case "h5":
-      case "h6":
-        paragraphs.push(new Paragraph({ text, heading: HeadingLevel.HEADING_4 }));
+      case "h6": {
+        const runs = inlineNodesToRuns(element);
+        paragraphs.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_4 }));
         break;
-      case "blockquote":
+      }
+      case "blockquote": {
+        const runs = inlineNodesToRuns(element, false, true);
         paragraphs.push(
           new Paragraph({
-            children: [new TextRun({ text, italics: true, color: "555555" })],
+            children: runs,
             indent: { left: convertInchesToTwip(0.5) },
           }),
         );
         break;
+      }
       case "hr":
         paragraphs.push(
           new Paragraph({
@@ -65,8 +95,11 @@ function htmlToParagraphs(html: string): Paragraph[] {
       case "br":
         paragraphs.push(new Paragraph({ text: "" }));
         break;
-      default:
-        if (text) paragraphs.push(new Paragraph({ children: [new TextRun(text)] }));
+      default: {
+        const runs = inlineNodesToRuns(element);
+        if (runs.length > 0) paragraphs.push(new Paragraph({ children: runs }));
+        break;
+      }
     }
   }
 
