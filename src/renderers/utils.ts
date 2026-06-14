@@ -91,6 +91,14 @@ export async function fetchCoverImage(
   }
 }
 
+export function remapImageSrcs(html: string, imageMap: Map<string, string>): string {
+  for (const [originalUrl, localPath] of imageMap) {
+    const escapedUrl = originalUrl.replace(/&/g, "&amp;");
+    html = html.split(escapedUrl).join(localPath);
+  }
+  return html;
+}
+
 function sanitizeTemplateValue(value: string): string {
   // Prevent story title/author from expanding other template variables
   return value.replace(/\{[^}]*\}/g, "_");

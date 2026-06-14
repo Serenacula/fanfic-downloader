@@ -106,7 +106,10 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
     doc.querySelector("dd.published")?.getAttribute("datetime") ??
     textContent(doc.querySelector("dd.published")),
   );
-  const updateDate = parseDate(textContent(doc.querySelector("dd.status")));
+  const updateDate = parseDate(
+    doc.querySelector("dd.status")?.getAttribute("datetime") ??
+    textContent(doc.querySelector("dd.status")),
+  );
 
   const chapters = extractChapters(doc, settings.includeAuthorNotes);
 

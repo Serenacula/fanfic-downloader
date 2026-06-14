@@ -54,7 +54,7 @@ interface WattpadJsonLd {
   keywords?: string;
   datePublished?: string;
   dateModified?: string;
-  interactionStatistic?: number;
+  interactionStatistic?: unknown;
 }
 
 const WATTPAD_PLATFORM_TAGS = new Set(["eBooks", "reading", "stories", "fiction"]);
@@ -255,7 +255,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
 
   const meta: WattpadMetadata = {
     genre,
-    reads: apiData?.readCount ?? jsonLd?.interactionStatistic ?? null,
+    reads: apiData?.readCount ?? null,
     votes: apiData?.voteCount ?? null,
   };
 

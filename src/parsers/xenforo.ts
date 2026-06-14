@@ -44,6 +44,9 @@ async function fetchHtmlViaProxy(url: string, tabQueryPattern: string): Promise<
       const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
       if (tabId != null) {
         const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+        if (typeof (resp as { text?: unknown })?.text !== "string") {
+          throw new Error("Invalid proxy response: missing text field");
+        }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return new DOMParser().parseFromString(resp.text, "text/html");
       }
@@ -103,6 +106,10 @@ function createXenForoParser(
   async function parse(url: string, settings: Settings): Promise<FicData> {
     const threadIdMatch = THREAD_ID_PATTERN.exec(url);
     if (!threadIdMatch) throw new Error(`Not a valid ${site} URL: ${url}`);
+    const parsedHostname = new URL(url).hostname;
+    if (parsedHostname !== hostPattern) {
+      throw new Error(`Not a valid ${site} URL: ${url}`);
+    }
     const threadId = threadIdMatch[1]!;
     const sourceUrl = `${baseUrl}/threads/${threadId}/`;
 

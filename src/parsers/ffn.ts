@@ -73,7 +73,7 @@ function parseMetaBar(doc: Document): StoryMeta {
   const author =
     doc.querySelector("#profile_top a.xcontrast_txt")?.textContent?.trim() ?? "Unknown";
   const summaryEl = doc.querySelector("#profile_top div.xcontrast_txt");
-  const summary = summaryEl?.textContent?.trim() ?? null;
+  const summary = summaryEl ? sanitizeHtml(`<p>${summaryEl.textContent?.trim() ?? ""}</p>`) : null;
 
   const metaSpan = doc.querySelector("#profile_top span.xgray.xcontrast_txt");
   const metaText = metaSpan?.textContent ?? "";

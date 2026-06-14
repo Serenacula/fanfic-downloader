@@ -90,6 +90,7 @@ const HTML_HEADERS = {
 
 export async function fetchHtml(url: string): Promise<Document> {
   const response = await enqueue(url, { headers: HTML_HEADERS });
+  // enqueue() already rejects non-OK responses after retries; this is a defensive backstop.
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
   }

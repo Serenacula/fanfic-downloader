@@ -1,6 +1,6 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
-import { htmlToMarkdown, zipFiles, fetchCoverImage } from "./utils.js";
+import { htmlToMarkdown, zipFiles, fetchCoverImage, remapImageSrcs } from "./utils.js";
 
 function buildFrontmatter(data: FicData): string {
   const { core } = data;
@@ -34,13 +34,6 @@ function buildImageMap(data: FicData): Map<string, string> {
     imageMap.set(image.url, `images/img-${index}.${extension}`);
   }
   return imageMap;
-}
-
-function remapImageSrcs(html: string, imageMap: Map<string, string>): string {
-  for (const [originalUrl, localPath] of imageMap) {
-    html = html.split(originalUrl).join(localPath);
-  }
-  return html;
 }
 
 function renderChapterMd(data: FicData, chapterIndex: number, settings: Settings, imageMap: Map<string, string>): string {

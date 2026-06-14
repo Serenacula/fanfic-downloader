@@ -36,6 +36,9 @@ async function scribbleHubFetchHtml(url: string): Promise<Document> {
       const tabId = tabs.find((t) => t.id != null && !t.discarded)?.id;
       if (tabId != null) {
         const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+        if (typeof (resp as { text?: unknown })?.text !== "string") {
+          throw new Error("Invalid proxy response: missing text field");
+        }
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return new DOMParser().parseFromString(resp.text, "text/html");
       }
