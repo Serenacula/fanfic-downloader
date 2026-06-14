@@ -10,6 +10,7 @@ import {
   fetchImages,
   parseDate,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
 
@@ -111,7 +112,7 @@ async function fetchAllEpisodes(seriesId: string): Promise<EpisodeListing[]> {
   return listings;
 }
 
-async function parse(url: string, settings: Settings): Promise<FicData> {
+async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
   const match = SERIES_PATTERN.exec(url);
   if (!match) throw new Error(`Not a valid Tapas URL: ${url}`);
   const slug = match[1]!;
@@ -140,6 +141,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const publishDate = listings[0]?.date ?? null;
   const updateDate = listings[listings.length - 1]?.date ?? null;
 
+  let fetchedCount = 0;
   const chapters: FicChapter[] = await Promise.all(
     listings.map(async (listing, index) => {
       const chapterDoc = await fetchHtml(listing.url);
@@ -147,6 +149,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
         ".viewer__body, .viewer__row, .viewer-row, .content-viewer, .prose-content, .novel-body",
       );
       const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
+      onProgress?.(++fetchedCount, listings.length);
       return { index, title: listing.title, htmlContent };
     }),
   );

@@ -11,6 +11,7 @@ import {
   parseDate,
   collectImageUrls,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 
 const FICTION_ID_PATTERN = /royalroad\.com\/fiction\/(\d+)/;
@@ -56,7 +57,7 @@ function extractChapterListing(doc: Document): ChapterListing[] {
   });
 }
 
-async function parse(url: string, settings: Settings): Promise<FicData> {
+async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
   const fictionId = extractFictionId(url);
   if (!fictionId) throw new Error(`Not a valid Royal Road URL: ${url}`);
 
@@ -106,6 +107,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const publishDate = chapterListing[0]?.date ?? null;
   const updateDate = chapterListing[chapterListing.length - 1]?.date ?? null;
 
+  let fetchedCount = 0;
   const chapters: FicChapter[] = await Promise.all(
     chapterListing.map(async (listing, index) => {
       const chapterPageUrl = chapterUrl(listing.path);
@@ -118,6 +120,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
         }
       }
       const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), chapterPageUrl) : "";
+      onProgress?.(++fetchedCount, chapterListing.length);
       return { index, title: listing.title, htmlContent };
     }),
   );

@@ -10,6 +10,7 @@ import {
   parseCount,
   collectImageUrls,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 
 const FFN_PATTERN = /fanfiction\.net\/s\/(\d+)/;
@@ -194,15 +195,21 @@ async function parseStory(
   site: "ffn" | "fictionpress",
   storyId: string,
   settings: Settings,
+  onProgress?: OnProgress,
 ): Promise<FicData> {
   const firstDoc = await fetchHtml(chapterUrl(domain, storyId, 1));
   const meta = parseMetaBar(firstDoc);
 
+  let fetchedCount = 1;
+  onProgress?.(fetchedCount, meta.chapterCount);
   const chapterDocs: Document[] = [firstDoc];
   if (meta.chapterCount > 1) {
     const remainingDocs = await Promise.all(
       Array.from({ length: meta.chapterCount - 1 }, (_, index) =>
-        fetchHtml(chapterUrl(domain, storyId, index + 2)),
+        fetchHtml(chapterUrl(domain, storyId, index + 2)).then((doc) => {
+          onProgress?.(++fetchedCount, meta.chapterCount);
+          return doc;
+        }),
       ),
     );
     chapterDocs.push(...remainingDocs);
@@ -262,18 +269,18 @@ async function parseStory(
 
 export const ffnParser: Parser = {
   pattern: FFN_PATTERN,
-  async parse(url: string, settings: Settings): Promise<FicData> {
+  async parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
     const storyId = extractStoryId(FFN_PATTERN, url);
     if (!storyId) throw new Error(`Not a valid FFN URL: ${url}`);
-    return parseStory("fanfiction.net", "ffn", storyId, settings);
+    return parseStory("fanfiction.net", "ffn", storyId, settings, onProgress);
   },
 };
 
 export const fictionPressParser: Parser = {
   pattern: FP_PATTERN,
-  async parse(url: string, settings: Settings): Promise<FicData> {
+  async parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
     const storyId = extractStoryId(FP_PATTERN, url);
     if (!storyId) throw new Error(`Not a valid FictionPress URL: ${url}`);
-    return parseStory("fictionpress.com", "fictionpress", storyId, settings);
+    return parseStory("fictionpress.com", "fictionpress", storyId, settings, onProgress);
   },
 };

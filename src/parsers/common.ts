@@ -2,9 +2,11 @@ import type { FicData, FicImage } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 import { enqueue } from "../background/request-queue.js";
 
+export type OnProgress = (fetched: number, total: number) => void;
+
 export interface Parser {
   pattern: RegExp;
-  parse: (url: string, settings: Settings) => Promise<FicData>;
+  parse: (url: string, settings: Settings, onProgress?: OnProgress) => Promise<FicData>;
 }
 
 const ALLOWED_TAGS = new Set([

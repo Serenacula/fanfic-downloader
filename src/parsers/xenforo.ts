@@ -15,6 +15,7 @@ import {
   collectImageUrls,
   fetchImages,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 
 type XenForoSite = "spacebattles" | "sufficientvelocity" | "questionablequesting";
@@ -66,7 +67,7 @@ function createXenForoParser(
 ): Parser {
   const pattern = new RegExp(hostPattern.replaceAll(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
 
-  async function parse(url: string, settings: Settings): Promise<FicData> {
+  async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
     const threadIdMatch = THREAD_ID_PATTERN.exec(url);
     if (!threadIdMatch) throw new Error(`Not a valid ${site} URL: ${url}`);
     const parsedHostname = new URL(url).hostname;
@@ -103,6 +104,7 @@ function createXenForoParser(
     const publishDate = listings[0]?.date ?? null;
     const updateDate = listings[listings.length - 1]?.date ?? null;
 
+    let fetchedCount = 0;
     const chapters: FicChapter[] = await Promise.all(
       listings.map(async (listing, index) => {
         const postDoc = await fetchDoc(listing.url);
@@ -119,6 +121,7 @@ function createXenForoParser(
             )
           : postDoc.querySelector(".message-body .bbWrapper, .messageContent");
         const htmlContent = postEl ? resolveImageSrcs(sanitizeHtml(postEl.innerHTML), listing.url) : "";
+        onProgress?.(++fetchedCount, listings.length);
         return { index, title: listing.title, htmlContent };
       }),
     );

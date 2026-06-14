@@ -219,7 +219,10 @@ async function runDownload(
         if (await isCancelled(id)) return
 
         console.log(`[fanfic-downloader] calling parser for ${url}`)
-        const parsed: FicData = await parser.parse(url, settings)
+        const onProgress = (fetched: number, total: number) => {
+            void updateJob(id, { chaptersFetched: fetched, chaptersTotal: total })
+        }
+        const parsed: FicData = await parser.parse(url, settings, onProgress)
         console.log(`[fanfic-downloader] parser returned: title="${parsed.core.title}" chapters=${parsed.core.chapters.length}`)
         const ficData: FicData = dataOverrides
             ? {

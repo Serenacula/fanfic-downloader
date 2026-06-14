@@ -9,6 +9,7 @@ import {
   collectImageUrls,
   fetchImages,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
 
@@ -134,7 +135,7 @@ function extractChapterContent(doc: Document): string {
   return pre ? pre.innerHTML : "";
 }
 
-async function parse(url: string, settings: Settings): Promise<FicData> {
+async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
   const storyId = await resolveStoryId(url);
   const sourceUrl = storyUrl(storyId);
 
@@ -209,6 +210,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const publishDate = parseDate(jsonLd?.datePublished ?? "") || parts[0]?.date || null;
   const updateDate = parseDate(jsonLd?.dateModified ?? "") || parts[parts.length - 1]?.date || null;
 
+  let fetchedCount = 0;
   const chapters: FicChapter[] = await Promise.all(
     parts.map(async (part, index) => {
       let htmlContent: string | null = null;
@@ -224,6 +226,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
         htmlContent = raw ? sanitizeHtml(raw) : "";
       }
 
+      onProgress?.(++fetchedCount, parts.length);
       return {
         index,
         title: part.title,

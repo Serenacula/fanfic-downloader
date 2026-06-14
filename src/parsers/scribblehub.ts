@@ -11,6 +11,7 @@ import {
   collectImageUrls,
   fetchImages,
   type Parser,
+  type OnProgress,
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
 
@@ -146,7 +147,7 @@ async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
   }
 }
 
-async function parse(url: string, settings: Settings): Promise<FicData> {
+async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
   const ref = resolveSeriesRef(url);
   if (!ref) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
   const { id: seriesId, seriesPageUrl: sourceUrl } = ref;
@@ -192,13 +193,13 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const updateDate = listings[0]?.date ?? null;
 
   console.log(`[scribblehub] fetching ${listings.length} chapters`);
+  let fetchedCount = 0;
   const chapters: FicChapter[] = await Promise.all(
     [...listings].reverse().map(async (listing, index) => {
-      console.log(`[scribblehub] fetching chapter ${index}: ${listing.url}`);
       const chapterDoc = await scribbleHubFetchHtml(listing.url);
       const content = chapterDoc.querySelector("#chp_raw, .chp_raw");
-      console.log(`[scribblehub] chapter ${index} content found: ${!!content}`);
       const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
+      onProgress?.(++fetchedCount, listings.length);
       return { index, title: listing.title, htmlContent };
     }),
   );
