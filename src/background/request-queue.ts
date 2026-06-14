@@ -68,10 +68,7 @@ export function createQueue(): RequestQueue {
       const settings = await getSettings();
       const limit = settings.maxConcurrentDownloads === 0 ? Infinity : settings.maxConcurrentDownloads;
 
-      if (inFlight >= limit) {
-        Promise.resolve().then(() => void drain());
-        return;
-      }
+      if (inFlight >= limit) return;
 
       while (pending.length > 0 && inFlight < limit) {
         const now = Date.now();

@@ -74,6 +74,13 @@ export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
     metaRows += row("Language", meta.language, isVisible(fields, "language"));
     metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(fields, "followers"));
     metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+  } else if (data.site === "fictionpress") {
+    const { meta } = data;
+    metaRows += tagRow("Genre", meta.genres, isVisible(fields, "genres"));
+    metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
+    metaRows += row("Language", meta.language, isVisible(fields, "language"));
+    metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(fields, "followers"));
+    metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(fields, "favorites"));
   } else if (data.site === "royalroad") {
     const { meta } = data;
     metaRows += tagRow("Tags", meta.tags, isVisible(fields, "tags"));
@@ -147,6 +154,11 @@ export function renderStoryInfoText(data: FicData, settings: Settings): string {
       lines.push(`Relationships: ${meta.relationships.join(", ")}`);
     }
   } else if (data.site === "ffn") {
+    const { meta } = data;
+    if (meta.genres.length > 0 && isVisible(fields, "genres")) {
+      lines.push(`Genres: ${meta.genres.join(", ")}`);
+    }
+  } else if (data.site === "fictionpress") {
     const { meta } = data;
     if (meta.genres.length > 0 && isVisible(fields, "genres")) {
       lines.push(`Genres: ${meta.genres.join(", ")}`);

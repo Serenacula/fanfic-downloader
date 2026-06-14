@@ -94,6 +94,7 @@ const FORMAT_EXTENSIONS: Record<DownloadFormat, string> = {
 }
 
 const SESSION_KEY = "downloadJobs"
+let jobsCache: Record<string, DownloadJob> | null = null
 const cancelledJobs = new Set<string>()
 const pendingObjectUrls = new Map<number, string>()
 
@@ -113,10 +114,11 @@ function isJobRecord(value: unknown): value is Record<string, DownloadJob> {
 }
 
 async function loadJobs(): Promise<Record<string, DownloadJob>> {
+    if (jobsCache !== null) return jobsCache
     const result = await browser.storage.session.get(SESSION_KEY)
     const stored = result[SESSION_KEY]
-    if (!isJobRecord(stored)) return {}
-    return stored
+    jobsCache = isJobRecord(stored) ? stored : {}
+    return jobsCache
 }
 
 async function saveJob(job: DownloadJob): Promise<void> {
@@ -176,6 +178,7 @@ export async function retryJob(id: string): Promise<void> {
     const jobs = await loadJobs()
     const job = jobs[id]
     if (!job) return
+    if (!["failed", "cancelled"].includes(job.status)) return
     cancelledJobs.delete(id)
     await updateJob(id, {
         status: "queued",
