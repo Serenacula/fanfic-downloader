@@ -24,10 +24,7 @@ export function createQueue(): RequestQueue {
 
   async function dispatch(entry: QueueEntry): Promise<void> {
     try {
-      // credentials: 'include' ensures browser cookies are sent with cross-origin requests,
-      // which is required for sites with bot/Cloudflare protection.
-      // Extensions with host_permissions bypass CORS, so this is safe.
-      const response = await fetch(entry.url, { credentials: "include", ...entry.init });
+      const response = await fetch(entry.url, entry.init);
       if (!response.ok) {
         console.warn(`[request-queue] HTTP ${response.status} for ${entry.url} (retry ${entry.retryCount}/${MAX_RETRIES})`);
         if (entry.retryCount < MAX_RETRIES && RETRYABLE_STATUS_CODES.has(response.status)) {

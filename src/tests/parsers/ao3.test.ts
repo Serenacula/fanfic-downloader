@@ -23,34 +23,63 @@ function htmlResponse(path: string): Response {
   });
 }
 
-describe("AO3 parser — multi-chapter work with author notes", () => {
+// Fixture: real AO3 page dump of works/80642696 ("A Villain By Any Other Name..." by Silvia_Goddess_of_Being_Right)
+// 5-chapter completed work; Chapter 2 has pre-chapter author notes; all chapters have end notes.
+describe("AO3 parser — multi-chapter work (works/80642696)", () => {
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url.includes("archiveofourown.org/works/99999")) return htmlResponse("ao3-multichapter.html");
+      if (url.includes("archiveofourown.org/works/80642696")) return htmlResponse("ao3-multichapter.html");
       throw new Error(`Unexpected fetch: ${url}`);
     });
   });
 
-  it("extracts chapter body without author notes by default", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", DEFAULT_SETTINGS);
-    expect(data.core.chapters).toHaveLength(2);
-    expect(data.core.chapters[0]!.htmlContent).toContain("first chapter body text");
-    expect(data.core.chapters[0]!.htmlContent).not.toContain("pre-chapter author note");
-    expect(data.core.chapters[0]!.htmlContent).not.toContain("post-chapter author note");
+  it("extracts title and author", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.title).toBe("A Villain By Any Other Name...");
+    expect(data.core.author).toBe("Silvia_Goddess_of_Being_Right");
   });
 
-  it("includes author notes when setting is enabled", async () => {
-    const settings = { ...DEFAULT_SETTINGS, includeAuthorNotes: true };
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", settings);
-    expect(data.core.chapters[0]!.htmlContent).toContain("first chapter body text");
-    expect(data.core.chapters[0]!.htmlContent).toContain("pre-chapter author note");
-    expect(data.core.chapters[0]!.htmlContent).toContain("post-chapter author note");
+  it("extracts all 5 chapters", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(5);
   });
 
   it("extracts chapter titles", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/99999", DEFAULT_SETTINGS);
-    expect(data.core.chapters[0]!.title).toBe("Beginning");
-    expect(data.core.chapters[1]!.title).toBe("End");
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.chapters[0]!.title).toBe("Clockblocker");
+    expect(data.core.chapters[1]!.title).toBe("Kid Win");
+  });
+
+  it("extracts chapter body content", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.chapters[0]!.htmlContent).toContain("Dennis is tired.");
+    expect(data.core.chapters[1]!.htmlContent).toContain("Armsmaster got kicked out");
+  });
+
+  it("excludes author notes by default", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    // Chapter 1 end notes
+    expect(data.core.chapters[0]!.htmlContent).not.toContain("Wrote this fic after rereading");
+    // Chapter 2 pre-notes
+    expect(data.core.chapters[1]!.htmlContent).not.toContain("Another round of thanks to HQM");
+  });
+
+  it("includes author notes when the setting is enabled", async () => {
+    const settings = { ...DEFAULT_SETTINGS, includeAuthorNotes: true };
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", settings);
+    // Chapter 1 end notes
+    expect(data.core.chapters[0]!.htmlContent).toContain("Wrote this fic after rereading");
+    // Chapter 2 pre-notes
+    expect(data.core.chapters[1]!.htmlContent).toContain("Another round of thanks to HQM");
+  });
+
+  it("extracts publish and update dates", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.publishDate).toBeInstanceOf(Date);
+    expect(data.core.updateDate).toBeInstanceOf(Date);
+    // Published 2026-03-04, Completed 2026-03-08
+    expect(data.core.publishDate!.getFullYear()).toBe(2026);
+    expect(data.core.updateDate!.getFullYear()).toBe(2026);
   });
 });
 

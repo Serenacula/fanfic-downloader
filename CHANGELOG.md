@@ -16,6 +16,7 @@
 * FFN universe selector, chapter progress status order, summary image embedding ([752ca8b](https://github.com/Serenacula/fanfic-downloader/commit/752ca8b5c0422eef335d940676660ac09e4bbe3e))
 * FictionPress metadata, concurrent job storage race, request-queue drain busy-loop ([b907e81](https://github.com/Serenacula/fanfic-downloader/commit/b907e81265198f49ce5758eae3897ae380b713a7))
 * guard against multiple edge-case crashes and an infinite loop (F-01, F-03, F-04, F-05, F-09) ([2f7fa64](https://github.com/Serenacula/fanfic-downloader/commit/2f7fa6457ec6a61674ab2a972e9779d0c4dbf8d9))
+* include underlying error in request-queue failure message, add orchestrator download logging ([2d6d8d0](https://github.com/Serenacula/fanfic-downloader/commit/2d6d8d02732beb2468077580cbb8ac4cdffa45c5))
 * inline formatting in PDF/DOCX, image src absolutisation in AO3/FFN, scoped image remapping, YAML newline escaping, FFN date label matching ([1698f12](https://github.com/Serenacula/fanfic-downloader/commit/1698f12466af66749f67438edc825126fbf490ca))
 * proxy XenForo fetches through active tab to bypass Cloudflare JS challenge ([eefff28](https://github.com/Serenacula/fanfic-downloader/commit/eefff2841a42b429e24c7c6b1645b20eeea90f2e))
 * request-queue drain stall, FFN summary escaping, AO3 updateDate, XenForo hostname guard, image remap dedup, misc cleanups ([769f566](https://github.com/Serenacula/fanfic-downloader/commit/769f5669c888091877664c8aa788a9f38622be3b))
