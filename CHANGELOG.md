@@ -19,6 +19,7 @@
 * include underlying error in request-queue failure message, add orchestrator download logging ([2d6d8d0](https://github.com/Serenacula/fanfic-downloader/commit/2d6d8d02732beb2468077580cbb8ac4cdffa45c5))
 * inline formatting in PDF/DOCX, image src absolutisation in AO3/FFN, scoped image remapping, YAML newline escaping, FFN date label matching ([1698f12](https://github.com/Serenacula/fanfic-downloader/commit/1698f12466af66749f67438edc825126fbf490ca))
 * proxy XenForo fetches through active tab to bypass Cloudflare JS challenge ([eefff28](https://github.com/Serenacula/fanfic-downloader/commit/eefff2841a42b429e24c7c6b1645b20eeea90f2e))
+* remove credentials:include from request queue — caused CORS preflight failures on Firefox for non-Cloudflare sites (e.g. AO3); replace synthetic AO3 multichapter fixture with real page dump and update tests ([0a9398b](https://github.com/Serenacula/fanfic-downloader/commit/0a9398b17704e4dbe28d1810ffee7b6d34a6ccf5))
 * request-queue drain stall, FFN summary escaping, AO3 updateDate, XenForo hostname guard, image remap dedup, misc cleanups ([769f566](https://github.com/Serenacula/fanfic-downloader/commit/769f5669c888091877664c8aa788a9f38622be3b))
 * try direct fetch first, fall back to content script proxy on failure ([f66d95d](https://github.com/Serenacula/fanfic-downloader/commit/f66d95d854396deb5e697cf5730497eea50bd1e4))
 
