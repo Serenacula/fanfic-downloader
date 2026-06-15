@@ -80,6 +80,11 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
     expect(data.core.updateDate!.getFullYear()).toBe(2026);
   });
 
+  it("detects status as complete for a completed work", async () => {
+    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    expect(data.core.status).toBe("complete");
+  });
+
   it("throws a clear error when no AO3 tab is open", async () => {
     vi.spyOn(browser.tabs, "query").mockResolvedValue([] as never);
     await expect(

@@ -97,10 +97,10 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const wordCountText = textContent(doc.querySelector("dd.words"));
   const wordCount = parseCount(wordCountText);
 
-  const statusText = textContent(doc.querySelector("dd.status")).toLowerCase();
+  const statusLabel = textContent(doc.querySelector("dt.status")).toLowerCase();
   const status =
-    statusText.includes("complete") ? "complete"
-    : statusText.includes("progress") ? "in-progress"
+    statusLabel.includes("complete") ? "complete"
+    : statusLabel.includes("progress") ? "in-progress"
     : "unknown";
 
   const publishDate = parseDate(
