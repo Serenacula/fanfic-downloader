@@ -55,6 +55,7 @@ function contentOpf(
         href: string
         mediaType: string
         properties?: string
+        manifestOnly?: boolean
     }>,
     hasCover: boolean,
 ): string {
@@ -68,7 +69,7 @@ function contentOpf(
         })
         .join("\n")
     const spineRefs = spineItems
-        .filter((item) => item.mediaType === "application/xhtml+xml")
+        .filter((item) => item.mediaType === "application/xhtml+xml" && !item.manifestOnly)
         .map((item) => `    <itemref idref="${item.id}"/>`)
         .join("\n")
 
@@ -96,7 +97,7 @@ ${spineRefs}
 </package>`
 }
 
-function navXhtml(data: FicData, chapterHrefs: string[]): string {
+function navXhtml(data: FicData, chapterHrefs: string[], hidden: boolean): string {
     const tocItems = [
         ...data.core.chapters.map((chapter, index) => {
             const title = chapter.title ?? `Chapter ${chapter.index + 1}`
@@ -104,9 +105,10 @@ function navXhtml(data: FicData, chapterHrefs: string[]): string {
         }),
     ].filter(Boolean)
 
+    const hiddenAttr = hidden ? ' hidden=""' : ""
     return xhtmlPage(
         data.core.title,
-        `<nav xmlns:epub="http://www.idpf.org/2007/ops" epub:type="toc">
+        `<nav xmlns:epub="http://www.idpf.org/2007/ops" epub:type="toc"${hiddenAttr}>
   <h1>Table of Contents</h1>
   <ol>
     ${tocItems.join("\n    ")}
@@ -132,6 +134,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
         href: string
         mediaType: string
         properties?: string
+        manifestOnly?: boolean
     }> = []
 
     // Cover image
@@ -192,15 +195,14 @@ export const renderEpub: RendererFn = async (data, settings) => {
         (chapter) => `chapter-${chapter.index}.xhtml`,
     )
 
-    if (settings.includeToc) {
-        files["OEBPS/nav.xhtml"] = navXhtml(data, chapterHrefs)
-        spineItems.push({
-            id: "nav",
-            href: "nav.xhtml",
-            mediaType: "application/xhtml+xml",
-            properties: "nav",
-        })
-    }
+    files["OEBPS/nav.xhtml"] = navXhtml(data, chapterHrefs, !settings.includeToc)
+    spineItems.push({
+        id: "nav",
+        href: "nav.xhtml",
+        mediaType: "application/xhtml+xml",
+        properties: "nav",
+        manifestOnly: !settings.includeToc,
+    })
 
     // Embedded images — embed whatever was fetched (controlled by settings.includeImages at parse time)
     const imageMap = new Map<string, string>() // original URL → epub path
