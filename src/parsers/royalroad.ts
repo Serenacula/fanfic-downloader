@@ -47,13 +47,14 @@ interface ChapterListing {
 
 function extractChapterListing(doc: Document): ChapterListing[] {
   const rows = Array.from(doc.querySelectorAll("table#chapters tbody tr"));
-  return rows.map((row) => {
+  return rows.flatMap((row) => {
     const link = row.querySelector("a[href]");
-    const title = link?.textContent?.trim() ?? "Untitled";
     const path = link?.getAttribute("href") ?? "";
+    if (!path) return [];
+    const title = link?.textContent?.trim() ?? "Untitled";
     const timeEl = row.querySelector("time");
     const date = timeEl ? parseDate(timeEl.getAttribute("datetime") ?? "") : null;
-    return { title, path, date };
+    return [{ title, path, date }];
   });
 }
 

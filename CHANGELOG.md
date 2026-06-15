@@ -10,6 +10,7 @@
 
 * add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([5b6131b](https://github.com/Serenacula/fanfic-downloader/commit/5b6131bbad65218fbd7ca4601f3ddd29ce35d788))
 * add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([b02db3d](https://github.com/Serenacula/fanfic-downloader/commit/b02db3d514082b3adb9dc31afa27c92e7135f11f))
+* always include nav.xhtml in EPUB3 manifest regardless of includeToc ([98e1d89](https://github.com/Serenacula/fanfic-downloader/commit/98e1d89ed0217b08543e222d8a45c39aa0a250ab))
 * AO3 chapter body selector matching author notes instead of content ([36e4b91](https://github.com/Serenacula/fanfic-downloader/commit/36e4b912cb5383f88dd97ccb96019309e10314ba))
 * apply bug-loop iteration-1 fixes (F-01 through F-09) ([775d546](https://github.com/Serenacula/fanfic-downloader/commit/775d5466112e7b3790b2ee0ed981065ceb4e77e3))
 * apply bugloop iteration-9 fixes (F-01 through F-07) ([7fbb3b0](https://github.com/Serenacula/fanfic-downloader/commit/7fbb3b078e8775f6af88766e47e06ce30f00fc32))
