@@ -10,7 +10,13 @@ vi.mock("../../background/request-queue.js", () => ({
     createQueue: vi.fn(),
 }));
 
+vi.mock("../../renderers/utils.js", async (importOriginal) => {
+    const original = await importOriginal<typeof import("../../renderers/utils.js")>();
+    return { ...original, fetchCoverImage: vi.fn() };
+});
+
 const { renderEpub } = await import("../../renderers/epub.js");
+const { fetchCoverImage } = await import("../../renderers/utils.js");
 
 function makeFicData(): FicData {
     return {
@@ -133,5 +139,26 @@ describe("renderEpub — nav document presence", () => {
         const blob = await renderEpub(makeFicData(), settings);
         const files = await unzipEpub(blob);
         expect(files["OEBPS/nav.xhtml"]).not.toContain('hidden=""');
+    });
+});
+
+describe("renderEpub — SVG cover image MIME type", () => {
+    it("uses image/svg+xml as the manifest media-type when the cover is an SVG", async () => {
+        vi.mocked(fetchCoverImage).mockResolvedValue({
+            data: new Uint8Array([1]),
+            extension: "svg",
+            mimeType: "image/svg+xml",
+        });
+        const ficData = makeFicData();
+        ficData.core.coverImageUrl = "https://example.com/cover.svg";
+        const settings = {
+            ...DEFAULT_SETTINGS,
+            includeCoverImage: true,
+            includeCoverPage: false,
+        };
+        const blob = await renderEpub(ficData, settings);
+        const files = await unzipEpub(blob);
+        expect(files["OEBPS/content.opf"]).toContain('media-type="image/svg+xml"');
+        expect(files["OEBPS/content.opf"]).not.toContain('media-type="image/svg"');
     });
 });

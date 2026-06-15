@@ -147,10 +147,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
         if (fetched) {
             coverData = fetched.data
             coverExtension = fetched.extension
-            coverMediaType =
-                fetched.extension === "jpg"
-                    ? "image/jpeg"
-                    : `image/${fetched.extension}`
+            coverMediaType = fetched.mimeType
         } else {
             const blob = await generateCoverImage(
                 data.core.title,

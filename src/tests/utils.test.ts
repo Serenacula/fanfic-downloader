@@ -156,6 +156,18 @@ describe("fetchCoverImage", () => {
     expect((await fetchCoverImage("https://example.com/cover.svg"))?.extension).toBe("svg");
   });
 
+  it("returns the original mimeType for image/svg+xml", async () => {
+    vi.mocked(enqueue).mockResolvedValue(
+      new Response(new Uint8Array([1]), {
+        status: 200,
+        headers: { "content-type": "image/svg+xml" },
+      }),
+    );
+    const result = await fetchCoverImage("https://example.com/cover.svg");
+    expect(result?.mimeType).toBe("image/svg+xml");
+    expect(result?.extension).toBe("svg");
+  });
+
   it("defaults to jpg when content-type header is absent", async () => {
     vi.mocked(enqueue).mockResolvedValue(
       new Response(new Uint8Array([1]), { status: 200 }),

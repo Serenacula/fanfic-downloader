@@ -100,7 +100,7 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const statusLabel = textContent(doc.querySelector("dt.status")).toLowerCase();
   const status =
     statusLabel.includes("complete") ? "complete"
-    : statusLabel.includes("progress") ? "in-progress"
+    : statusLabel.includes("updated") ? "in-progress"
     : "unknown";
 
   const publishDate = parseDate(

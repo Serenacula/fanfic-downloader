@@ -75,7 +75,7 @@ export function zipFiles(files: Record<string, Uint8Array | string>): Promise<Bl
 
 export async function fetchCoverImage(
   coverImageUrl: string | null,
-): Promise<{ data: Uint8Array; extension: string } | null> {
+): Promise<{ data: Uint8Array; extension: string; mimeType: string } | null> {
   if (!coverImageUrl) return null;
   try {
     const response = await enqueue(coverImageUrl);
@@ -85,7 +85,7 @@ export async function fetchCoverImage(
     const rawExt = mimeType === "image/jpeg" ? "jpg" : (mimeType.split("/")[1] ?? "jpg");
     // Strip MIME suffixes (e.g. "+xml") and any non-alphanumeric characters from extension
     const extension = rawExt.replace(/\+.*$/, "").replace(/[^a-zA-Z0-9]/g, "") || "jpg";
-    return { data: new Uint8Array(buffer), extension };
+    return { data: new Uint8Array(buffer), extension, mimeType };
   } catch {
     return null;
   }

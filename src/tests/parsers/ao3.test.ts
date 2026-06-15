@@ -155,6 +155,37 @@ describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
   });
 });
 
+describe("AO3 parser — in-progress status detection", () => {
+  it("detects status as in-progress when the status label is 'Updated:'", async () => {
+    const tab = { id: 1, discarded: false };
+    vi.spyOn(browser.tabs, "query").mockResolvedValue([tab] as never);
+    const stubHtml = `<!DOCTYPE html><html><body>
+      <h2 class="title heading">In Progress Work</h2>
+      <h3 class="byline heading"><a>Author Name</a></h3>
+      <dl class="stats">
+        <dt class="status">Updated:</dt>
+        <dd class="status">2026-01-01</dd>
+        <dt class="published">Published:</dt>
+        <dd class="published">2025-01-01</dd>
+        <dt class="words">Words:</dt><dd class="words">1,000</dd>
+      </dl>
+      <div id="chapters">
+        <div class="chapter">
+          <div class="userstuff module"><p>Some content.</p></div>
+        </div>
+      </div>
+    </body></html>`;
+    vi.spyOn(browser.tabs, "sendMessage").mockResolvedValue({
+      ok: true, status: 200, text: stubHtml,
+    } as never);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/99999998",
+      DEFAULT_SETTINGS,
+    );
+    expect(data.core.status).toBe("in-progress");
+  });
+});
+
 describe("AO3 parser — empty chapter content guard", () => {
   it("throws a clear error when no chapter content is found in the document", async () => {
     const tab = { id: 1, discarded: false };
