@@ -108,11 +108,12 @@ export async function tryContentScriptProxy(url: string, tabQueryPattern: string
   if (typeof browser === "undefined" || !browser?.tabs) {
     throw new Error("browser.tabs not available");
   }
+  const hostname = new URL(url).hostname;
   const tabs = await browser.tabs.query({ url: tabQueryPattern });
   const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
   if (tabId == null) {
     throw new Error(
-      `No open tab found for this site — open the page in Firefox first, then retry`,
+      `No ${hostname} tab open — open the site in a tab, then click Retry`,
     );
   }
   const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
@@ -121,7 +122,7 @@ export async function tryContentScriptProxy(url: string, tabQueryPattern: string
   }
   if (isCloudflareChallenge(resp.text)) {
     throw new Error(
-      `Blocked by a Cloudflare challenge — reload the page in your Firefox tab, then retry`,
+      `Cloudflare challenge on ${hostname} — refresh the tab, then click Retry`,
     );
   }
   if (!resp.ok) throw new Error(`HTTP ${resp.status} from ${url}`);

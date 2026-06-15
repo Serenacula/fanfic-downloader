@@ -89,7 +89,7 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
     vi.spyOn(browser.tabs, "query").mockResolvedValue([] as never);
     await expect(
       ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS),
-    ).rejects.toThrow(/open the page in Firefox first/);
+    ).rejects.toThrow(/No .+ tab open/);
   });
 
   it("throws a clear error when Cloudflare blocks the tab response", async () => {

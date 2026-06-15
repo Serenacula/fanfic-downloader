@@ -18,7 +18,7 @@ function statusLabel(job: DownloadJob): string {
     case "rendering": return "Rendering…";
     case "saving": return "Saving…";
     case "complete": return "Complete";
-    case "failed": return `Failed: ${job.error ?? "unknown error"}`;
+    case "failed": return job.error ?? "Unknown error";
     case "cancelled": return "Cancelled";
   }
 }
