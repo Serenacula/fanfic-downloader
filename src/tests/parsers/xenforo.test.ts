@@ -110,6 +110,38 @@ describe("XenForo / SpaceBattles parser — URL detection", () => {
   });
 });
 
+describe("XenForo / SpaceBattles parser — protocol-relative threadmark URLs", () => {
+  const THREAD_URL = `${BASE}/threads/a-song-of-dust.99999/`;
+  const PROTOCOL_RELATIVE_THREADMARKS = `
+    <!DOCTYPE html><html><body>
+    <nav class="p-breadcrumbs"><a href="/forums/">Forums</a><a href="/forums/fan-fiction.5/">Fan Fiction</a></nav>
+    <div class="structItemContainer">
+      <div class="structItem">
+        <div class="structItem-title">
+          <a href="//forums.spacebattles.com/threads/a-song-of-dust.99999/post-200#post-200">Prologue</a>
+        </div>
+        <time datetime="2024-01-15T12:00:00Z">Jan 15, 2024</time>
+      </div>
+    </div>
+    </body></html>
+  `;
+
+  it("resolves protocol-relative threadmark href to https", async () => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("threadmarks")) {
+        return new Response(PROTOCOL_RELATIVE_THREADMARKS, { status: 200, headers: { "content-type": "text/html" } });
+      }
+      if (url === `${BASE}/threads/99999/`) return htmlResponse("xenforo-thread.html");
+      if (url.includes("post-200")) return htmlResponse("xenforo-post.html");
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    const data = await spaceBattlesParser.parse(THREAD_URL, DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(1);
+    expect(data.core.chapters[0]!.title).toBe("Prologue");
+  });
+});
+
 describe("XenForo / SufficientVelocity parser — URL detection", () => {
   it("matches SV thread URLs and not SB URLs", () => {
     expect(sufficientVelocityParser.pattern.test(

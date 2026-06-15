@@ -89,3 +89,47 @@ describe("Tapas parser — series/The-Last-Story-TLS", () => {
     expect(meta.genre).toBe("GL");
   });
 });
+
+describe("Tapas parser — pagination URL construction", () => {
+  it("never appends an 'until=' parameter to episode API requests", async () => {
+    const capturedUrls: string[] = [];
+
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      capturedUrls.push(url);
+      if (url.includes("tapas.io/series/The-Last-Story-TLS/info")) {
+        return new Response(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../fixtures/tapas-info.html"), "utf8"), {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
+      }
+      if (url.includes("tapas.io/series/150240/episodes")) {
+        const singlePageResponse = {
+          code: 200,
+          data: {
+            pagination: { page: 1, has_next: false },
+            body: `<ul><li data-id="9001" data-href="/episode/9001"><span class="info__title">Episode One</span></li></ul>`,
+          },
+        };
+        return new Response(JSON.stringify(singlePageResponse), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      if (url.includes("tapas.io/episode/9001")) {
+        return new Response("<html><body><div class='prose-content'><p>Content</p></div></body></html>", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+
+    await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+
+    const episodeApiUrls = capturedUrls.filter((url) => url.includes("/episodes"));
+    expect(episodeApiUrls.length).toBeGreaterThan(0);
+    for (const url of episodeApiUrls) {
+      expect(url).not.toContain("until=");
+    }
+  });
+});

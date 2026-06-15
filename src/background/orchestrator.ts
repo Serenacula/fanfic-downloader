@@ -96,7 +96,6 @@ const FORMAT_EXTENSIONS: Record<DownloadFormat, string> = {
 const SESSION_KEY = "downloadJobs"
 let jobsCache: Record<string, DownloadJob> | null = null
 const cancelledJobs = new Set<string>()
-const pendingObjectUrls = new Map<number, string>()
 
 function generateId(): string {
     return crypto.randomUUID()
@@ -265,13 +264,17 @@ async function runDownload(
         console.log(
             `[fanfic-downloader] downloading as "${filename}" from ${objectUrl}`,
         )
-        const downloadId = await browser.downloads.download({
-            url: objectUrl,
-            filename,
-            saveAs: false,
-        })
+        let downloadId: number
+        try {
+            downloadId = await browser.downloads.download({
+                url: objectUrl,
+                filename,
+                saveAs: false,
+            })
+        } finally {
+            URL.revokeObjectURL(objectUrl)
+        }
         console.log(`[fanfic-downloader] download initiated, id=${downloadId}`)
-        pendingObjectUrls.set(downloadId, objectUrl)
 
         await updateJob(id, {
             status: "complete",
@@ -480,14 +483,6 @@ export function handleDownloadChange(delta: {
     console.log(
         `[fanfic-downloader] download ${delta.id} state: ${state ?? "(unchanged)"}`,
     )
-
-    const objectUrl = pendingObjectUrls.get(delta.id)
-    if (state === "complete" || state === "interrupted") {
-        if (objectUrl) {
-            URL.revokeObjectURL(objectUrl)
-            pendingObjectUrls.delete(delta.id)
-        }
-    }
 
     if (state === "interrupted") {
         void (async () => {

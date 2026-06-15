@@ -23,6 +23,7 @@ vi.mock("../renderers/utils.js", () => ({
 
 const { detectParser } = await import("../parsers/index.js");
 const { renderTxt } = await import("../renderers/txt.js");
+const { renderEpub } = await import("../renderers/epub.js");
 const { getJobs, startDownload, retryJob } = await import("../background/orchestrator.js");
 
 const FAKE_FIC: FicData = {
@@ -117,6 +118,32 @@ describe("startDownload — job persistence", () => {
     const job = jobs.find((j) => j.id === id);
     expect(job?.overrides).toBeUndefined();
     expect(job?.dataOverrides).toBeUndefined();
+  });
+});
+
+describe("startDownload — object URL lifecycle", () => {
+  it("revokes the object URL even when browser.downloads.download rejects", async () => {
+    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn(() => Promise.resolve(FAKE_FIC)), pattern: /ffn/ });
+    vi.mocked(renderEpub).mockResolvedValue(new Blob(["epub"], { type: "application/epub+zip" }));
+
+    const revokespy = vi.spyOn(URL, "revokeObjectURL");
+
+    const browserRef = (globalThis as Record<string, unknown>).browser as {
+      downloads: { download: ReturnType<typeof vi.fn> };
+      [key: string]: unknown;
+    };
+    browserRef.downloads.download.mockRejectedValueOnce(new Error("download failed"));
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/");
+
+    await vi.waitFor(async () => {
+      const jobs = await getJobs();
+      const job = jobs.find((j) => j.id === id);
+      if (job?.status !== "failed") throw new Error("Job has not failed yet");
+    }, { timeout: 2000 });
+
+    expect(revokespy).toHaveBeenCalled();
+    revokespy.mockRestore();
   });
 });
 

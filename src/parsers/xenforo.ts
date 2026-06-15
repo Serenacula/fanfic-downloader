@@ -42,7 +42,7 @@ function extractThreadmarks(doc: Document, baseUrl: string): ThreadmarkListing[]
   return links.flatMap((link) => {
     const href = link.getAttribute("href") ?? "";
     if (!href) return [];
-    const fullUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
+    const fullUrl = new URL(href, baseUrl).href;
     const title = link.textContent?.trim() ?? "Untitled";
     const listItem = link.closest("li, .structItem");
     const timeEl = listItem?.querySelector("time");

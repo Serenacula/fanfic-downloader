@@ -163,6 +163,50 @@ describe("Wattpad parser — HTML fallback (no API)", () => {
   });
 });
 
+describe("Wattpad parser — HTML fallback with root-relative chapter href", () => {
+  const ROOT_RELATIVE_STORY_HTML = `
+    <!DOCTYPE html><html lang="en">
+    <head>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Article",
+      "headline": "Root Relative Story",
+      "author": {"name": "Test Author"},
+      "datePublished": "2026-01-01",
+      "dateModified": "2026-01-02",
+      "description": "A story with root-relative links.",
+      "image": "https://img.wattpad.com/cover/999-256.jpg"
+    }
+    </script>
+    </head>
+    <body>
+    <a href="/1625014783-chapter-one">Chapter One</a>
+    </body></html>
+  `;
+
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("wattpad.com/story/999999") && !url.includes("api/")) {
+        return new Response(ROOT_RELATIVE_STORY_HTML, { status: 200, headers: { "content-type": "text/html" } });
+      }
+      if (url.includes("api/v3/stories/999999")) {
+        return new Response(null, { status: 500 });
+      }
+      if (url.includes("api/v3/story_parts/1625014783")) {
+        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), { status: 200, headers: { "content-type": "application/json" } });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("resolves root-relative chapter href to an absolute URL", async () => {
+    const data = await wattpadParser.parse("https://www.wattpad.com/story/999999-root-relative", DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(1);
+    expect(data.core.chapters[0]!.title).toBe("Chapter One");
+  });
+});
+
 describe("Wattpad parser — chapter URL entry point", () => {
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {

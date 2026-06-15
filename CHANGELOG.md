@@ -1,4 +1,4 @@
-## [1.1.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.0.0...v1.1.0) (2026-06-14)
+## [1.1.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.0.0...v1.1.0) (2026-06-15)
 
 ### Features
 
@@ -12,6 +12,7 @@
 * add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([b02db3d](https://github.com/Serenacula/fanfic-downloader/commit/b02db3d514082b3adb9dc31afa27c92e7135f11f))
 * AO3 chapter body selector matching author notes instead of content ([36e4b91](https://github.com/Serenacula/fanfic-downloader/commit/36e4b912cb5383f88dd97ccb96019309e10314ba))
 * apply bug-loop iteration-1 fixes (F-01 through F-09) ([775d546](https://github.com/Serenacula/fanfic-downloader/commit/775d5466112e7b3790b2ee0ed981065ceb4e77e3))
+* apply bugloop iteration-9 fixes (F-01 through F-07) ([7fbb3b0](https://github.com/Serenacula/fanfic-downloader/commit/7fbb3b078e8775f6af88766e47e06ce30f00fc32))
 * clamp rateLimitMs to [0, 10000] on save (F-06) ([01e7c68](https://github.com/Serenacula/fanfic-downloader/commit/01e7c688b299b29e45d1150f8d9780c41c44aa6f))
 * cross-platform xpi build using fflate instead of shell zip ([d823742](https://github.com/Serenacula/fanfic-downloader/commit/d82374213c86d1ce18befccb3313acff8de571c0))
 * FFN universe selector, chapter progress status order, summary image embedding ([752ca8b](https://github.com/Serenacula/fanfic-downloader/commit/752ca8b5c0422eef335d940676660ac09e4bbe3e))
