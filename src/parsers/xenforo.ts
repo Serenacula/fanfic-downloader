@@ -76,11 +76,9 @@ function createXenForoParser(
     const threadId = threadIdMatch[1]!;
     const sourceUrl = `${baseUrl}/threads/${threadId}/`;
 
-    const fetchDoc = (fetchUrl: string) => fetchHtml(fetchUrl);
-
     const [threadDoc, threadmarksDoc] = await Promise.all([
-      fetchDoc(sourceUrl),
-      fetchDoc(threadmarksUrl(baseUrl, threadId)),
+      fetchHtml(sourceUrl),
+      fetchHtml(threadmarksUrl(baseUrl, threadId)),
     ]);
 
     const title = textContent(threadDoc.querySelector("h1.p-title-value, .threadTitle, h1")) || "Untitled";
@@ -106,7 +104,7 @@ function createXenForoParser(
     let fetchedCount = 0;
     const chapters: FicChapter[] = await Promise.all(
       listings.map(async (listing, index) => {
-        const postDoc = await fetchDoc(listing.url);
+        const postDoc = await fetchHtml(listing.url);
         // XF2: article has data-content="post-XXXX" and id="js-post-XXXX";
         // the anchor id "post-XXXX" is on a <span> inside the article, not the article itself
         let anchor = "";

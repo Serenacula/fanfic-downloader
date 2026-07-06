@@ -3,6 +3,7 @@ export {}
 import {
     getSettings,
     saveSettings,
+    clampRateLimitMs,
     DEFAULT_SETTINGS,
     type Settings,
 } from "../shared/settings.js"
@@ -184,9 +185,7 @@ function wireEvents(): void {
 
         await saveSettings({
             format,
-            rateLimitMs: isNaN(rateLimitMs)
-                ? DEFAULT_SETTINGS.rateLimitMs
-                : Math.min(Math.max(0, rateLimitMs), 10_000),
+            rateLimitMs: clampRateLimitMs(rateLimitMs),
             maxConcurrentDownloads: isNaN(maxConcurrentDownloads)
                 ? DEFAULT_SETTINGS.maxConcurrentDownloads
                 : Math.max(0, maxConcurrentDownloads),

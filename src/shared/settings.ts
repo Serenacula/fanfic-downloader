@@ -39,6 +39,13 @@ export const DEFAULT_SETTINGS: Settings = {
   storyInfoFields: {},
 };
 
+export const MAX_RATE_LIMIT_MS = 10_000;
+
+export function clampRateLimitMs(value: number): number {
+  if (isNaN(value)) return DEFAULT_SETTINGS.rateLimitMs;
+  return Math.min(Math.max(0, value), MAX_RATE_LIMIT_MS);
+}
+
 export type RendererFn = (data: FicData, settings: Settings) => Promise<Blob>;
 
 const STORAGE_KEY = "settings";
