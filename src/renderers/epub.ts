@@ -2,7 +2,7 @@ import type { FicData, FicImage } from "../shared/types.js"
 import type { Settings, RendererFn } from "../shared/settings.js"
 import { renderStoryInfoHtml } from "./story-info.js"
 import { generateCoverImage } from "./cover.js"
-import { fetchCoverImage } from "./utils.js"
+import { fetchCoverImage, remapImageSrcs } from "./utils.js"
 import { strToU8, zip as fflateZip } from "fflate"
 
 function escXml(text: string): string {
@@ -222,34 +222,14 @@ export const renderEpub: RendererFn = async (data, settings) => {
 
     // Story info page — written after imageMap is built so summary images can be remapped
     if (hasInfo) {
-        let infoHtml = renderStoryInfoHtml(data, settings)
-        if (imageMap.size > 0) {
-            const infoDoc = new DOMParser().parseFromString(infoHtml, "text/html")
-            for (const img of Array.from(infoDoc.querySelectorAll("img"))) {
-                const src = img.getAttribute("src")
-                if (src === null) continue
-                const localPath = imageMap.get(src) ?? imageMap.get(src.replace(/&amp;/g, "&"))
-                if (localPath !== undefined) img.setAttribute("src", localPath)
-            }
-            infoHtml = infoDoc.body.innerHTML
-        }
+        const infoHtml = remapImageSrcs(renderStoryInfoHtml(data, settings), imageMap)
         files["OEBPS/info.xhtml"] = xhtmlPage("Story Information", toXhtml(infoHtml))
     }
 
     // Chapters
     for (const chapter of data.core.chapters) {
-        let html = chapter.htmlContent
         // Remap image URLs to local epub paths (DOM-based to avoid touching prose text)
-        if (imageMap.size > 0) {
-            const imgDoc = new DOMParser().parseFromString(html, "text/html")
-            for (const img of Array.from(imgDoc.querySelectorAll("img"))) {
-                const src = img.getAttribute("src")
-                if (src === null) continue
-                const localPath = imageMap.get(src) ?? imageMap.get(src.replace(/&amp;/g, "&"))
-                if (localPath !== undefined) img.setAttribute("src", localPath)
-            }
-            html = imgDoc.body.innerHTML
-        }
+        const html = remapImageSrcs(chapter.htmlContent, imageMap)
 
         const titleHtml =
             settings.includeChapterTitles && chapter.title

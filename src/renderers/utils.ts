@@ -97,8 +97,12 @@ export function remapImageSrcs(html: string, imageMap: Map<string, string>): str
   for (const img of Array.from(doc.querySelectorAll("img"))) {
     const src = img.getAttribute("src");
     if (src === null) continue;
-    const escapedSrc = src.replace(/&/g, "&amp;");
-    const localPath = imageMap.get(src) ?? imageMap.get(escapedSrc);
+    // getAttribute decodes entities, so a plain lookup normally hits; the two
+    // fallbacks tolerate a map keyed by an escaped URL and a double-escaped source
+    const localPath =
+      imageMap.get(src) ??
+      imageMap.get(src.replace(/&/g, "&amp;")) ??
+      imageMap.get(src.replace(/&amp;/g, "&"));
     if (localPath !== undefined) img.setAttribute("src", localPath);
   }
   return doc.body.innerHTML;

@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { JSDOM } from "jsdom";
 import { unzipSync } from "fflate";
 import { DEFAULT_SETTINGS } from "../../shared/settings.js";
 import type { FicData } from "../../shared/types.js";
@@ -140,6 +141,44 @@ describe("renderEpub — nav document presence", () => {
         const files = await unzipEpub(blob);
         expect(files["OEBPS/nav.xhtml"]).not.toContain('hidden=""');
     });
+});
+
+describe("renderEpub — embedded image remapping", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("remaps chapter img srcs to the embedded image path without touching prose", async () => {
+    // remapImageSrcs needs DOMParser, which the node environment lacks
+    vi.stubGlobal("DOMParser", new JSDOM().window.DOMParser);
+
+    const imageUrl = "https://example.com/pic.png?a=1&b=2";
+    const ficData = makeFicData();
+    ficData.core.images = [
+      { url: imageUrl, mimeType: "image/png", data: new Uint8Array([1, 2, 3]).buffer },
+    ];
+    ficData.core.chapters = [
+      {
+        index: 0,
+        title: "Chapter One",
+        // As produced by sanitizeHtml: attribute ampersands are entity-escaped
+        htmlContent: `<p>See https://example.com/pic.png?a=1&amp;b=2 inline.</p><img src="https://example.com/pic.png?a=1&amp;b=2" alt="pic"/>`,
+      },
+    ];
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      includeCoverImage: false,
+      includeCoverPage: false,
+    };
+
+    const blob = await renderEpub(ficData, settings);
+    const files = await unzipEpub(blob);
+
+    expect(Object.keys(files)).toContain("OEBPS/images/img-0.png");
+    expect(files["OEBPS/chapter-0.xhtml"]).toContain('src="images/img-0.png"');
+    // Prose text mentioning the URL must not be rewritten
+    expect(files["OEBPS/chapter-0.xhtml"]).toContain("See https://example.com/pic.png?a=1&amp;b=2 inline.");
+  });
 });
 
 describe("renderEpub — SVG cover image MIME type", () => {
