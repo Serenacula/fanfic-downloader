@@ -24,7 +24,14 @@ vi.mock("../renderers/utils.js", () => ({
 const { detectParser } = await import("../parsers/index.js");
 const { renderTxt } = await import("../renderers/txt.js");
 const { renderEpub } = await import("../renderers/epub.js");
-const { getJobs, startDownload, retryJob } = await import("../background/orchestrator.js");
+const {
+  getJobs,
+  startDownload,
+  retryJob,
+  cancelJob,
+  handleDownloadChange,
+  resetOrchestratorStateForTests,
+} = await import("../background/orchestrator.js");
 
 const FAKE_FIC: FicData = {
   site: "ffn",
@@ -50,6 +57,9 @@ let sessionStore: Record<string, unknown> = {};
 beforeEach(() => {
   sessionStore = {};
   vi.clearAllMocks();
+  // The orchestrator caches jobs and tracks cancellation in module state;
+  // without this reset, tests read the previous test's cache instead of storage.
+  resetOrchestratorStateForTests();
 
   const browserBase = (globalThis as Record<string, unknown>).browser as Record<string, unknown>;
   (globalThis as Record<string, unknown>).browser = {
@@ -181,5 +191,75 @@ describe("retryJob — overrides pass-through", () => {
 
   it("does nothing for an unknown job id", async () => {
     await expect(retryJob("nonexistent-id")).resolves.toBeUndefined();
+  });
+
+  it("does not restart a job that is still running", async () => {
+    // Parser never resolves, so the job stays in a fetching state
+    const mockParse = vi.fn(() => new Promise<FicData>(() => {}));
+    vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/");
+    await vi.waitFor(async () => {
+      const job = (await getJobs()).find((j) => j.id === id);
+      if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
+    }, { timeout: 2000 });
+
+    await retryJob(id);
+    expect(mockParse).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("cancelJob then retryJob — stale run does not race the retry", () => {
+  it("ignores the cancelled run when its parse resolves after a retry started", async () => {
+    let resolveFirstParse: ((data: FicData) => void) | undefined;
+    const mockParse = vi.fn()
+      .mockImplementationOnce(() => new Promise<FicData>((resolve) => { resolveFirstParse = resolve; }))
+      .mockImplementation(() => new Promise<FicData>(() => {}));
+    vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
+    vi.mocked(renderTxt).mockResolvedValue(new Blob(["text"], { type: "text/plain" }));
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/", { format: "txt" });
+    await vi.waitFor(() => {
+      if (mockParse.mock.calls.length < 1) throw new Error("Parse not called yet");
+    }, { timeout: 2000 });
+
+    await cancelJob(id);
+    await retryJob(id);
+    await vi.waitFor(() => {
+      if (mockParse.mock.calls.length < 2) throw new Error("Retry parse not called yet");
+    }, { timeout: 2000 });
+
+    // The first (cancelled) run's parse finally resolves — it must notice it is
+    // stale and stop, not continue on to render and clobber the retried job.
+    resolveFirstParse!(FAKE_FIC);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(renderTxt).not.toHaveBeenCalled();
+    const job = (await getJobs()).find((j) => j.id === id);
+    expect(job?.status).toBe("fetching-metadata");
+  });
+});
+
+describe("handleDownloadChange — object URL lifecycle", () => {
+  it("revokes the object URL when the browser reports the download complete", async () => {
+    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn(() => Promise.resolve(FAKE_FIC)), pattern: /ffn/ });
+    vi.mocked(renderTxt).mockResolvedValue(new Blob(["text"], { type: "text/plain" }));
+
+    const revokeSpy = vi.spyOn(URL, "revokeObjectURL");
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/", { format: "txt" });
+    await vi.waitFor(async () => {
+      const job = (await getJobs()).find((j) => j.id === id);
+      if (job?.status !== "complete") throw new Error("Job has not completed yet");
+    }, { timeout: 2000 });
+
+    expect(revokeSpy).not.toHaveBeenCalled();
+    handleDownloadChange({ id: 1, state: { current: "complete" } });
+    expect(revokeSpy).toHaveBeenCalledTimes(1);
+
+    // A second event for the same download must not double-revoke
+    handleDownloadChange({ id: 1, state: { current: "complete" } });
+    expect(revokeSpy).toHaveBeenCalledTimes(1);
+    revokeSpy.mockRestore();
   });
 });

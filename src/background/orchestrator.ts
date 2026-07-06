@@ -97,6 +97,38 @@ const SESSION_KEY = "downloadJobs"
 let jobsCache: Record<string, DownloadJob> | null = null
 const cancelledJobs = new Set<string>()
 
+// Each (re)start of a job bumps its generation; a runDownload holding an older
+// generation is stale (its job was cancelled and retried while it was mid-await)
+// and must stop touching the job instead of racing the newer run.
+const jobGenerations = new Map<string, number>()
+
+// Object URLs are revoked when the browser reports the download finished
+// (revoking immediately can interrupt an in-flight download of a large blob);
+// the timeout is a leak guard in case the state-change event never arrives.
+const pendingObjectUrls = new Map<number, string>()
+const OBJECT_URL_REVOKE_FALLBACK_MS = 10 * 60_000
+
+function bumpGeneration(id: string): number {
+    const generation = (jobGenerations.get(id) ?? 0) + 1
+    jobGenerations.set(id, generation)
+    return generation
+}
+
+function revokePendingObjectUrl(downloadId: number): void {
+    const objectUrl = pendingObjectUrls.get(downloadId)
+    if (objectUrl === undefined) return
+    URL.revokeObjectURL(objectUrl)
+    pendingObjectUrls.delete(downloadId)
+}
+
+// Test-only: clear module state that would otherwise leak between test cases.
+export function resetOrchestratorStateForTests(): void {
+    jobsCache = null
+    cancelledJobs.clear()
+    jobGenerations.clear()
+    pendingObjectUrls.clear()
+}
+
 function generateId(): string {
     return crypto.randomUUID()
 }
@@ -164,7 +196,7 @@ export async function startDownload(
         dataOverrides,
     }
     await saveJob(job)
-    void runDownload(id, url, overrides, dataOverrides)
+    void runDownload(id, url, bumpGeneration(id), overrides, dataOverrides)
     return id
 }
 
@@ -186,7 +218,7 @@ export async function retryJob(id: string): Promise<void> {
         startedAt: Date.now(),
         completedAt: null,
     })
-    void runDownload(id, job.url, job.overrides, job.dataOverrides)
+    void runDownload(id, job.url, bumpGeneration(id), job.overrides, job.dataOverrides)
 }
 
 async function isCancelled(id: string): Promise<boolean> {
@@ -195,9 +227,15 @@ async function isCancelled(id: string): Promise<boolean> {
     return jobs[id]?.status === "cancelled";
 }
 
+async function isStale(id: string, generation: number): Promise<boolean> {
+    if (jobGenerations.get(id) !== generation) return true
+    return isCancelled(id)
+}
+
 async function runDownload(
     id: string,
     url: string,
+    generation: number,
     overrides?: Partial<Settings>,
     dataOverrides?: DataOverrides,
 ): Promise<void> {
@@ -207,19 +245,21 @@ async function runDownload(
         const parser = detectParser(url)
         if (!parser) throw new Error(`Unsupported site: ${url}`)
 
-        await updateJob(id, { status: "fetching-metadata" })
-        if (await isCancelled(id)) return
-
         await updateJob(id, {
-            status: "fetching-chapters",
+            status: "fetching-metadata",
             chaptersTotal: null,
             chaptersFetched: 0,
         })
-        if (await isCancelled(id)) return
+        if (await isStale(id, generation)) return
 
         console.log(`[fanfic-downloader] calling parser for ${url}`)
         const onProgress = (fetched: number, total: number) => {
-            void updateJob(id, { chaptersFetched: fetched, chaptersTotal: total })
+            if (jobGenerations.get(id) !== generation) return
+            void updateJob(id, {
+                status: "fetching-chapters",
+                chaptersFetched: fetched,
+                chaptersTotal: total,
+            })
         }
         const parsed: FicData = await parser.parse(url, settings, onProgress)
         console.log(`[fanfic-downloader] parser returned: title="${parsed.core.title}" chapters=${parsed.core.chapters.length}`)
@@ -234,7 +274,7 @@ async function runDownload(
                   },
               }
             : parsed
-        if (await isCancelled(id)) return
+        if (await isStale(id, generation)) return
 
         await updateJob(id, {
             title: ficData.core.title,
@@ -250,7 +290,7 @@ async function runDownload(
             `[fanfic-downloader] rendered ${settings.format}: ${blob.size} bytes, type="${blob.type}"`,
         )
 
-        if (await isCancelled(id)) return
+        if (await isStale(id, generation)) return
         await updateJob(id, { status: "saving" })
 
         const isZip =
@@ -271,10 +311,16 @@ async function runDownload(
                 filename,
                 saveAs: false,
             })
-        } finally {
+        } catch (downloadError) {
             URL.revokeObjectURL(objectUrl)
+            throw downloadError
         }
         console.log(`[fanfic-downloader] download initiated, id=${downloadId}`)
+        pendingObjectUrls.set(downloadId, objectUrl)
+        setTimeout(
+            () => revokePendingObjectUrl(downloadId),
+            OBJECT_URL_REVOKE_FALLBACK_MS,
+        )
 
         await updateJob(id, {
             status: "complete",
@@ -283,7 +329,7 @@ async function runDownload(
         })
         await notifyCompletion(ficData.core.title, true)
     } catch (error) {
-        if (!(await isCancelled(id))) {
+        if (!(await isStale(id, generation))) {
             const message =
                 error instanceof Error ? error.message : String(error)
             console.error(
@@ -483,6 +529,10 @@ export function handleDownloadChange(delta: {
     console.log(
         `[fanfic-downloader] download ${delta.id} state: ${state ?? "(unchanged)"}`,
     )
+
+    if (state === "complete" || state === "interrupted") {
+        revokePendingObjectUrl(delta.id)
+    }
 
     if (state === "interrupted") {
         void (async () => {
