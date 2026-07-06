@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      created: ${{ steps.push_tag.outcome == 'success' && steps.tag_exists.outputs.exists == 'false' }}
+      tag: ${{ steps.version.outputs.value }}
 
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +31,19 @@ jobs:
           fi
 
       - name: Create and push tag
+        id: push_tag
         if: steps.tag_exists.outputs.exists == 'false'
         run: |
           git tag "${{ steps.version.outputs.value }}"
           git push origin "${{ steps.version.outputs.value }}"
+
+  # Tag pushes made with GITHUB_TOKEN do not fire the release workflow's
+  # `on: push: tags` trigger, so call it explicitly for new tags.
+  release:
+    needs: tag
+    if: needs.tag.outputs.created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      tag: ${{ needs.tag.outputs.tag }}

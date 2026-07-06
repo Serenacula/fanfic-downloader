@@ -1,9 +1,18 @@
 name: Release
 
+# Tags pushed by tag-version.yml use GITHUB_TOKEN, which never triggers the
+# push event below, so tag-version.yml calls this workflow directly instead.
+# The push trigger remains for manually pushed tags.
 on:
   push:
     tags:
       - "v*"
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to build and release (e.g. v1.2.3)"
+        required: true
+        type: string
 
 jobs:
   release:
@@ -13,6 +22,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -25,6 +36,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
             release/fanfic-downloader.xpi
             release/fanfic-downloader-source.zip
