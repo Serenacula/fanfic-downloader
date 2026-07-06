@@ -129,18 +129,37 @@ export async function tryContentScriptProxy(url: string, tabQueryPattern: string
   return new DOMParser().parseFromString(resp.text, "text/html");
 }
 
+// Statuses Cloudflare uses when challenging or blocking a request. Other HTTP
+// errors (404, 410, …) are genuine site responses that the proxy cannot fix.
+const PROXY_FALLBACK_STATUSES = new Set([403, 429, 503]);
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function isProxyWorthTrying(directError: unknown): boolean {
+  const statusMatch = /HTTP (\d{3})/.exec(errorMessage(directError));
+  // No HTTP status means a network-level failure, which may itself be Cloudflare blocking.
+  if (!statusMatch) return true;
+  return PROXY_FALLBACK_STATUSES.has(Number(statusMatch[1]));
+}
+
 export async function fetchHtml(url: string): Promise<Document> {
+  let directError: unknown;
   try {
     return await fetchHtmlDirect(url);
-  } catch (directError) {
-    console.warn(`[fanfic-downloader] direct fetch failed for ${url}, trying content script proxy`);
-    const hostname = new URL(url).hostname;
-    try {
-      return await tryContentScriptProxy(url, `*://${hostname}/*`);
-    } catch (proxyError) {
-      console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
-      throw proxyError;
-    }
+  } catch (error) {
+    directError = error;
+  }
+  if (!isProxyWorthTrying(directError)) throw directError;
+
+  console.warn(`[fanfic-downloader] direct fetch failed for ${url}, trying content script proxy`);
+  const hostname = new URL(url).hostname;
+  try {
+    return await tryContentScriptProxy(url, `*://${hostname}/*`);
+  } catch (proxyError) {
+    console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
+    throw new Error(`${errorMessage(proxyError)} (direct fetch failed: ${errorMessage(directError)})`);
   }
 }
 
