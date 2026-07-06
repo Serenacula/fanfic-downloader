@@ -134,18 +134,12 @@ function parseMetaBar(doc: Document): StoryMeta {
     }
   }
 
-  // Parse dates from span elements within the meta.
-  // data-xutime is a Unix timestamp in seconds on the live site; test fixtures may use ISO strings.
+  // Parse dates from span elements within the meta; data-xutime is a Unix timestamp in seconds.
   const dateSpans = metaSpan ? Array.from(metaSpan.querySelectorAll("span[data-xutime]")) : [];
   const toDate = (span: Element): Date | null => {
-    const raw = span.getAttribute("data-xutime") ?? "";
-    const trimmed = raw.trim();
-    if (/^\d+$/.test(trimmed) && trimmed !== "0") {
-      return new Date(Number(trimmed) * 1000);
-    }
-    // Fall back to ISO / free-form date string (e.g. test fixtures)
-    const date = new Date(trimmed);
-    return isNaN(date.getTime()) ? null : date;
+    const raw = (span.getAttribute("data-xutime") ?? "").trim();
+    if (!/^\d+$/.test(raw) || raw === "0") return null;
+    return new Date(Number(raw) * 1000);
   };
   for (const span of dateSpans) {
     // Find the nearest preceding label ("Published:" / "Updated:"), skipping

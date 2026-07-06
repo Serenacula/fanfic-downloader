@@ -18,6 +18,7 @@
 * clamp rateLimitMs to [0, 10000] on save (F-06) ([01e7c68](https://github.com/Serenacula/fanfic-downloader/commit/01e7c688b299b29e45d1150f8d9780c41c44aa6f))
 * correct AO3 in-progress status detection and SVG cover MIME type ([4e6b1fb](https://github.com/Serenacula/fanfic-downloader/commit/4e6b1fb6c249825c05d3efce1fcfc1c8391a1437))
 * cross-platform xpi build using fflate instead of shell zip ([d823742](https://github.com/Serenacula/fanfic-downloader/commit/d82374213c86d1ce18befccb3313acff8de571c0))
+* escape FFN summary text before HTML wrapping and harden date-label detection ([591ab6c](https://github.com/Serenacula/fanfic-downloader/commit/591ab6c510674297689475591cf71cc1ef140779))
 * FFN universe selector, chapter progress status order, summary image embedding ([752ca8b](https://github.com/Serenacula/fanfic-downloader/commit/752ca8b5c0422eef335d940676660ac09e4bbe3e))
 * FictionPress metadata, concurrent job storage race, request-queue drain busy-loop ([b907e81](https://github.com/Serenacula/fanfic-downloader/commit/b907e81265198f49ce5758eae3897ae380b713a7))
 * filter rows with no chapter link in RoyalRoad extractor ([c4178b1](https://github.com/Serenacula/fanfic-downloader/commit/c4178b17903ee289ae8ceeab54ca3df84d270310))
