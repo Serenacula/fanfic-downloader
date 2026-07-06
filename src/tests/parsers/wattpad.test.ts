@@ -207,6 +207,49 @@ describe("Wattpad parser — HTML fallback with root-relative chapter href", () 
   });
 });
 
+describe("Wattpad parser — HTML fallback with a malformed link on the page", () => {
+  const MALFORMED_LINK_STORY_HTML = `
+    <!DOCTYPE html><html lang="en">
+    <head>
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "Article",
+      "headline": "Malformed Link Story",
+      "author": {"name": "Test Author"},
+      "description": "A story page containing one broken anchor.",
+      "image": "https://img.wattpad.com/cover/999-256.jpg"
+    }
+    </script>
+    </head>
+    <body>
+    <a href="https://">broken link</a>
+    <a href="/1625014783-chapter-one">Chapter One</a>
+    </body></html>
+  `;
+
+  beforeEach(() => {
+    vi.mocked(enqueue).mockImplementation(async (url: string) => {
+      if (url.includes("wattpad.com/story/888888") && !url.includes("api/")) {
+        return new Response(MALFORMED_LINK_STORY_HTML, { status: 200, headers: { "content-type": "text/html" } });
+      }
+      if (url.includes("api/v3/stories/888888")) {
+        return new Response(null, { status: 500 });
+      }
+      if (url.includes("api/v3/story_parts/1625014783")) {
+        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), { status: 200, headers: { "content-type": "application/json" } });
+      }
+      throw new Error(`Unexpected fetch: ${url}`);
+    });
+  });
+
+  it("skips the malformed href instead of failing the whole parse", async () => {
+    const data = await wattpadParser.parse("https://www.wattpad.com/story/888888-malformed", DEFAULT_SETTINGS);
+    expect(data.core.chapters).toHaveLength(1);
+    expect(data.core.chapters[0]!.title).toBe("Chapter One");
+  });
+});
+
 describe("Wattpad parser — chapter URL entry point", () => {
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {

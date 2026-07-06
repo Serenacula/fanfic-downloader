@@ -192,7 +192,12 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     const seen = new Set<string>();
     parts = (Array.from(doc.querySelectorAll("a[href]")) as HTMLAnchorElement[])
       .flatMap((link) => {
-        const absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;
+        let absoluteHref: string;
+        try {
+          absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;
+        } catch {
+          return []; // malformed href on an unrelated link — skip it
+        }
         const partMatch = CHAPTER_HREF.exec(absoluteHref);
         if (!partMatch || seen.has(partMatch[1]!)) return [];
         seen.add(partMatch[1]!);
