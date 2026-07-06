@@ -108,6 +108,16 @@ describe("FFN parser — s/12345 (The Long Road Home)", () => {
     await expect(ffnParser.parse("https://example.com/s/999/1/", DEFAULT_SETTINGS))
       .rejects.toThrow("Not a valid FFN URL");
   });
+
+  it("reports per-chapter progress through onProgress", async () => {
+    const onProgress = vi.fn();
+    await ffnParser.parse("https://www.fanfiction.net/s/12345/1/", DEFAULT_SETTINGS, onProgress);
+
+    expect(onProgress.mock.calls).toEqual([
+      [1, 2],
+      [2, 2],
+    ]);
+  });
 });
 
 describe("FFN parser — reverse date order", () => {

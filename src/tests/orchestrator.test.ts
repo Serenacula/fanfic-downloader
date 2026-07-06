@@ -209,6 +209,31 @@ describe("retryJob — overrides pass-through", () => {
   });
 });
 
+describe("startDownload — chapter fetch progress", () => {
+  it("reflects parser onProgress calls in the job's chapter counters and status", async () => {
+    type OnProgress = ((fetched: number, total: number) => void) | undefined;
+    const mockParse = vi.fn(
+      (_url: string, _settings: unknown, onProgress?: OnProgress) =>
+        new Promise<FicData>(() => {
+          // Report progress but never finish, so the mid-download state is observable
+          onProgress?.(3, 10);
+        }),
+    );
+    vi.mocked(detectParser).mockReturnValue({ parse: mockParse as never, pattern: /ffn/ });
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/");
+
+    await vi.waitFor(async () => {
+      const job = (await getJobs()).find((j) => j.id === id);
+      if (job?.chaptersFetched !== 3) throw new Error("Progress not recorded yet");
+    }, { timeout: 2000 });
+
+    const job = (await getJobs()).find((j) => j.id === id);
+    expect(job?.chaptersTotal).toBe(10);
+    expect(job?.status).toBe("fetching-chapters");
+  });
+});
+
 describe("cancelJob then retryJob — stale run does not race the retry", () => {
   it("ignores the cancelled run when its parse resolves after a retry started", async () => {
     let resolveFirstParse: ((data: FicData) => void) | undefined;
