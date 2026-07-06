@@ -33,6 +33,7 @@
 * retry PDF font loading after a failed attempt instead of caching the rejection ([02c630f](https://github.com/Serenacula/fanfic-downloader/commit/02c630f2a79eee09ab16d7bf3308760077c0c3b1))
 * revoke object URL immediately after download, fix protocol-relative and root-relative URL handling ([a575d15](https://github.com/Serenacula/fanfic-downloader/commit/a575d15670bd139bbe6977371048661e84726aca))
 * route AO3 fetches through content script proxy to bypass Cloudflare ([91ca49d](https://github.com/Serenacula/fanfic-downloader/commit/91ca49dd8e07823f2aecef6a25e93d0b631c1756))
+* skip malformed hrefs in Wattpad chapter-link fallback instead of failing the parse ([a53d175](https://github.com/Serenacula/fanfic-downloader/commit/a53d1756bf31d3db74a223f328d726a4d92d1419))
 * try direct fetch first, fall back to content script proxy on failure ([f66d95d](https://github.com/Serenacula/fanfic-downloader/commit/f66d95d854396deb5e697cf5730497eea50bd1e4))
 
 ## [1.0.0](https://github.com/Serenacula/fanfic-downloader/compare/3ea1e207d4aee163455edae7dfe2030be7bbb5e4...v1.0.0) (2026-05-01)

@@ -70,12 +70,18 @@ interface StoryMeta {
   chapterCount: number;
 }
 
+function escapeHtmlText(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function parseMetaBar(doc: Document): StoryMeta {
   const title = doc.querySelector("#profile_top b.xcontrast_txt")?.textContent?.trim() ?? "";
   const author =
     doc.querySelector("#profile_top a.xcontrast_txt")?.textContent?.trim() ?? "Unknown";
   const summaryEl = doc.querySelector("#profile_top div.xcontrast_txt");
-  const summary = summaryEl ? sanitizeHtml(`<p>${summaryEl.textContent?.trim() ?? ""}</p>`) : null;
+  // textContent is decoded text — escape it before wrapping, or literal <b> / & in
+  // a summary would be re-parsed as markup and mangled
+  const summary = summaryEl ? sanitizeHtml(`<p>${escapeHtmlText(summaryEl.textContent?.trim() ?? "")}</p>`) : null;
 
   const metaSpan = doc.querySelector("#profile_top span.xgray.xcontrast_txt");
   const metaText = metaSpan?.textContent ?? "";
@@ -142,11 +148,21 @@ function parseMetaBar(doc: Document): StoryMeta {
     return isNaN(date.getTime()) ? null : date;
   };
   for (const span of dateSpans) {
+    // Find the nearest preceding label ("Published:" / "Updated:"), skipping
+    // whitespace-only nodes and reading labels wrapped in elements. Stop at the
+    // previous date span so its label is never reused for this one.
     let sibling: Node | null = span.previousSibling;
     let labelText = "";
     while (sibling) {
-      if (sibling.nodeType === Node.TEXT_NODE) {
-        labelText = (sibling.textContent ?? "").trim();
+      if (
+        sibling.nodeType === Node.ELEMENT_NODE &&
+        (sibling as Element).hasAttribute("data-xutime")
+      ) {
+        break;
+      }
+      const text = (sibling.textContent ?? "").trim();
+      if (text) {
+        labelText = text;
         break;
       }
       sibling = sibling.previousSibling;

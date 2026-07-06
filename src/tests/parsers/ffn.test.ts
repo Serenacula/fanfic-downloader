@@ -130,6 +130,62 @@ describe("FFN parser — reverse date order", () => {
   });
 });
 
+function inlineFfnPage(summary: string, meta: string): string {
+  return `<!DOCTYPE html><html><body>
+    <div id="pre_story_links"><span><a href="/book/Books/">Books</a><a href="/book/Test-Universe/">Test Universe</a></span></div>
+    <div id="profile_top">
+      <b class="xcontrast_txt">Inline Test Story</b>
+      <a class="xcontrast_txt" href="/u/1/author">InlineAuthor</a>
+      <div class="xcontrast_txt">${summary}</div>
+      <span class="xgray xcontrast_txt">${meta}</span>
+    </div>
+    <div id="storytext"><p>Chapter body text.</p></div>
+  </body></html>`;
+}
+
+function mockInlineStory(html: string): void {
+  vi.mocked(enqueue).mockImplementation(async (url: string) => {
+    if (url.includes("fanfiction.net/s/55555/")) {
+      return new Response(html, { status: 200, headers: { "content-type": "text/html" } });
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  });
+}
+
+describe("FFN parser — summary escaping", () => {
+  it("keeps literal angle brackets and ampersands in the summary as text, not markup", async () => {
+    mockInlineStory(inlineFfnPage(
+      "Careful with &lt;b&gt;brackets&lt;/b&gt; &amp; ampersands",
+      "Rated: T - English - Chapters: 1 - Words: 100 - Complete",
+    ));
+
+    const data = await ffnParser.parse("https://www.fanfiction.net/s/55555/1/", DEFAULT_SETTINGS);
+    // The summary displayed literal "<b>" text on FFN; it must survive as escaped
+    // text rather than becoming a real bold element or being stripped
+    expect(data.core.summary).toContain("&lt;b&gt;brackets&lt;/b&gt;");
+    expect(data.core.summary).toContain("&amp; ampersands");
+    expect(data.core.summary).not.toContain("<b>");
+  });
+});
+
+describe("FFN parser — date labels wrapped in elements", () => {
+  it("finds Published/Updated labels inside elements with whitespace before the date span", async () => {
+    mockInlineStory(inlineFfnPage(
+      "A summary.",
+      `Rated: T - English - Chapters: 1 - Words: 100 - ` +
+        `<strong>Updated:</strong> <span data-xutime="1655294400"></span> - ` +
+        `<strong>Published:</strong> <span data-xutime="1641038400"></span> - Complete`,
+    ));
+
+    const data = await ffnParser.parse("https://www.fanfiction.net/s/55555/1/", DEFAULT_SETTINGS);
+    expect(data.core.publishDate).toBeInstanceOf(Date);
+    expect(data.core.updateDate).toBeInstanceOf(Date);
+    expect(data.core.publishDate!.getFullYear()).toBe(2022);
+    expect(data.core.publishDate!.getMonth()).toBe(0); // January
+    expect(data.core.updateDate!.getMonth()).toBe(5); // June
+  });
+});
+
 describe("FFN parser — URL detection", () => {
   it("matches story URLs with a chapter number", () => {
     expect(ffnParser.pattern.test("https://www.fanfiction.net/s/12345/1/")).toBe(true);
