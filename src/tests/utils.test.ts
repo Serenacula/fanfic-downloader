@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { FicData } from "../../shared/types.js";
+import type { FicData } from "../shared/types.js";
 
 vi.mock("../background/request-queue.js", () => ({
   enqueue: vi.fn(),

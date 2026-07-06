@@ -16,6 +16,7 @@ const ao3Data: FicData = {
     wordCount: 12345,
     publishDate: new Date("2024-01-01"),
     updateDate: new Date("2024-06-01"),
+    coverImageUrl: null,
     sourceUrl: "https://archiveofourown.org/works/1",
   },
   meta: {
@@ -46,6 +47,7 @@ const ffnData: FicData = {
     wordCount: 5000,
     publishDate: null,
     updateDate: null,
+    coverImageUrl: null,
     sourceUrl: "https://www.fanfiction.net/s/1/1/",
   },
   meta: {

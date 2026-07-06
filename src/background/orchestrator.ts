@@ -36,8 +36,8 @@ export interface DownloadJob {
     startedAt: number
     completedAt: number | null
     downloadId: number | null
-    overrides?: Partial<Settings>
-    dataOverrides?: DataOverrides
+    overrides?: Partial<Settings> | undefined
+    dataOverrides?: DataOverrides | undefined
 }
 
 export interface DataOverrides {
@@ -523,7 +523,7 @@ export async function handleMessage(
 
 export function handleDownloadChange(delta: {
     id: number
-    state?: { current?: string }
+    state?: { current?: string | undefined } | undefined
 }): void {
     const state = delta.state?.current
     console.log(
