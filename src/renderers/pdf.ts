@@ -9,9 +9,9 @@ const pdfMakeAny = pdfMake as Record<string, unknown>;
 
 let fontsLoadedPromise: Promise<void> | null = null;
 
-async function ensureFontsLoaded(): Promise<void> {
+export async function ensureFontsLoaded(): Promise<void> {
   if (fontsLoadedPromise) return fontsLoadedPromise;
-  fontsLoadedPromise = (async () => {
+  const loadPromise = (async () => {
     const fontFiles: Record<string, string> = {
       "Roboto-Regular.ttf": browser.runtime.getURL("fonts/Roboto-Regular.ttf"),
       "Roboto-Medium.ttf": browser.runtime.getURL("fonts/Roboto-Medium.ttf"),
@@ -34,7 +34,12 @@ async function ensureFontsLoaded(): Promise<void> {
       },
     };
   })();
-  return fontsLoadedPromise;
+  fontsLoadedPromise = loadPromise;
+  // Drop a failed load so the next render retries instead of rejecting forever
+  loadPromise.catch(() => {
+    if (fontsLoadedPromise === loadPromise) fontsLoadedPromise = null;
+  });
+  return loadPromise;
 }
 
 type ContentPart = Content;
@@ -56,7 +61,7 @@ function inlineNodesToRuns(node: Node, bold = false, italics = false): InlineRun
   );
 }
 
-function htmlToPdfContent(html: string): ContentPart[] {
+export function htmlToPdfContent(html: string): ContentPart[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   return nodesToPdfContent(Array.from(doc.body.childNodes));
 }
