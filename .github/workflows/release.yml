@@ -41,3 +41,60 @@ jobs:
             release/fanfic-downloader.xpi
             release/fanfic-downloader-source.zip
           generate_release_notes: true
+
+  amo:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # The `secrets` context isn't available in a job-level `if`, so the gate
+      # lives here instead: every later step requires this step's output.
+      - name: Check for AMO credentials
+        id: check_secrets
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          if [ -z "$AMO_JWT_ISSUER" ] || [ -z "$AMO_JWT_SECRET" ]; then
+            echo "AMO secrets not configured, skipping upload"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.check_secrets.outputs.configured == 'true'
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        if: steps.check_secrets.outputs.configured == 'true'
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+        if: steps.check_secrets.outputs.configured == 'true'
+
+      - run: npm run build
+        if: steps.check_secrets.outputs.configured == 'true'
+
+      # "Submitted to AMO" — not "published". Human review can take multiple
+      # days; --approval-timeout 0 makes this step exit once the submission is
+      # accepted, instead of polling for review approval and hanging/failing
+      # on timeout despite a successful submission.
+      - name: Submit to AMO
+        if: steps.check_secrets.outputs.configured == 'true'
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          npx web-ext sign \
+            --channel listed \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --source-dir dist \
+            --upload-source-code release/fanfic-downloader-source.zip \
+            --approval-timeout 0

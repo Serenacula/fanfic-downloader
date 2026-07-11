@@ -45,5 +45,9 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/release.yml
+    # Reusable (workflow_call) workflows do NOT inherit repo secrets by default —
+    # without this, release.yml's amo job would never see AMO_JWT_ISSUER/SECRET
+    # and would silently self-skip forever, even after the secrets are added.
+    secrets: inherit
     with:
       tag: ${{ needs.tag.outputs.tag }}
