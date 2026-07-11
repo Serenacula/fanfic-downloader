@@ -10,5 +10,11 @@
     "types": ["firefox-webext-browser"],
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "manifest.json", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "src/**/*",
+    "manifest.json",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.live.config.ts"
+  ]
 }
