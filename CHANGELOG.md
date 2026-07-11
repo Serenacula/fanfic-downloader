@@ -26,6 +26,7 @@
 * include underlying error in request-queue failure message, add orchestrator download logging ([2d6d8d0](https://github.com/Serenacula/fanfic-downloader/commit/2d6d8d02732beb2468077580cbb8ac4cdffa45c5))
 * inline formatting in PDF/DOCX, image src absolutisation in AO3/FFN, scoped image remapping, YAML newline escaping, FFN date label matching ([1698f12](https://github.com/Serenacula/fanfic-downloader/commit/1698f12466af66749f67438edc825126fbf490ca))
 * invalidate stale download runs after cancel+retry, revoke object URLs on download completion ([0656dd0](https://github.com/Serenacula/fanfic-downloader/commit/0656dd0edd9d7e44b738a0132ae3efc3458392be))
+* mark jobs stranded by an extension restart as failed so they can be retried ([a915e61](https://github.com/Serenacula/fanfic-downloader/commit/a915e61a89f50f0804c7a2645553c8b02caf36ba))
 * only fall back to content-script proxy on Cloudflare-shaped failures, preserve direct fetch error ([f3b94c1](https://github.com/Serenacula/fanfic-downloader/commit/f3b94c13109ba997312174354b55816d7ed1f3f8))
 * proxy XenForo fetches through active tab to bypass Cloudflare JS challenge ([eefff28](https://github.com/Serenacula/fanfic-downloader/commit/eefff2841a42b429e24c7c6b1645b20eeea90f2e))
 * read dt.status label for AO3 status detection instead of dd.status date ([417b9aa](https://github.com/Serenacula/fanfic-downloader/commit/417b9aa6ceeffb868170a7a247410f7b0cd190b8))
