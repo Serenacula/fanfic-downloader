@@ -153,19 +153,27 @@ export async function renderDownloadList(
   const interval = setInterval(() => void refreshJobs(), 800);
   void refreshJobs();
 
-  downloadBtn.addEventListener("click", async () => {
-    if (!isOnFicPage) return;
-    const settings = await getSettings();
-    if (settings.confirmationDialogue) {
-      await browser.tabs.create({
-        url:
-          browser.runtime.getURL("src/confirmation/index.html") +
-          `?url=${encodeURIComponent(currentUrl)}`,
-      });
-    } else {
-      void send({ type: "startDownload", url: currentUrl });
-    }
+  downloadBtn.addEventListener("click", () => {
+    void handleDownloadClick();
   });
+
+  async function handleDownloadClick(): Promise<void> {
+    if (!isOnFicPage) return;
+    try {
+      const settings = await getSettings();
+      if (settings.confirmationDialogue) {
+        await browser.tabs.create({
+          url:
+            browser.runtime.getURL("src/confirmation/index.html") +
+            `?url=${encodeURIComponent(currentUrl)}`,
+        });
+      } else {
+        void send({ type: "startDownload", url: currentUrl });
+      }
+    } catch (error) {
+      console.error("[fanfic-downloader] failed to start download:", error);
+    }
+  }
 
   urlBtn.addEventListener("click", onNavigateUrl);
 
