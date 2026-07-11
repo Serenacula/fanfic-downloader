@@ -21,6 +21,7 @@
 * AO3 chapter body selector matching author notes instead of content ([36e4b91](https://github.com/Serenacula/fanfic-downloader/commit/36e4b912cb5383f88dd97ccb96019309e10314ba))
 * apply bug-loop iteration-1 fixes (F-01 through F-09) ([775d546](https://github.com/Serenacula/fanfic-downloader/commit/775d5466112e7b3790b2ee0ed981065ceb4e77e3))
 * apply bugloop iteration-9 fixes (F-01 through F-07) ([7fbb3b0](https://github.com/Serenacula/fanfic-downloader/commit/7fbb3b078e8775f6af88766e47e06ce30f00fc32))
+* catch sendMessage failures in the confirmation dialog's download button ([d28d544](https://github.com/Serenacula/fanfic-downloader/commit/d28d54497bc85d1b76a8f5031107b66bfb46c2ab))
 * clamp rateLimitMs to [0, 10000] on save (F-06) ([01e7c68](https://github.com/Serenacula/fanfic-downloader/commit/01e7c688b299b29e45d1150f8d9780c41c44aa6f))
 * correct AO3 in-progress status detection and SVG cover MIME type ([4e6b1fb](https://github.com/Serenacula/fanfic-downloader/commit/4e6b1fb6c249825c05d3efce1fcfc1c8391a1437))
 * cross-platform xpi build using fflate instead of shell zip ([d823742](https://github.com/Serenacula/fanfic-downloader/commit/d82374213c86d1ce18befccb3313acff8de571c0))

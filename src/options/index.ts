@@ -212,11 +212,19 @@ function wireEvents(): void {
   document.getElementById("rateLimitMs")?.addEventListener("input", () => void save());
   document.getElementById("maxConcurrentDownloads")?.addEventListener("input", () => void save());
 
-  document.getElementById("btn-reset")?.addEventListener("click", async () => {
+  document.getElementById("btn-reset")?.addEventListener("click", () => {
+    void resetToDefaults();
+  });
+}
+
+async function resetToDefaults(): Promise<void> {
+  try {
     await saveSettings({ ...DEFAULT_SETTINGS });
     const current = await getSettings();
     render(current);
-  });
+  } catch (error) {
+    console.error("[fanfic-downloader] failed to reset settings:", error);
+  }
 }
 
 async function init(): Promise<void> {
