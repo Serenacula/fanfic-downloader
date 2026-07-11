@@ -15,7 +15,13 @@ export default defineConfig({
     webExtension({
       browser: "firefox",
       additionalInputs: ["src/confirmation/index.html"],
-      transformManifest(manifest) {
+      // vite-plugin-web-extension types this parameter via webextension-polyfill's
+      // Browser namespace, which this project doesn't have installed (it uses
+      // @types/firefox-webext-browser instead) — annotate locally to avoid relying
+      // on that unresolved type.
+      transformManifest(manifest: {
+        background?: { service_worker?: string; scripts?: string[] };
+      }) {
         const sw = manifest.background?.service_worker;
         if (sw) {
           manifest.background = { scripts: [sw] };

@@ -1,5 +1,5 @@
-import type { FicData, FicImage } from "../shared/types.js";
-import type { Settings, RendererFn } from "../shared/settings.js";
+import type { FicData } from "../shared/types.js";
+import type { RendererFn } from "../shared/settings.js";
 import { renderStoryInfoHtml } from "./story-info.js";
 import { generateCoverImage } from "./cover.js";
 import { fetchCoverImage, remapImageSrcs } from "./utils.js";

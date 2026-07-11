@@ -118,6 +118,10 @@ async function resolveStoryId(url: string): Promise<string> {
 
   // HTML fallback: the chapter page always has a link back to the story
   const doc = await fetchHtml(url);
+  // eslint false positive: querySelector's compound-selector overload returns
+  // Element | null here, so this cast to HTMLAnchorElement is load-bearing —
+  // removing it breaks `tsc --noEmit` (storyLink.href doesn't exist on Element).
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
   const storyLink = doc.querySelector('a[href*="/story/"]') as HTMLAnchorElement | null;
   const storyLinkMatch = storyLink ? STORY_PATTERN.exec(storyLink.href) : null;
   if (storyLinkMatch) return storyLinkMatch[1]!;
@@ -182,7 +186,7 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
 
   const coverImageUrl =
     jsonLd?.image ??
-    (doc.querySelector('img[data-testid="image"]') as HTMLImageElement | null)?.getAttribute(
+    (doc.querySelector('img[data-testid="image"]'))?.getAttribute(
       "src",
     ) ??
     null;
@@ -200,7 +204,7 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     // this fallback may only capture links visible in the summary view.
     const CHAPTER_HREF = /^https:\/\/www\.wattpad\.com\/(\d+)/;
     const seen = new Set<string>();
-    parts = (Array.from(doc.querySelectorAll("a[href]")) as HTMLAnchorElement[]).flatMap((link) => {
+    parts = (Array.from(doc.querySelectorAll("a[href]"))).flatMap((link) => {
       let absoluteHref: string;
       try {
         absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;

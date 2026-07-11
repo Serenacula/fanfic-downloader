@@ -23,9 +23,9 @@ async function navigate(screen: Screen): Promise<void> {
   }
 }
 
-async function init(): Promise<void> {
+function init(): void {
   void browser.action.setBadgeText({ text: "" });
   void navigate("list");
 }
 
-void init();
+init();

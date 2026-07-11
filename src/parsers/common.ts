@@ -186,6 +186,7 @@ export async function fetchHtml(url: string): Promise<Document> {
     console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
     throw new Error(
       `${errorMessage(proxyError)} (direct fetch failed: ${errorMessage(directError)})`,
+      { cause: proxyError },
     );
   }
 }

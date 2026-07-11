@@ -205,11 +205,11 @@ async function renderSinglePdf(data: FicData, settings: Settings): Promise<Blob>
         try {
           resolve(blob);
         } catch (error) {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         }
       });
     } catch (error) {
-      reject(error);
+      reject(error instanceof Error ? error : new Error(String(error)));
     }
   });
 }

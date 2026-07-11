@@ -144,7 +144,7 @@ function isJobRecord(value: unknown): value is Record<string, DownloadJob> {
 async function loadJobs(): Promise<Record<string, DownloadJob>> {
   if (jobsCache !== null) return jobsCache;
   const result = await browser.storage.session.get(SESSION_KEY);
-  const stored = result[SESSION_KEY];
+  const stored: unknown = result[SESSION_KEY];
   jobsCache = isJobRecord(stored) ? stored : {};
   return jobsCache;
 }

@@ -63,7 +63,7 @@ const STORAGE_KEY = "settings";
 
 export async function getSettings(): Promise<Settings> {
   const result = await browser.storage.local.get(STORAGE_KEY);
-  const stored = result[STORAGE_KEY];
+  const stored: unknown = result[STORAGE_KEY];
   const merged =
     stored == null || typeof stored !== "object"
       ? { ...DEFAULT_SETTINGS }
