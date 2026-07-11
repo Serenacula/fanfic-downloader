@@ -11,7 +11,8 @@
     "check-versions": "node scripts/check-version-sync.mjs",
     "lint": "eslint src",
     "format:check": "prettier --check .",
-    "test:live": "vitest run --config vitest.live.config.ts"
+    "test:live": "vitest run --config vitest.live.config.ts",
+    "refresh-fixtures": "node scripts/refresh-fixtures.mjs"
   },
   "keywords": [],
   "author": "Serenacula",

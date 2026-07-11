@@ -46,6 +46,23 @@ npm test        # run parser tests
 
 Load the extension in Firefox: `about:debugging` → "Load Temporary Add-on" → pick any file in `dist/`.
 
+### Keeping fixtures fresh
+
+Some of `src/tests/fixtures/` are real GET dumps of live pages (mapped in
+`src/tests/fixtures/sources.json`); the rest are hand-crafted synthetic HTML for sites
+whose real content doesn't come from a simple GET (e.g. ScribbleHub's TOC is a POST
+endpoint, Wattpad's chapter text comes from a JSON API). Only the ones in
+`sources.json` are refreshable:
+
+```bash
+npm run refresh-fixtures   # re-fetches every fixture in sources.json
+npm test                   # a failure here means a site changed
+```
+
+If a test fails after refreshing, the site's markup drifted — fix the parser (or, if
+the change is intentional and harmless, update the test's expected values) and commit
+the fixture update together with the fix in the same commit.
+
 ## License
 
 MIT

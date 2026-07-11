@@ -1,0 +1,22 @@
+{
+  "ao3-work.html": "https://archiveofourown.org/works/75693471?view_full_work=true&view_adult=true",
+  "ao3-multichapter.html": "https://archiveofourown.org/works/80642696?view_full_work=true&view_adult=true",
+  "rr-fiction.html": "https://www.royalroad.com/fiction/165189",
+  "rr-chapter.html": "https://www.royalroad.com/fiction/165189/okeanos-returnal/chapter/3334461/prologue-last-warm-night",
+  "tapas-info.html": "https://tapas.io/series/The-Last-Story-TLS/info",
+  "tapas-episodes-api.json": "https://tapas.io/series/150240/episodes?page=1&sort=OLDEST",
+  "tapas-episode.html": "https://tapas.io/episode/1527944",
+  "_synthetic": [
+    "ffn-story.html",
+    "ffn-story-reversed-dates.html",
+    "xenforo-post.html",
+    "xenforo-threadmarks.html",
+    "xenforo-thread.html",
+    "scribblehub-series.html",
+    "scribblehub-stats.html",
+    "scribblehub-chapter.html",
+    "scribblehub-toc.html",
+    "wattpad-story.html",
+    "wattpad-chapter.html"
+  ]
+}
