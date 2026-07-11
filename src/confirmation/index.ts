@@ -28,10 +28,6 @@ function escHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function escAttr(text: string): string {
-  return text.replace(/"/g, "&quot;").replace(/</g, "&lt;");
-}
-
 async function init(): Promise<void> {
   const settings = await getSettings();
   const app = document.getElementById("app");
@@ -115,7 +111,11 @@ async function init(): Promise<void> {
       .catch(() => window.close());
   });
 
-  document.getElementById("btn-download")?.addEventListener("click", async () => {
+  document.getElementById("btn-download")?.addEventListener("click", () => {
+    void handleDownloadClick();
+  });
+
+  async function handleDownloadClick(): Promise<void> {
     const titleEnabled = (document.getElementById("tog-title") as HTMLInputElement).checked;
     const authorEnabled = (document.getElementById("tog-author") as HTMLInputElement).checked;
     const tagsEnabled = (document.getElementById("tog-tags") as HTMLInputElement).checked;
@@ -148,15 +148,20 @@ async function init(): Promise<void> {
       (settingsOverrides as Record<string, unknown>)[key] = checkbox.checked;
     }
 
-    await browser.runtime.sendMessage({
-      type: "startDownload",
-      url,
-      overrides: settingsOverrides,
-      dataOverrides,
-    });
-
-    window.close();
-  });
+    try {
+      await browser.runtime.sendMessage({
+        type: "startDownload",
+        url,
+        overrides: settingsOverrides,
+        dataOverrides,
+      });
+      window.close();
+    } catch (error) {
+      // Leave the dialog open so the user can retry instead of it silently
+      // doing nothing — an unhandled rejection here would otherwise vanish.
+      console.error("[fanfic-downloader] failed to start download:", error);
+    }
+  }
 
   // Fetch real metadata and populate placeholders/fields
   void fetchPreviewMetadata();
