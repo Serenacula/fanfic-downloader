@@ -1,7 +1,7 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings, RendererFn } from "../shared/settings.js";
 import { renderStoryInfoText } from "./story-info.js";
-import { htmlToText } from "./utils.js";
+import { htmlToText, collectInlineRuns } from "./utils.js";
 import pdfMake from "pdfmake/build/pdfmake.js";
 import type { TDocumentDefinitions, Content } from "pdfmake/interfaces.js";
 
@@ -44,23 +44,6 @@ export async function ensureFontsLoaded(): Promise<void> {
 
 type ContentPart = Content;
 
-type InlineRun = { text: string; bold?: boolean; italics?: boolean };
-
-function inlineNodesToRuns(node: Node, bold = false, italics = false): InlineRun[] {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const text = node.textContent ?? "";
-    return text ? [{ text, ...(bold ? { bold } : {}), ...(italics ? { italics } : {}) }] : [];
-  }
-  if (node.nodeType !== Node.ELEMENT_NODE) return [];
-  const element = node as Element;
-  const tag = element.tagName.toLowerCase();
-  const childBold = bold || tag === "strong" || tag === "b";
-  const childItalics = italics || tag === "em" || tag === "i";
-  return Array.from(element.childNodes).flatMap((child) =>
-    inlineNodesToRuns(child, childBold, childItalics),
-  );
-}
-
 export function htmlToPdfContent(html: string): ContentPart[] {
   const doc = new DOMParser().parseFromString(html, "text/html");
   return nodesToPdfContent(Array.from(doc.body.childNodes));
@@ -88,26 +71,26 @@ function nodeToPdfContent(node: Node): ContentPart | null {
 
   switch (tag) {
     case "p": {
-      const runs = inlineNodesToRuns(element);
+      const runs = collectInlineRuns(element);
       return runs.length === 0 ? null : { text: runs as Content, margin: [0, 4, 0, 4] };
     }
     case "h1": {
-      const runs = inlineNodesToRuns(element);
+      const runs = collectInlineRuns(element);
       return runs.length === 0 ? null : { text: runs as Content, fontSize: 18, bold: true, margin: [0, 12, 0, 6] };
     }
     case "h2": {
-      const runs = inlineNodesToRuns(element);
+      const runs = collectInlineRuns(element);
       return runs.length === 0 ? null : { text: runs as Content, fontSize: 15, bold: true, margin: [0, 10, 0, 4] };
     }
     case "h3":
     case "h4":
     case "h5":
     case "h6": {
-      const runs = inlineNodesToRuns(element);
+      const runs = collectInlineRuns(element);
       return runs.length === 0 ? null : { text: runs as Content, fontSize: 12, bold: true, margin: [0, 8, 0, 3] };
     }
     case "blockquote": {
-      const runs = inlineNodesToRuns(element, false, true);
+      const runs = collectInlineRuns(element, false, true);
       return runs.length === 0 ? null : {
         text: runs as Content,
         margin: [20, 4, 0, 4],
@@ -121,16 +104,16 @@ function nodeToPdfContent(node: Node): ContentPart | null {
       return { text: "\n" };
     case "ul":
       return {
-        ul: Array.from(element.children).map((child) => inlineNodesToRuns(child) as Content),
+        ul: Array.from(element.children).map((child) => collectInlineRuns(child) as Content),
         margin: [0, 4, 0, 4],
       };
     case "ol":
       return {
-        ol: Array.from(element.children).map((child) => inlineNodesToRuns(child) as Content),
+        ol: Array.from(element.children).map((child) => collectInlineRuns(child) as Content),
         margin: [0, 4, 0, 4],
       };
     default: {
-      const runs = inlineNodesToRuns(element);
+      const runs = collectInlineRuns(element);
       return runs.length === 0 ? null : { text: runs as Content };
     }
   }

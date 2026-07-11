@@ -11,24 +11,16 @@ import {
   Packer,
 } from "docx";
 import { renderStoryInfoText } from "./story-info.js";
-import { htmlToText } from "./utils.js";
+import { htmlToText, collectInlineRuns } from "./utils.js";
 
 function inlineNodesToRuns(node: Node, bold = false, italics = false): TextRun[] {
-  if (node.nodeType === Node.TEXT_NODE) {
-    const text = node.textContent ?? "";
-    if (!text) return [];
-    const options: { text: string; bold?: boolean; italics?: boolean } = { text };
-    if (bold) options.bold = true;
-    if (italics) options.italics = true;
-    return [new TextRun(options)];
-  }
-  if (node.nodeType !== Node.ELEMENT_NODE) return [];
-  const element = node as Element;
-  const tag = element.tagName.toLowerCase();
-  const childBold = bold || tag === "strong" || tag === "b";
-  const childItalics = italics || tag === "em" || tag === "i";
-  return Array.from(element.childNodes).flatMap((child) =>
-    inlineNodesToRuns(child, childBold, childItalics),
+  return collectInlineRuns(node, bold, italics).map(
+    (run) =>
+      new TextRun({
+        text: run.text,
+        ...(run.bold && { bold: true }),
+        ...(run.italics && { italics: true }),
+      }),
   );
 }
 

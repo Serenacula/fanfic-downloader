@@ -60,6 +60,27 @@ function nodeToMarkdown(node: Node): string {
   }
 }
 
+export interface InlineRun {
+  text: string;
+  bold?: boolean;
+  italics?: boolean;
+}
+
+export function collectInlineRuns(node: Node, bold = false, italics = false): InlineRun[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent ?? "";
+    return text ? [{ text, ...(bold ? { bold } : {}), ...(italics ? { italics } : {}) }] : [];
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return [];
+  const element = node as Element;
+  const tag = element.tagName.toLowerCase();
+  const childBold = bold || tag === "strong" || tag === "b";
+  const childItalics = italics || tag === "em" || tag === "i";
+  return Array.from(element.childNodes).flatMap((child) =>
+    collectInlineRuns(child, childBold, childItalics),
+  );
+}
+
 export function zipFiles(files: Record<string, Uint8Array | string>): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const input: Record<string, Uint8Array> = {};
