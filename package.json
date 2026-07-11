@@ -6,7 +6,8 @@
         "build": "vite build && node scripts/zip-dist.mjs && node scripts/zip-source.mjs",
         "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0",
         "dev": "vite build --watch",
-        "test": "vitest run"
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit"
     },
     "keywords": [],
     "author": "",
