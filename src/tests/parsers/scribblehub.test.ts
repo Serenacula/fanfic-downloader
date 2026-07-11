@@ -36,7 +36,7 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
       }
       if (url.includes("admin-ajax.php")) {
         // Verify correct POST params
-        const body = init?.body as string ?? "";
+        const body = (init?.body as string) ?? "";
         if (!body.includes("wi_getreleases_long") || !body.includes("2313252")) {
           throw new Error(`Unexpected AJAX params: ${body}`);
         }
@@ -53,29 +53,44 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
   });
 
   it("returns the correct site identifier", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("scribblehub");
   });
 
   it("extracts title and author", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The Last Silence");
     expect(data.core.author).toBe("ImadChelloufi");
   });
 
   it("extracts summary", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.summary).not.toBeNull();
     expect(data.core.summary!.length).toBeGreaterThan(20);
   });
 
   it("extracts ongoing status", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.status).toBe("in-progress");
   });
 
   it("extracts genres and tags", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as ScribbleHubMetadata;
     expect(meta.genres).toContain("Fantasy");
     expect(data.core.tags).toContain("Apocalypse");
@@ -83,33 +98,48 @@ describe("ScribbleHub parser — series/2313252 (The Last Silence)", () => {
   });
 
   it("extracts views and favorites from .fic_stats", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as ScribbleHubMetadata;
     expect(meta.views).toBe(21);
     expect(meta.favorites).toBe(3);
   });
 
   it("finds all chapters from AJAX TOC in reading order", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(2);
     expect(data.core.chapters[0]!.title).toContain("Chapter 01");
     expect(data.core.chapters[1]!.title).toContain("Chapter 02");
   });
 
   it("extracts chapter content from #chp_raw", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.htmlContent).toContain("Biological War");
   });
 
   it("extracts dates from chapter TOC dates", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.publishDate).toBeInstanceOf(Date);
     expect(data.core.updateDate).toBeInstanceOf(Date);
     expect(data.core.publishDate!.getFullYear()).toBe(2026);
   });
 
   it("fetches word count from stats page table", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.wordCount).toBe(7705);
   });
 
@@ -144,7 +174,10 @@ describe("ScribbleHub parser — static TOC fallback", () => {
   });
 
   it("falls back to series page TOC when AJAX fails", async () => {
-    const data = await scribbleHubParser.parse("https://www.scribblehub.com/series/2313252/the-last-silence/", DEFAULT_SETTINGS);
+    const data = await scribbleHubParser.parse(
+      "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(2);
     expect(data.core.chapters[0]!.title).toContain("Chapter 01");
     expect(data.core.chapters[1]!.title).toContain("Chapter 02");
@@ -153,16 +186,28 @@ describe("ScribbleHub parser — static TOC fallback", () => {
 
 describe("ScribbleHub parser — URL detection", () => {
   it("matches series page URLs", () => {
-    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/series/2313252/the-last-silence/")).toBe(true);
-    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/series/2313252/")).toBe(true);
+    expect(
+      scribbleHubParser.pattern.test(
+        "https://www.scribblehub.com/series/2313252/the-last-silence/",
+      ),
+    ).toBe(true);
+    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/series/2313252/")).toBe(
+      true,
+    );
   });
 
   it("matches chapter reader URLs", () => {
-    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/read/2313252-the-last-silence/chapter/2314736/")).toBe(true);
+    expect(
+      scribbleHubParser.pattern.test(
+        "https://www.scribblehub.com/read/2313252-the-last-silence/chapter/2314736/",
+      ),
+    ).toBe(true);
   });
 
   it("does not match profile or other pages", () => {
-    expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/profile/259832/imadchelloufi/")).toBe(false);
+    expect(
+      scribbleHubParser.pattern.test("https://www.scribblehub.com/profile/259832/imadchelloufi/"),
+    ).toBe(false);
     expect(scribbleHubParser.pattern.test("https://www.scribblehub.com/")).toBe(false);
   });
 });

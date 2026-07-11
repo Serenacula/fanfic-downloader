@@ -17,15 +17,49 @@ const FFN_PATTERN = /fanfiction\.net\/s\/(\d+)/;
 const FP_PATTERN = /fictionpress\.com\/s\/(\d+)/;
 
 const FFN_GENRES = new Set([
-  "Adventure", "Angst", "Crime", "Drama", "Fantasy", "Friendship", "General",
-  "Horror", "Humor", "Hurt/Comfort", "Mystery", "Parody", "Poetry", "Romance",
-  "Sci-Fi", "Spiritual", "Supernatural", "Suspense", "Tragedy", "Western",
+  "Adventure",
+  "Angst",
+  "Crime",
+  "Drama",
+  "Fantasy",
+  "Friendship",
+  "General",
+  "Horror",
+  "Humor",
+  "Hurt/Comfort",
+  "Mystery",
+  "Parody",
+  "Poetry",
+  "Romance",
+  "Sci-Fi",
+  "Spiritual",
+  "Supernatural",
+  "Suspense",
+  "Tragedy",
+  "Western",
 ]);
 
 const FFN_LANGUAGES = new Set([
-  "English", "French", "Spanish", "German", "Japanese", "Chinese", "Korean",
-  "Italian", "Portuguese", "Russian", "Dutch", "Norwegian", "Swedish", "Danish",
-  "Finnish", "Polish", "Indonesian", "Turkish", "Arabic", "Hebrew",
+  "English",
+  "French",
+  "Spanish",
+  "German",
+  "Japanese",
+  "Chinese",
+  "Korean",
+  "Italian",
+  "Portuguese",
+  "Russian",
+  "Dutch",
+  "Norwegian",
+  "Swedish",
+  "Danish",
+  "Finnish",
+  "Polish",
+  "Indonesian",
+  "Turkish",
+  "Arabic",
+  "Hebrew",
 ]);
 
 function parseGenrePart(part: string): string[] | null {
@@ -81,7 +115,9 @@ function parseMetaBar(doc: Document): StoryMeta {
   const summaryEl = doc.querySelector("#profile_top div.xcontrast_txt");
   // textContent is decoded text — escape it before wrapping, or literal <b> / & in
   // a summary would be re-parsed as markup and mangled
-  const summary = summaryEl ? sanitizeHtml(`<p>${escapeHtmlText(summaryEl.textContent?.trim() ?? "")}</p>`) : null;
+  const summary = summaryEl
+    ? sanitizeHtml(`<p>${escapeHtmlText(summaryEl.textContent?.trim() ?? "")}</p>`)
+    : null;
 
   const metaSpan = doc.querySelector("#profile_top span.xgray.xcontrast_txt");
   const metaText = metaSpan?.textContent ?? "";
@@ -112,7 +148,11 @@ function parseMetaBar(doc: Document): StoryMeta {
       favs = parseCount(part.replace("Favs:", "").trim());
     } else if (part.startsWith("Follows:")) {
       follows = parseCount(part.replace("Follows:", "").trim());
-    } else if (part.startsWith("Reviews:") || part.startsWith("Updated:") || part.startsWith("Published:")) {
+    } else if (
+      part.startsWith("Reviews:") ||
+      part.startsWith("Updated:") ||
+      part.startsWith("Published:")
+    ) {
       // Dates are parsed from data-xutime span attributes below
     } else if (part.startsWith("Status:")) {
       const statusVal = part.replace("Status:", "").trim().toLowerCase();
@@ -129,7 +169,12 @@ function parseMetaBar(doc: Document): StoryMeta {
       } else if (!language && FFN_LANGUAGES.has(part)) {
         language = part;
       } else if (!/^\d/.test(part)) {
-        characters.push(...part.split(",").map((s) => s.trim()).filter(Boolean));
+        characters.push(
+          ...part
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        );
       }
     }
   }
@@ -171,15 +216,13 @@ function parseMetaBar(doc: Document): StoryMeta {
   if (publishDate && !updateDate) updateDate = publishDate;
 
   // Universe from breadcrumb
-  const breadcrumbAnchors = Array.from(
-    doc.querySelectorAll("#pre_story_links a[href^='/']"),
-  );
+  const breadcrumbAnchors = Array.from(doc.querySelectorAll("#pre_story_links a[href^='/']"));
   const crossoverAnchor = breadcrumbAnchors.find((anchor) =>
     (anchor.getAttribute("href") ?? "").includes("/crossovers/"),
   );
   const universe =
-    (crossoverAnchor ?? breadcrumbAnchors[breadcrumbAnchors.length - 1])
-      ?.textContent?.trim() ?? null;
+    (crossoverAnchor ?? breadcrumbAnchors[breadcrumbAnchors.length - 1])?.textContent?.trim() ??
+    null;
 
   return {
     title: title || "Untitled",

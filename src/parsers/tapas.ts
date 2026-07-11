@@ -40,7 +40,11 @@ interface EpisodeListing {
 }
 
 function extractSeriesId(doc: Document): string | null {
-  for (const name of ["twitter:app:url:googleplay", "twitter:app:url:iphone", "twitter:app:url:ipad"]) {
+  for (const name of [
+    "twitter:app:url:googleplay",
+    "twitter:app:url:iphone",
+    "twitter:app:url:ipad",
+  ]) {
     const content = doc.querySelector(`meta[name="${name}"]`)?.getAttribute("content") ?? "";
     const match = /tapastic:\/\/series\/(\d+)/.exec(content);
     if (match) return match[1]!;
@@ -66,7 +70,8 @@ function parseEpisodeHtml(html: string): EpisodeListing[] {
     const dataId = item.getAttribute("data-id") ?? "";
     const path = href || (dataId ? `/episode/${dataId}` : "");
     if (!path) continue;
-    const title = item.querySelector(".info__title, a.info__title")?.textContent?.trim() ?? "Untitled";
+    const title =
+      item.querySelector(".info__title, a.info__title")?.textContent?.trim() ?? "Untitled";
     listings.push({ title, url: episodeUrl(path), date: null });
   }
   return listings;
@@ -79,7 +84,9 @@ async function fetchAllEpisodes(seriesId: string): Promise<EpisodeListing[]> {
 
   while (true) {
     if (page > MAX_PAGES) {
-      console.warn(`[tapas] fetchAllEpisodes exceeded MAX_PAGES (${MAX_PAGES}), stopping pagination`);
+      console.warn(
+        `[tapas] fetchAllEpisodes exceeded MAX_PAGES (${MAX_PAGES}), stopping pagination`,
+      );
       break;
     }
 
@@ -127,16 +134,23 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const summary = summaryEl ? sanitizeHtml(summaryEl.innerHTML) : null;
   const genre = textContent(doc.querySelector("a[href*='genre_name=']")) || null;
 
-  const statusText = textContent(doc.querySelector(".series-status, .info-body__status")).toLowerCase();
-  const status = statusText.includes("complet") ? "complete" as const
-    : statusText.includes("ongoing") ? "in-progress" as const
-    : "unknown" as const;
+  const statusText = textContent(
+    doc.querySelector(".series-status, .info-body__status"),
+  ).toLowerCase();
+  const status = statusText.includes("complet")
+    ? ("complete" as const)
+    : statusText.includes("ongoing")
+      ? ("in-progress" as const)
+      : ("unknown" as const);
 
   const seriesId = extractSeriesId(doc);
   if (!seriesId) throw new Error(`Could not find Tapas series ID for: ${url}`);
 
   const listings = await fetchAllEpisodes(seriesId);
-  if (listings.length === 0) throw new Error("No episodes found for Tapas series (series may require login or have no published episodes)");
+  if (listings.length === 0)
+    throw new Error(
+      "No episodes found for Tapas series (series may require login or have no published episodes)",
+    );
 
   const publishDate = listings[0]?.date ?? null;
   const updateDate = listings[listings.length - 1]?.date ?? null;
@@ -148,7 +162,9 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
       const content = chapterDoc.querySelector(
         ".viewer__body, .viewer__row, .viewer-row, .content-viewer, .prose-content, .novel-body",
       );
-      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
+      const htmlContent = content
+        ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url)
+        : "";
       onProgress?.(++fetchedCount, listings.length);
       return { index, title: listing.title, htmlContent };
     }),

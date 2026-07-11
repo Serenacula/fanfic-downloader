@@ -104,7 +104,7 @@ describe("request queue", () => {
       maxConcurrentDownloads: 3,
       filenameTemplate: "{title} - {author}",
       storyInfoFields: {},
-    debugLogging: false,
+      debugLogging: false,
     });
 
     const dispatchTimes: number[] = [];
@@ -180,7 +180,8 @@ describe("request queue", () => {
   });
 
   it("resolves immediately on a successful response after a transient failure", async () => {
-    const mockFetch = vi.fn()
+    const mockFetch = vi
+      .fn()
       .mockResolvedValueOnce(makeResponse(false, 503))
       .mockResolvedValueOnce(makeResponse(true));
     vi.stubGlobal("fetch", mockFetch);

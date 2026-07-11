@@ -32,7 +32,10 @@ export function renderUrlInput(container: HTMLElement, onBack: () => void): () =
   async function handleSubmit(): Promise<void> {
     clearError();
     const url = input.value.trim();
-    if (!url) { showError("Please enter a URL."); return; }
+    if (!url) {
+      showError("Please enter a URL.");
+      return;
+    }
 
     submitBtn.disabled = true;
     const response = await send({ type: "startDownloadByUrl", url });

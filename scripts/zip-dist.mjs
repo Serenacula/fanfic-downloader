@@ -10,17 +10,17 @@ const releaseDir = join(root, "release");
 const outputPath = join(releaseDir, "fanfic-downloader.xpi");
 
 function collectFiles(dir) {
-    const files = {};
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-        const fullPath = join(dir, entry.name);
-        if (entry.isDirectory()) {
-            Object.assign(files, collectFiles(fullPath));
-        } else {
-            const relPath = relative(distDir, fullPath);
-            files[relPath] = [readFileSync(fullPath), { level: 6 }];
-        }
+  const files = {};
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      Object.assign(files, collectFiles(fullPath));
+    } else {
+      const relPath = relative(distDir, fullPath);
+      files[relPath] = [readFileSync(fullPath), { level: 6 }];
     }
-    return files;
+  }
+  return files;
 }
 
 mkdirSync(releaseDir, { recursive: true });

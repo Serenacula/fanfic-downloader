@@ -99,14 +99,19 @@ async function init(): Promise<void> {
   ] as const) {
     document.getElementById(togId)?.addEventListener("change", (event) => {
       const checked = (event.target as HTMLInputElement).checked;
-      const input = document.getElementById(inputId) as HTMLInputElement | HTMLTextAreaElement | null;
+      const input = document.getElementById(inputId) as
+        HTMLInputElement | HTMLTextAreaElement | null;
       if (input) input.disabled = !checked;
     });
   }
 
   document.getElementById("btn-cancel")?.addEventListener("click", () => {
-    browser.tabs.getCurrent()
-      .then((tab) => { if (tab?.id !== undefined) void browser.tabs.remove(tab.id); else window.close(); })
+    browser.tabs
+      .getCurrent()
+      .then((tab) => {
+        if (tab?.id !== undefined) void browser.tabs.remove(tab.id);
+        else window.close();
+      })
       .catch(() => window.close());
   });
 
@@ -116,19 +121,29 @@ async function init(): Promise<void> {
     const tagsEnabled = (document.getElementById("tog-tags") as HTMLInputElement).checked;
 
     const titleInput = (document.getElementById("override-title") as HTMLInputElement).value.trim();
-    const authorInput = (document.getElementById("override-author") as HTMLInputElement).value.trim();
-    const tagsInput = (document.getElementById("override-tags") as HTMLTextAreaElement).value.trim();
+    const authorInput = (
+      document.getElementById("override-author") as HTMLInputElement
+    ).value.trim();
+    const tagsInput = (
+      document.getElementById("override-tags") as HTMLTextAreaElement
+    ).value.trim();
 
     const dataOverrides: DataOverrides = {};
     if (titleEnabled && titleInput) dataOverrides.title = titleInput;
     if (authorEnabled && authorInput) dataOverrides.author = authorInput;
     if (tagsEnabled && tagsInput) {
-      dataOverrides.tags = tagsInput.split(",").map((tag) => tag.trim()).filter(Boolean);
+      dataOverrides.tags = tagsInput
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
     }
 
-    const format = (document.getElementById("format") as HTMLSelectElement).value as Settings["format"];
+    const format = (document.getElementById("format") as HTMLSelectElement)
+      .value as Settings["format"];
     const settingsOverrides: Partial<Settings> = { format };
-    for (const checkbox of Array.from(document.querySelectorAll<HTMLInputElement>("input[data-key]"))) {
+    for (const checkbox of Array.from(
+      document.querySelectorAll<HTMLInputElement>("input[data-key]"),
+    )) {
       const key = checkbox.dataset["key"] as keyof Settings;
       (settingsOverrides as Record<string, unknown>)[key] = checkbox.checked;
     }
@@ -159,9 +174,8 @@ function setFallbackPlaceholders(): void {
 async function fetchPreviewMetadata(): Promise<void> {
   const timeoutId = setTimeout(setFallbackPlaceholders, 12_000);
   try {
-    const response = await browser.runtime.sendMessage({ type: "getPreviewMetadata", url }) as
-      | { type: "previewMetadata"; title: string; author: string; tags: string[] }
-      | { type: string };
+    const response = (await browser.runtime.sendMessage({ type: "getPreviewMetadata", url })) as
+      { type: "previewMetadata"; title: string; author: string; tags: string[] } | { type: string };
 
     clearTimeout(timeoutId);
 
@@ -170,7 +184,12 @@ async function fetchPreviewMetadata(): Promise<void> {
       return;
     }
 
-    const { title, author, tags } = response as { type: "previewMetadata"; title: string; author: string; tags: string[] };
+    const { title, author, tags } = response as {
+      type: "previewMetadata";
+      title: string;
+      author: string;
+      tags: string[];
+    };
 
     const titleToggle = document.getElementById("tog-title") as HTMLInputElement | null;
     const titleInput = document.getElementById("override-title") as HTMLInputElement | null;

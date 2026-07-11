@@ -34,7 +34,9 @@ describe("fetchHtml — direct fetch first", () => {
   });
 
   it("returns the direct response without consulting the proxy", async () => {
-    vi.mocked(enqueue).mockResolvedValue(htmlResponse("<html><body><p>direct page</p></body></html>"));
+    vi.mocked(enqueue).mockResolvedValue(
+      htmlResponse("<html><body><p>direct page</p></body></html>"),
+    );
     const querySpy = vi.spyOn(browser.tabs, "query");
 
     const doc = await fetchHtml(PAGE_URL);

@@ -31,36 +31,52 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
     vi.spyOn(browser.tabs, "query").mockResolvedValue([tab] as never);
     vi.spyOn(browser.tabs, "sendMessage").mockImplementation(async (_tabId, msg) => {
       const { url } = msg as { url: string };
-      if (url.includes("archiveofourown.org/works/80642696")) return proxyResponse("ao3-multichapter.html");
+      if (url.includes("archiveofourown.org/works/80642696"))
+        return proxyResponse("ao3-multichapter.html");
       throw new Error(`Unexpected proxy fetch: ${url}`);
     });
   });
 
   it("extracts title and author", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("A Villain By Any Other Name...");
     expect(data.core.author).toBe("Silvia_Goddess_of_Being_Right");
   });
 
   it("extracts all 5 chapters", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(5);
   });
 
   it("extracts chapter titles", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.title).toBe("Clockblocker");
     expect(data.core.chapters[1]!.title).toBe("Kid Win");
   });
 
   it("extracts chapter body content", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.htmlContent).toContain("Dennis is tired.");
     expect(data.core.chapters[1]!.htmlContent).toContain("Armsmaster got kicked out");
   });
 
   it("excludes author notes by default", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.htmlContent).not.toContain("Wrote this fic after rereading");
     expect(data.core.chapters[1]!.htmlContent).not.toContain("Another round of thanks to HQM");
   });
@@ -73,7 +89,10 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
   });
 
   it("extracts publish and update dates", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.publishDate).toBeInstanceOf(Date);
     expect(data.core.updateDate).toBeInstanceOf(Date);
     expect(data.core.publishDate!.getFullYear()).toBe(2026);
@@ -81,7 +100,10 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
   });
 
   it("detects status as complete for a completed work", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/80642696",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.status).toBe("complete");
   });
 
@@ -96,7 +118,7 @@ describe("AO3 parser — multi-chapter work (works/80642696)", () => {
     vi.spyOn(browser.tabs, "sendMessage").mockResolvedValue({
       ok: false,
       status: 403,
-      text: '<html><script>window._cf_chl_opt = {}</script></html>',
+      text: "<html><script>window._cf_chl_opt = {}</script></html>",
     } as never);
     await expect(
       ao3Parser.parse("https://archiveofourown.org/works/80642696", DEFAULT_SETTINGS),
@@ -116,41 +138,62 @@ describe("AO3 parser — works/75693471 (The Things We Miss)", () => {
   });
 
   it("returns the correct site identifier", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("ao3");
   });
 
   it("extracts title and author", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The Things We Miss");
     expect(data.core.author).toBe("Serenacula");
   });
 
   it("extracts summary", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.summary).toContain("Praem is not quite as mature");
   });
 
   it("extracts chapter content", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(1);
     expect(data.core.chapters[0]!.htmlContent).toContain("It was quite late");
   });
 
   it("extracts AO3-specific metadata", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as AO3Metadata;
     expect(meta.fandoms).toContain("Katalepsis - Hungry");
     expect(meta.rating).toBe("General Audiences");
   });
 
   it("extracts dates", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.publishDate).toBeInstanceOf(Date);
   });
 
   it("extracts word count", async () => {
-    const data = await ao3Parser.parse("https://archiveofourown.org/works/75693471", DEFAULT_SETTINGS);
+    const data = await ao3Parser.parse(
+      "https://archiveofourown.org/works/75693471",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.wordCount).toBeGreaterThan(0);
   });
 });
@@ -176,7 +219,9 @@ describe("AO3 parser — in-progress status detection", () => {
       </div>
     </body></html>`;
     vi.spyOn(browser.tabs, "sendMessage").mockResolvedValue({
-      ok: true, status: 200, text: stubHtml,
+      ok: true,
+      status: 200,
+      text: stubHtml,
     } as never);
     const data = await ao3Parser.parse(
       "https://archiveofourown.org/works/99999998",

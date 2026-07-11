@@ -148,20 +148,20 @@ async function renderSingleDocx(data: FicData, settings: Settings): Promise<Blob
         alignment: AlignmentType.CENTER,
       }),
       new Paragraph({ text: "" }),
-      ...infoText
-        .split("\n")
-        .map(
-          (line) =>
-            new Paragraph({
-              children: [new TextRun({ text: line, size: 20 })],
-            }),
-        ),
+      ...infoText.split("\n").map(
+        (line) =>
+          new Paragraph({
+            children: [new TextRun({ text: line, size: 20 })],
+          }),
+      ),
       new Paragraph({ text: "", pageBreakBefore: true }),
     );
   }
 
   if (settings.includeToc) {
-    allParagraphs.push(new Paragraph({ text: "Table of Contents", heading: HeadingLevel.HEADING_1 }));
+    allParagraphs.push(
+      new Paragraph({ text: "Table of Contents", heading: HeadingLevel.HEADING_1 }),
+    );
     for (const chapter of data.core.chapters) {
       const title = chapter.title ?? `Chapter ${chapter.index + 1}`;
       allParagraphs.push(new Paragraph({ text: title }));

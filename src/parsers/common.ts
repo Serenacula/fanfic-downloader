@@ -10,9 +10,32 @@ export interface Parser {
 }
 
 const ALLOWED_TAGS = new Set([
-  "p", "em", "strong", "b", "i", "br", "hr", "blockquote",
-  "img", "a", "h1", "h2", "h3", "h4", "h5", "h6",
-  "ul", "ol", "li", "div", "span", "s", "del", "u", "sup", "sub",
+  "p",
+  "em",
+  "strong",
+  "b",
+  "i",
+  "br",
+  "hr",
+  "blockquote",
+  "img",
+  "a",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "ul",
+  "ol",
+  "li",
+  "div",
+  "span",
+  "s",
+  "del",
+  "u",
+  "sup",
+  "sub",
 ]);
 
 const ALLOWED_ATTRS: Record<string, Set<string>> = {
@@ -104,7 +127,10 @@ function isCloudflareChallenge(html: string): boolean {
 
 type ProxyResponse = { ok: boolean; status: number; text: string };
 
-export async function tryContentScriptProxy(url: string, tabQueryPattern: string): Promise<Document> {
+export async function tryContentScriptProxy(
+  url: string,
+  tabQueryPattern: string,
+): Promise<Document> {
   if (typeof browser === "undefined" || !browser?.tabs) {
     throw new Error("browser.tabs not available");
   }
@@ -112,18 +138,17 @@ export async function tryContentScriptProxy(url: string, tabQueryPattern: string
   const tabs = await browser.tabs.query({ url: tabQueryPattern });
   const tabId = tabs.find((tab) => tab.id != null && !tab.discarded)?.id;
   if (tabId == null) {
-    throw new Error(
-      `No ${hostname} tab open — open the site in a tab, then click Retry`,
-    );
+    throw new Error(`No ${hostname} tab open — open the site in a tab, then click Retry`);
   }
-  const resp = await browser.tabs.sendMessage(tabId, { type: "proxyFetch", url }) as ProxyResponse;
+  const resp = (await browser.tabs.sendMessage(tabId, {
+    type: "proxyFetch",
+    url,
+  })) as ProxyResponse;
   if (typeof (resp as { text?: unknown })?.text !== "string") {
     throw new Error("Invalid response from content script proxy");
   }
   if (isCloudflareChallenge(resp.text)) {
-    throw new Error(
-      `Cloudflare challenge on ${hostname} — refresh the tab, then click Retry`,
-    );
+    throw new Error(`Cloudflare challenge on ${hostname} — refresh the tab, then click Retry`);
   }
   if (!resp.ok) throw new Error(`HTTP ${resp.status} from ${url}`);
   return new DOMParser().parseFromString(resp.text, "text/html");
@@ -159,7 +184,9 @@ export async function fetchHtml(url: string): Promise<Document> {
     return await tryContentScriptProxy(url, `*://${hostname}/*`);
   } catch (proxyError) {
     console.warn(`[fanfic-downloader] content script proxy also failed for ${url}:`, proxyError);
-    throw new Error(`${errorMessage(proxyError)} (direct fetch failed: ${errorMessage(directError)})`);
+    throw new Error(
+      `${errorMessage(proxyError)} (direct fetch failed: ${errorMessage(directError)})`,
+    );
   }
 }
 

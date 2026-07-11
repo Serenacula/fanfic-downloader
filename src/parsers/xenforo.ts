@@ -59,11 +59,7 @@ function extractSubForum(doc: Document): string | null {
   return null;
 }
 
-function createXenForoParser(
-  site: XenForoSite,
-  baseUrl: string,
-  hostPattern: string,
-): Parser {
+function createXenForoParser(site: XenForoSite, baseUrl: string, hostPattern: string): Parser {
   const pattern = new RegExp(hostPattern.replaceAll(".", "\\.") + "\\/threads\\/[^/]+\\.\\d+");
 
   async function parse(url: string, settings: Settings, onProgress?: OnProgress): Promise<FicData> {
@@ -81,10 +77,12 @@ function createXenForoParser(
       fetchHtml(threadmarksUrl(baseUrl, threadId)),
     ]);
 
-    const title = textContent(threadDoc.querySelector("h1.p-title-value, .threadTitle, h1")) || "Untitled";
-    const author = textContent(
-      threadDoc.querySelector(".message-userDetails .username, .threadStarterPost .username"),
-    ) || "Unknown";
+    const title =
+      textContent(threadDoc.querySelector("h1.p-title-value, .threadTitle, h1")) || "Untitled";
+    const author =
+      textContent(
+        threadDoc.querySelector(".message-userDetails .username, .threadStarterPost .username"),
+      ) || "Unknown";
 
     // Use the first post as the summary/description
     const firstPost = threadDoc.querySelector(".message-body .bbWrapper, .messageContent");
@@ -108,16 +106,22 @@ function createXenForoParser(
         // XF2: article has data-content="post-XXXX" and id="js-post-XXXX";
         // the anchor id "post-XXXX" is on a <span> inside the article, not the article itself
         let anchor = "";
-        try { anchor = new URL(listing.url).hash.replace("#", ""); } catch { /* malformed URL, no anchor */ }
+        try {
+          anchor = new URL(listing.url).hash.replace("#", "");
+        } catch {
+          /* malformed URL, no anchor */
+        }
         const postEl = anchor
           ? postDoc.querySelector(
               `[data-content="${anchor}"] .message-body .bbWrapper,` +
-              `[data-content="${anchor}"] .messageContent,` +
-              `#js-${anchor} .message-body .bbWrapper,` +
-              `#js-${anchor} .messageContent`,
+                `[data-content="${anchor}"] .messageContent,` +
+                `#js-${anchor} .message-body .bbWrapper,` +
+                `#js-${anchor} .messageContent`,
             )
           : postDoc.querySelector(".message-body .bbWrapper, .messageContent");
-        const htmlContent = postEl ? resolveImageSrcs(sanitizeHtml(postEl.innerHTML), listing.url) : "";
+        const htmlContent = postEl
+          ? resolveImageSrcs(sanitizeHtml(postEl.innerHTML), listing.url)
+          : "";
         onProgress?.(++fetchedCount, listings.length);
         return { index, title: listing.title, htmlContent };
       }),

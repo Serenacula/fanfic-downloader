@@ -71,9 +71,10 @@ function parseJsonLd(doc: Document): WattpadJsonLd | null {
 }
 
 async function fetchStoryApi(storyId: string): Promise<WattpadApiStory | null> {
-  const apiUrl = `https://www.wattpad.com/api/v3/stories/${storyId}`
-    + `?fields=id,title,user,description,completed,mainCategory,tags,readCount,voteCount`
-    + `,parts(id,title,url,createDate)&_=${Date.now()}`;
+  const apiUrl =
+    `https://www.wattpad.com/api/v3/stories/${storyId}` +
+    `?fields=id,title,user,description,completed,mainCategory,tags,readCount,voteCount` +
+    `,parts(id,title,url,createDate)&_=${Date.now()}`;
   try {
     const response = await enqueue(apiUrl);
     if (!response.ok) return null;
@@ -139,18 +140,21 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const storyId = await resolveStoryId(url);
   const sourceUrl = storyUrl(storyId);
 
-  const [doc, apiData] = await Promise.all([
-    fetchHtml(sourceUrl),
-    fetchStoryApi(storyId),
-  ]);
+  const [doc, apiData] = await Promise.all([fetchHtml(sourceUrl), fetchStoryApi(storyId)]);
 
   const jsonLd = parseJsonLd(doc);
 
-  const title = (apiData?.title ?? jsonLd?.headline
-    ?? textContent(doc.querySelector('h1[data-testid="title"]'))) || "Untitled";
+  const title =
+    (apiData?.title ??
+      jsonLd?.headline ??
+      textContent(doc.querySelector('h1[data-testid="title"]'))) ||
+    "Untitled";
 
-  const author = (apiData?.user?.name ?? jsonLd?.author?.name
-    ?? textContent(doc.querySelector('a[aria-label^="by "]'))) || "Unknown";
+  const author =
+    (apiData?.user?.name ??
+      jsonLd?.author?.name ??
+      textContent(doc.querySelector('a[aria-label^="by "]'))) ||
+    "Unknown";
 
   const rawDescription = apiData?.description ?? jsonLd?.description ?? null;
   const summary = rawDescription ? sanitizeHtml(rawDescription) : null;
@@ -161,21 +165,27 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const tags: string[] = apiData?.tags?.length
     ? apiData.tags
     : jsonLd?.keywords
-      ? jsonLd.keywords.split(",")
+      ? jsonLd.keywords
+          .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag && !WATTPAD_PLATFORM_TAGS.has(tag) && tag !== genre)
       : Array.from(doc.querySelectorAll('[data-testid="tags"] span'))
           .map((el) => el.textContent?.trim() ?? "")
           .filter(Boolean);
 
-  const status = apiData?.completed === true ? "complete" as const
-    : apiData?.completed === false ? "in-progress" as const
-    : "unknown" as const;
+  const status =
+    apiData?.completed === true
+      ? ("complete" as const)
+      : apiData?.completed === false
+        ? ("in-progress" as const)
+        : ("unknown" as const);
 
-  const coverImageUrl = jsonLd?.image
-    ?? (doc.querySelector('img[data-testid="image"]') as HTMLImageElement | null)
-        ?.getAttribute("src")
-    ?? null;
+  const coverImageUrl =
+    jsonLd?.image ??
+    (doc.querySelector('img[data-testid="image"]') as HTMLImageElement | null)?.getAttribute(
+      "src",
+    ) ??
+    null;
 
   let parts: PartListing[];
   if (apiData?.parts?.length) {
@@ -190,24 +200,25 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     // this fallback may only capture links visible in the summary view.
     const CHAPTER_HREF = /^https:\/\/www\.wattpad\.com\/(\d+)/;
     const seen = new Set<string>();
-    parts = (Array.from(doc.querySelectorAll("a[href]")) as HTMLAnchorElement[])
-      .flatMap((link) => {
-        let absoluteHref: string;
-        try {
-          absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;
-        } catch {
-          return []; // malformed href on an unrelated link — skip it
-        }
-        const partMatch = CHAPTER_HREF.exec(absoluteHref);
-        if (!partMatch || seen.has(partMatch[1]!)) return [];
-        seen.add(partMatch[1]!);
-        return [{
+    parts = (Array.from(doc.querySelectorAll("a[href]")) as HTMLAnchorElement[]).flatMap((link) => {
+      let absoluteHref: string;
+      try {
+        absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;
+      } catch {
+        return []; // malformed href on an unrelated link — skip it
+      }
+      const partMatch = CHAPTER_HREF.exec(absoluteHref);
+      if (!partMatch || seen.has(partMatch[1]!)) return [];
+      seen.add(partMatch[1]!);
+      return [
+        {
           id: partMatch[1]!,
           title: link.textContent?.trim() || "Untitled",
           url: absoluteHref,
           date: null,
-        }];
-      });
+        },
+      ];
+    });
   }
 
   if (parts.length === 0) throw new Error("No chapters found on Wattpad story page");
@@ -233,7 +244,9 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
       }
 
       if (!htmlContent) {
-        console.warn(`[wattpad] chapter ${index + 1} ("${part.title}") has no content after all fetch attempts`);
+        console.warn(
+          `[wattpad] chapter ${index + 1} ("${part.title}") has no content after all fetch attempts`,
+        );
       }
 
       onProgress?.(++fetchedCount, parts.length);

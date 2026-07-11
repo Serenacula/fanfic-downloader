@@ -105,8 +105,9 @@ describe("FFN parser — s/12345 (The Long Road Home)", () => {
   });
 
   it("throws for a non-FFN URL", async () => {
-    await expect(ffnParser.parse("https://example.com/s/999/1/", DEFAULT_SETTINGS))
-      .rejects.toThrow("Not a valid FFN URL");
+    await expect(ffnParser.parse("https://example.com/s/999/1/", DEFAULT_SETTINGS)).rejects.toThrow(
+      "Not a valid FFN URL",
+    );
   });
 
   it("reports per-chapter progress through onProgress", async () => {
@@ -123,7 +124,8 @@ describe("FFN parser — s/12345 (The Long Road Home)", () => {
 describe("FFN parser — reverse date order", () => {
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url.includes("fanfiction.net/s/99999/")) return htmlResponse("ffn-story-reversed-dates.html");
+      if (url.includes("fanfiction.net/s/99999/"))
+        return htmlResponse("ffn-story-reversed-dates.html");
       throw new Error(`Unexpected fetch: ${url}`);
     });
   });
@@ -164,10 +166,12 @@ function mockInlineStory(html: string): void {
 
 describe("FFN parser — summary escaping", () => {
   it("keeps literal angle brackets and ampersands in the summary as text, not markup", async () => {
-    mockInlineStory(inlineFfnPage(
-      "Careful with &lt;b&gt;brackets&lt;/b&gt; &amp; ampersands",
-      "Rated: T - English - Chapters: 1 - Words: 100 - Complete",
-    ));
+    mockInlineStory(
+      inlineFfnPage(
+        "Careful with &lt;b&gt;brackets&lt;/b&gt; &amp; ampersands",
+        "Rated: T - English - Chapters: 1 - Words: 100 - Complete",
+      ),
+    );
 
     const data = await ffnParser.parse("https://www.fanfiction.net/s/55555/1/", DEFAULT_SETTINGS);
     // The summary displayed literal "<b>" text on FFN; it must survive as escaped
@@ -180,12 +184,14 @@ describe("FFN parser — summary escaping", () => {
 
 describe("FFN parser — date labels wrapped in elements", () => {
   it("finds Published/Updated labels inside elements with whitespace before the date span", async () => {
-    mockInlineStory(inlineFfnPage(
-      "A summary.",
-      `Rated: T - English - Chapters: 1 - Words: 100 - ` +
-        `<strong>Updated:</strong> <span data-xutime="1655294400"></span> - ` +
-        `<strong>Published:</strong> <span data-xutime="1641038400"></span> - Complete`,
-    ));
+    mockInlineStory(
+      inlineFfnPage(
+        "A summary.",
+        `Rated: T - English - Chapters: 1 - Words: 100 - ` +
+          `<strong>Updated:</strong> <span data-xutime="1655294400"></span> - ` +
+          `<strong>Published:</strong> <span data-xutime="1641038400"></span> - Complete`,
+      ),
+    );
 
     const data = await ffnParser.parse("https://www.fanfiction.net/s/55555/1/", DEFAULT_SETTINGS);
     expect(data.core.publishDate).toBeInstanceOf(Date);

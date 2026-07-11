@@ -58,7 +58,6 @@ function nodesToPdfContent(nodes: Node[]): ContentPart[] {
   return parts;
 }
 
-
 function nodeToPdfContent(node: Node): ContentPart | null {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? "";
@@ -76,30 +75,41 @@ function nodeToPdfContent(node: Node): ContentPart | null {
     }
     case "h1": {
       const runs = collectInlineRuns(element);
-      return runs.length === 0 ? null : { text: runs as Content, fontSize: 18, bold: true, margin: [0, 12, 0, 6] };
+      return runs.length === 0
+        ? null
+        : { text: runs as Content, fontSize: 18, bold: true, margin: [0, 12, 0, 6] };
     }
     case "h2": {
       const runs = collectInlineRuns(element);
-      return runs.length === 0 ? null : { text: runs as Content, fontSize: 15, bold: true, margin: [0, 10, 0, 4] };
+      return runs.length === 0
+        ? null
+        : { text: runs as Content, fontSize: 15, bold: true, margin: [0, 10, 0, 4] };
     }
     case "h3":
     case "h4":
     case "h5":
     case "h6": {
       const runs = collectInlineRuns(element);
-      return runs.length === 0 ? null : { text: runs as Content, fontSize: 12, bold: true, margin: [0, 8, 0, 3] };
+      return runs.length === 0
+        ? null
+        : { text: runs as Content, fontSize: 12, bold: true, margin: [0, 8, 0, 3] };
     }
     case "blockquote": {
       const runs = collectInlineRuns(element, false, true);
-      return runs.length === 0 ? null : {
-        text: runs as Content,
-        margin: [20, 4, 0, 4],
-        italics: true,
-        color: "#555555",
-      };
+      return runs.length === 0
+        ? null
+        : {
+            text: runs as Content,
+            margin: [20, 4, 0, 4],
+            italics: true,
+            color: "#555555",
+          };
     }
     case "hr":
-      return { canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5 }], margin: [0, 8, 0, 8] };
+      return {
+        canvas: [{ type: "line", x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5 }],
+        margin: [0, 8, 0, 8],
+      };
     case "br":
       return { text: "\n" };
     case "ul":
@@ -149,8 +159,20 @@ async function renderSinglePdf(data: FicData, settings: Settings): Promise<Blob>
   if (settings.includeCoverPage) {
     const infoText = renderStoryInfoText(data, settings);
     content.push(
-      { text: data.core.title, fontSize: 24, bold: true, alignment: "center", margin: [0, 60, 0, 8] },
-      { text: `by ${data.core.author}`, fontSize: 14, alignment: "center", margin: [0, 0, 0, 40], color: "#555555" },
+      {
+        text: data.core.title,
+        fontSize: 24,
+        bold: true,
+        alignment: "center",
+        margin: [0, 60, 0, 8],
+      },
+      {
+        text: `by ${data.core.author}`,
+        fontSize: 14,
+        alignment: "center",
+        margin: [0, 0, 0, 40],
+        color: "#555555",
+      },
       { text: infoText, fontSize: 10, color: "#444444" },
       { text: "", pageBreak: "after" },
     );

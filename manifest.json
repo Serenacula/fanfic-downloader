@@ -1,78 +1,78 @@
 {
-    "manifest_version": 3,
-    "name": "Sere's Fanfic Downloader",
-    "version": "1.1.0",
-    "description": "Download fanfiction from AO3, FFN, and more in your preferred format.",
+  "manifest_version": 3,
+  "name": "Sere's Fanfic Downloader",
+  "version": "1.1.0",
+  "description": "Download fanfiction from AO3, FFN, and more in your preferred format.",
 
-    "browser_specific_settings": {
-        "gecko": {
-            "id": "fanfic-downloader@serenacula",
-            "data_collection_permissions": {
-                "required": ["none"]
-            }
-        }
-    },
-
-    "permissions": ["downloads", "activeTab", "storage", "scripting", "alarms"],
-    "host_permissions": [
-        "*://*.archiveofourown.org/*",
-        "*://*.fanfiction.net/*",
-        "*://*.royalroad.com/*",
-        "*://*.royalroadcdn.com/*",
-        "*://*.tapas.io/*",
-        "*://*.scribblehub.com/*",
-        "*://*.wattpad.com/*",
-        "*://*.spacebattles.com/*",
-        "*://*.sufficientvelocity.com/*",
-        "*://*.questionablequesting.com/*",
-        "*://*.fictionpress.com/*"
-    ],
-
-    "background": {
-        "service_worker": "src/background/index.ts",
-        "type": "module"
-    },
-
-    "action": {
-        "default_popup": "src/popup/index.html",
-        "default_title": "Sere's Fanfic Downloader",
-        "default_icon": {
-            "16": "icons/icon.svg",
-            "32": "icons/icon.svg",
-            "48": "icons/icon.svg",
-            "128": "icons/icon.svg"
-        }
-    },
-
-    "options_ui": {
-        "page": "src/options/index.html",
-        "open_in_tab": true
-    },
-
-    "content_scripts": [
-        {
-            "matches": [
-                "*://*.archiveofourown.org/works/*",
-                "*://*.fanfiction.net/s/*",
-                "*://*.royalroad.com/fiction/*",
-                "*://*.tapas.io/series/*",
-                "*://*.scribblehub.com/series/*",
-                "*://*.scribblehub.com/read/*",
-                "*://*.wattpad.com/story/*",
-                "*://*.spacebattles.com/threads/*",
-                "*://*.sufficientvelocity.com/threads/*",
-                "*://*.questionablequesting.com/threads/*",
-                "*://*.fictionpress.com/s/*"
-            ],
-            "js": ["src/content/index.ts"],
-            "run_at": "document_idle"
-        }
-    ],
-
-    "icons": {
-        "16": "icons/icon.svg",
-        "32": "icons/icon.svg",
-        "48": "icons/icon.svg",
-        "128": "icons/icon.svg"
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "fanfic-downloader@serenacula",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
+  },
+
+  "permissions": ["downloads", "activeTab", "storage", "scripting", "alarms"],
+  "host_permissions": [
+    "*://*.archiveofourown.org/*",
+    "*://*.fanfiction.net/*",
+    "*://*.royalroad.com/*",
+    "*://*.royalroadcdn.com/*",
+    "*://*.tapas.io/*",
+    "*://*.scribblehub.com/*",
+    "*://*.wattpad.com/*",
+    "*://*.spacebattles.com/*",
+    "*://*.sufficientvelocity.com/*",
+    "*://*.questionablequesting.com/*",
+    "*://*.fictionpress.com/*"
+  ],
+
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "Sere's Fanfic Downloader",
+    "default_icon": {
+      "16": "icons/icon.svg",
+      "32": "icons/icon.svg",
+      "48": "icons/icon.svg",
+      "128": "icons/icon.svg"
+    }
+  },
+
+  "options_ui": {
+    "page": "src/options/index.html",
+    "open_in_tab": true
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.archiveofourown.org/works/*",
+        "*://*.fanfiction.net/s/*",
+        "*://*.royalroad.com/fiction/*",
+        "*://*.tapas.io/series/*",
+        "*://*.scribblehub.com/series/*",
+        "*://*.scribblehub.com/read/*",
+        "*://*.wattpad.com/story/*",
+        "*://*.spacebattles.com/threads/*",
+        "*://*.sufficientvelocity.com/threads/*",
+        "*://*.questionablequesting.com/threads/*",
+        "*://*.fictionpress.com/s/*"
+      ],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "icons": {
+    "16": "icons/icon.svg",
+    "32": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  }
 }

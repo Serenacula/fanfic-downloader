@@ -72,41 +72,62 @@ describe("RoyalRoad parser — fiction/165189 (Okeanos: Returnal)", () => {
   });
 
   it("returns the correct site identifier", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("royalroad");
   });
 
   it("extracts title and author", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("Okeanos Returnal");
     expect(data.core.author).toBe("qualiap");
   });
 
   it("extracts summary", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.summary).toContain("Lorenz Phis");
   });
 
   it("extracts chapter content", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(1);
     expect(data.core.chapters[0]!.htmlContent.length).toBeGreaterThan(100);
   });
 
   it("extracts dates", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.publishDate).toBeInstanceOf(Date);
   });
 
   it("extracts RoyalRoad-specific metadata", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as RoyalRoadMetadata;
     expect(meta.tags.length).toBeGreaterThan(0);
     expect(meta.tags).toContain("Urban Fantasy");
   });
 
   it("extracts word count", async () => {
-    const data = await royalRoadParser.parse("https://www.royalroad.com/fiction/165189/okeanos-returnal", DEFAULT_SETTINGS);
+    const data = await royalRoadParser.parse(
+      "https://www.royalroad.com/fiction/165189/okeanos-returnal",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.wordCount).toBeGreaterThan(0);
   });
 });

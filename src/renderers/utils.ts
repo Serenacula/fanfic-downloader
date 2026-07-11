@@ -14,7 +14,9 @@ export function htmlToText(html: string): string {
 
 export function htmlToMarkdown(html: string): string {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  return nodeToMarkdown(doc.body).replace(/\n{3,}/g, "\n\n").trim();
+  return nodeToMarkdown(doc.body)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function nodeToMarkdown(node: Node): string {
@@ -28,25 +30,45 @@ function nodeToMarkdown(node: Node): string {
   const inner = Array.from(element.childNodes).map(nodeToMarkdown).join("");
 
   switch (tag) {
-    case "p": return `\n\n${inner}\n\n`;
-    case "br": return "\n";
-    case "hr": return "\n\n---\n\n";
+    case "p":
+      return `\n\n${inner}\n\n`;
+    case "br":
+      return "\n";
+    case "hr":
+      return "\n\n---\n\n";
     case "em":
-    case "i": return `*${inner}*`;
+    case "i":
+      return `*${inner}*`;
     case "strong":
-    case "b": return `**${inner}**`;
+    case "b":
+      return `**${inner}**`;
     case "s":
-    case "del": return `~~${inner}~~`;
-    case "blockquote": return `\n\n> ${inner.trim().replace(/\n/g, "\n> ")}\n\n`;
-    case "h1": return `\n\n# ${inner}\n\n`;
-    case "h2": return `\n\n## ${inner}\n\n`;
-    case "h3": return `\n\n### ${inner}\n\n`;
-    case "h4": return `\n\n#### ${inner}\n\n`;
-    case "h5": return `\n\n##### ${inner}\n\n`;
-    case "h6": return `\n\n###### ${inner}\n\n`;
-    case "ul": return `\n\n${Array.from(element.children).map((child) => `- ${nodeToMarkdown(child).trim()}`).join("\n")}\n\n`;
-    case "ol": return `\n\n${Array.from(element.children).map((child, index) => `${index + 1}. ${nodeToMarkdown(child).trim()}`).join("\n")}\n\n`;
-    case "li": return inner;
+    case "del":
+      return `~~${inner}~~`;
+    case "blockquote":
+      return `\n\n> ${inner.trim().replace(/\n/g, "\n> ")}\n\n`;
+    case "h1":
+      return `\n\n# ${inner}\n\n`;
+    case "h2":
+      return `\n\n## ${inner}\n\n`;
+    case "h3":
+      return `\n\n### ${inner}\n\n`;
+    case "h4":
+      return `\n\n#### ${inner}\n\n`;
+    case "h5":
+      return `\n\n##### ${inner}\n\n`;
+    case "h6":
+      return `\n\n###### ${inner}\n\n`;
+    case "ul":
+      return `\n\n${Array.from(element.children)
+        .map((child) => `- ${nodeToMarkdown(child).trim()}`)
+        .join("\n")}\n\n`;
+    case "ol":
+      return `\n\n${Array.from(element.children)
+        .map((child, index) => `${index + 1}. ${nodeToMarkdown(child).trim()}`)
+        .join("\n")}\n\n`;
+    case "li":
+      return inner;
     case "a": {
       const href = element.getAttribute("href");
       return href ? `[${inner}](${href})` : inner;
@@ -56,7 +78,8 @@ function nodeToMarkdown(node: Node): string {
       const alt = element.getAttribute("alt") ?? "";
       return `![${alt}](${src})`;
     }
-    default: return inner;
+    default:
+      return inner;
   }
 }
 
@@ -140,12 +163,14 @@ export function formatFilename(template: string, data: FicData): string {
   const dateStr = (date: Date): string =>
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
-  return template
-    .replace(/\{title\}/g, sanitizeTemplateValue(data.core.title))
-    .replace(/\{author\}/g, sanitizeTemplateValue(data.core.author))
-    .replace(/\{currentDate\}/g, dateStr(now))
-    .replace(/\{publishDate\}/g, data.core.publishDate ? dateStr(data.core.publishDate) : "")
-    .replace(/\{updateDate\}/g, data.core.updateDate ? dateStr(data.core.updateDate) : "")
-    .replace(/[<>:"/\\|?*]/g, "_")
-    .trim() || "download";
+  return (
+    template
+      .replace(/\{title\}/g, sanitizeTemplateValue(data.core.title))
+      .replace(/\{author\}/g, sanitizeTemplateValue(data.core.author))
+      .replace(/\{currentDate\}/g, dateStr(now))
+      .replace(/\{publishDate\}/g, data.core.publishDate ? dateStr(data.core.publishDate) : "")
+      .replace(/\{updateDate\}/g, data.core.updateDate ? dateStr(data.core.updateDate) : "")
+      .replace(/[<>:"/\\|?*]/g, "_")
+      .trim() || "download"
+  );
 }

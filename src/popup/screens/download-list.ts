@@ -7,30 +7,43 @@ const FOLDER_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" 
 
 function statusLabel(job: DownloadJob): string {
   switch (job.status) {
-    case "queued": return "Queued";
-    case "fetching-metadata": return "Fetching info…";
+    case "queued":
+      return "Queued";
+    case "fetching-metadata":
+      return "Fetching info…";
     case "fetching-chapters": {
       if (job.chaptersTotal != null) {
         return `Fetching ${job.chaptersFetched}/${job.chaptersTotal} chapters`;
       }
       return "Fetching chapters…";
     }
-    case "rendering": return "Rendering…";
-    case "saving": return "Saving…";
-    case "complete": return "Complete";
-    case "failed": return job.error ?? "Unknown error";
-    case "cancelled": return "Cancelled";
+    case "rendering":
+      return "Rendering…";
+    case "saving":
+      return "Saving…";
+    case "complete":
+      return "Complete";
+    case "failed":
+      return job.error ?? "Unknown error";
+    case "cancelled":
+      return "Cancelled";
   }
 }
 
 function isActive(job: DownloadJob): boolean {
-  return ["queued", "fetching-metadata", "fetching-chapters", "rendering", "saving"].includes(job.status);
+  return ["queued", "fetching-metadata", "fetching-chapters", "rendering", "saving"].includes(
+    job.status,
+  );
 }
 
 function buildJobElement(job: DownloadJob): HTMLElement {
   const active = isActive(job);
   let hostname = job.url;
-  try { hostname = new URL(job.url).hostname; } catch { /* malformed URL, fall back to raw string */ }
+  try {
+    hostname = new URL(job.url).hostname;
+  } catch {
+    /* malformed URL, fall back to raw string */
+  }
   const title = job.title ?? hostname;
 
   const el = document.createElement("div");
@@ -145,7 +158,8 @@ export async function renderDownloadList(
     const settings = await getSettings();
     if (settings.confirmationDialogue) {
       await browser.tabs.create({
-        url: browser.runtime.getURL("src/confirmation/index.html") +
+        url:
+          browser.runtime.getURL("src/confirmation/index.html") +
           `?url=${encodeURIComponent(currentUrl)}`,
       });
     } else {

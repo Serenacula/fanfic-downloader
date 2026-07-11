@@ -27,7 +27,9 @@ export function createQueue(): RequestQueue {
     try {
       const response = await fetch(entry.url, entry.init);
       if (!response.ok) {
-        console.warn(`[request-queue] HTTP ${response.status} for ${entry.url} (retry ${entry.retryCount}/${MAX_RETRIES})`);
+        console.warn(
+          `[request-queue] HTTP ${response.status} for ${entry.url} (retry ${entry.retryCount}/${MAX_RETRIES})`,
+        );
         if (entry.retryCount < MAX_RETRIES && RETRYABLE_STATUS_CODES.has(response.status)) {
           scheduleRetry(entry);
           return;
@@ -38,12 +40,16 @@ export function createQueue(): RequestQueue {
       entry.resolve(response);
     } catch (fetchError) {
       const cause = fetchError instanceof Error ? fetchError.message : String(fetchError);
-      console.warn(`[request-queue] fetch threw for ${entry.url} (attempt ${entry.retryCount + 1}/${MAX_RETRIES + 1}): ${cause}`);
+      console.warn(
+        `[request-queue] fetch threw for ${entry.url} (attempt ${entry.retryCount + 1}/${MAX_RETRIES + 1}): ${cause}`,
+      );
       if (entry.retryCount < MAX_RETRIES) {
         scheduleRetry(entry);
         return;
       }
-      entry.reject(new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url} — ${cause}`));
+      entry.reject(
+        new Error(`Request failed after ${MAX_RETRIES} retries: ${entry.url} — ${cause}`),
+      );
     } finally {
       inFlight--;
       void drain();

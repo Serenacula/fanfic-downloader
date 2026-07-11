@@ -33,18 +33,27 @@ describe("FictionPress parser — s/12345 (The Long Road Home)", () => {
   });
 
   it("returns the fictionpress site identifier", async () => {
-    const data = await fictionPressParser.parse("https://www.fictionpress.com/s/12345/1/", DEFAULT_SETTINGS);
+    const data = await fictionPressParser.parse(
+      "https://www.fictionpress.com/s/12345/1/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("fictionpress");
   });
 
   it("extracts title and author", async () => {
-    const data = await fictionPressParser.parse("https://www.fictionpress.com/s/12345/1/", DEFAULT_SETTINGS);
+    const data = await fictionPressParser.parse(
+      "https://www.fictionpress.com/s/12345/1/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The Long Road Home");
     expect(data.core.author).toBe("QuillWriter");
   });
 
   it("extracts word count, favs, and follows", async () => {
-    const data = await fictionPressParser.parse("https://www.fictionpress.com/s/12345/1/", DEFAULT_SETTINGS);
+    const data = await fictionPressParser.parse(
+      "https://www.fictionpress.com/s/12345/1/",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as FFNMetadata;
     expect(data.core.wordCount).toBe(3456);
     expect(meta.favs).toBe(42);
@@ -52,12 +61,18 @@ describe("FictionPress parser — s/12345 (The Long Road Home)", () => {
   });
 
   it("detects complete status", async () => {
-    const data = await fictionPressParser.parse("https://www.fictionpress.com/s/12345/1/", DEFAULT_SETTINGS);
+    const data = await fictionPressParser.parse(
+      "https://www.fictionpress.com/s/12345/1/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.status).toBe("complete");
   });
 
   it("builds the canonical sourceUrl from the story ID", async () => {
-    const data = await fictionPressParser.parse("https://www.fictionpress.com/s/12345/1/", DEFAULT_SETTINGS);
+    const data = await fictionPressParser.parse(
+      "https://www.fictionpress.com/s/12345/1/",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.sourceUrl).toContain("fictionpress.com/s/12345/");
   });
 
@@ -69,8 +84,9 @@ describe("FictionPress parser — s/12345 (The Long Road Home)", () => {
   });
 
   it("throws for a non-FictionPress URL", async () => {
-    await expect(fictionPressParser.parse("https://example.com/s/999/1/", DEFAULT_SETTINGS))
-      .rejects.toThrow("Not a valid FictionPress URL");
+    await expect(
+      fictionPressParser.parse("https://example.com/s/999/1/", DEFAULT_SETTINGS),
+    ).rejects.toThrow("Not a valid FictionPress URL");
   });
 });
 

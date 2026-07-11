@@ -50,8 +50,9 @@ function makeFicData(
 
 describe("formatFilename", () => {
   it("substitutes {title} and {author}", () => {
-    expect(formatFilename("{title} - {author}", makeFicData("My Story", "Jane Doe")))
-      .toBe("My Story - Jane Doe");
+    expect(formatFilename("{title} - {author}", makeFicData("My Story", "Jane Doe"))).toBe(
+      "My Story - Jane Doe",
+    );
   });
 
   it("prevents a title containing {author} from expanding into the author value", () => {
@@ -151,7 +152,10 @@ describe("fetchCoverImage", () => {
 
   it("strips +xml suffix from image/svg+xml", async () => {
     vi.mocked(enqueue).mockResolvedValue(
-      new Response(new Uint8Array([1]), { status: 200, headers: { "content-type": "image/svg+xml" } }),
+      new Response(new Uint8Array([1]), {
+        status: 200,
+        headers: { "content-type": "image/svg+xml" },
+      }),
     );
     expect((await fetchCoverImage("https://example.com/cover.svg"))?.extension).toBe("svg");
   });
@@ -169,9 +173,7 @@ describe("fetchCoverImage", () => {
   });
 
   it("defaults to jpg when content-type header is absent", async () => {
-    vi.mocked(enqueue).mockResolvedValue(
-      new Response(new Uint8Array([1]), { status: 200 }),
-    );
+    vi.mocked(enqueue).mockResolvedValue(new Response(new Uint8Array([1]), { status: 200 }));
     expect((await fetchCoverImage("https://example.com/cover"))?.extension).toBe("jpg");
   });
 

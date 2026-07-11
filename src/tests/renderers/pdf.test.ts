@@ -12,7 +12,7 @@ describe("ensureFontsLoaded — failure recovery", () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
     (globalThis as Record<string, unknown>).browser = {
-      ...(globalThis as Record<string, unknown>).browser as Record<string, unknown>,
+      ...((globalThis as Record<string, unknown>).browser as Record<string, unknown>),
       runtime: { getURL: (path: string) => `moz-extension://test/${path}` },
     };
   });
@@ -29,9 +29,9 @@ describe("ensureFontsLoaded — failure recovery", () => {
   });
 
   it("caches a successful load and does not refetch fonts", async () => {
-    const mockFetch = vi.fn().mockImplementation(async () =>
-      new Response(new Uint8Array([1, 2, 3]), { status: 200 }),
-    );
+    const mockFetch = vi
+      .fn()
+      .mockImplementation(async () => new Response(new Uint8Array([1, 2, 3]), { status: 200 }));
     vi.stubGlobal("fetch", mockFetch);
 
     await ensureFontsLoaded();
@@ -83,10 +83,7 @@ describe("htmlToPdfContent — inline formatting", () => {
     const parts = htmlToPdfContent("<ul><li>one <strong>bold</strong></li><li>two</li></ul>");
     expect(parts).toEqual([
       {
-        ul: [
-          [{ text: "one " }, { text: "bold", bold: true }],
-          [{ text: "two" }],
-        ],
+        ul: [[{ text: "one " }, { text: "bold", bold: true }], [{ text: "two" }]],
         margin: [0, 4, 0, 4],
       },
     ]);

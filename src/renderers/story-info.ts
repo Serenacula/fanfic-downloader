@@ -1,9 +1,7 @@
 import type { FicData } from "../shared/types.js";
 import type { Settings } from "../shared/settings.js";
 
-const NO_WARNING_VALUES = new Set([
-  "No Archive Warnings Apply",
-]);
+const NO_WARNING_VALUES = new Set(["No Archive Warnings Apply"]);
 
 function isVisible(fields: Partial<Record<string, boolean>> | undefined, key: string): boolean {
   return fields?.[key] !== false;
@@ -45,8 +43,16 @@ export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
 
   let metaRows = "";
 
-  metaRows += row("Status", core.status === "complete" ? "Complete" : core.status === "in-progress" ? "In Progress" : null, isVisible(fields, "status"));
-  metaRows += row("Words", core.wordCount?.toLocaleString() ?? null, isVisible(fields, "wordCount"));
+  metaRows += row(
+    "Status",
+    core.status === "complete" ? "Complete" : core.status === "in-progress" ? "In Progress" : null,
+    isVisible(fields, "status"),
+  );
+  metaRows += row(
+    "Words",
+    core.wordCount?.toLocaleString() ?? null,
+    isVisible(fields, "wordCount"),
+  );
   metaRows += row("Published", formatDate(core.publishDate), isVisible(fields, "publishDate"));
   metaRows += row("Updated", formatDate(core.updateDate), isVisible(fields, "updateDate"));
 
@@ -66,36 +72,76 @@ export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
       metaRows += row("Series", seriesText);
     }
     metaRows += row("Kudos", meta.kudos?.toLocaleString() ?? null, isVisible(fields, "kudos"));
-    metaRows += row("Bookmarks", meta.bookmarks?.toLocaleString() ?? null, isVisible(fields, "bookmarks"));
+    metaRows += row(
+      "Bookmarks",
+      meta.bookmarks?.toLocaleString() ?? null,
+      isVisible(fields, "bookmarks"),
+    );
   } else if (data.site === "ffn") {
     const { meta } = data;
     metaRows += tagRow("Genre", meta.genres, isVisible(fields, "genres"));
     metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
     metaRows += row("Language", meta.language, isVisible(fields, "language"));
-    metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(fields, "followers"));
-    metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+    metaRows += row(
+      "Follows",
+      meta.follows?.toLocaleString() ?? null,
+      isVisible(fields, "followers"),
+    );
+    metaRows += row(
+      "Favourites",
+      meta.favs?.toLocaleString() ?? null,
+      isVisible(fields, "favorites"),
+    );
   } else if (data.site === "fictionpress") {
     const { meta } = data;
     metaRows += tagRow("Genre", meta.genres, isVisible(fields, "genres"));
     metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
     metaRows += row("Language", meta.language, isVisible(fields, "language"));
-    metaRows += row("Follows", meta.follows?.toLocaleString() ?? null, isVisible(fields, "followers"));
-    metaRows += row("Favourites", meta.favs?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+    metaRows += row(
+      "Follows",
+      meta.follows?.toLocaleString() ?? null,
+      isVisible(fields, "followers"),
+    );
+    metaRows += row(
+      "Favourites",
+      meta.favs?.toLocaleString() ?? null,
+      isVisible(fields, "favorites"),
+    );
   } else if (data.site === "royalroad") {
     const { meta } = data;
     metaRows += tagRow("Tags", meta.tags, isVisible(fields, "tags"));
-    metaRows += row("Overall Rating", meta.rating !== null ? meta.rating.toFixed(2) : null, isVisible(fields, "rating"));
-    metaRows += row("Ratings", meta.ratingCount?.toLocaleString() ?? null, isVisible(fields, "ratingCount"));
+    metaRows += row(
+      "Overall Rating",
+      meta.rating !== null ? meta.rating.toFixed(2) : null,
+      isVisible(fields, "rating"),
+    );
+    metaRows += row(
+      "Ratings",
+      meta.ratingCount?.toLocaleString() ?? null,
+      isVisible(fields, "ratingCount"),
+    );
     metaRows += row("Views", meta.views?.toLocaleString() ?? null, isVisible(fields, "views"));
-    metaRows += row("Followers", meta.followers?.toLocaleString() ?? null, isVisible(fields, "followers"));
-    metaRows += row("Favourites", meta.favorites?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+    metaRows += row(
+      "Followers",
+      meta.followers?.toLocaleString() ?? null,
+      isVisible(fields, "followers"),
+    );
+    metaRows += row(
+      "Favourites",
+      meta.favorites?.toLocaleString() ?? null,
+      isVisible(fields, "favorites"),
+    );
   } else if (data.site === "scribblehub") {
     const { meta } = data;
     metaRows += tagRow("Genres", meta.genres, isVisible(fields, "genres"));
     metaRows += tagRow("Tags", meta.tags, isVisible(fields, "tags"));
     metaRows += row("Rating", meta.rating, isVisible(fields, "rating"));
     metaRows += row("Views", meta.views?.toLocaleString() ?? null, isVisible(fields, "views"));
-    metaRows += row("Favourites", meta.favorites?.toLocaleString() ?? null, isVisible(fields, "favorites"));
+    metaRows += row(
+      "Favourites",
+      meta.favorites?.toLocaleString() ?? null,
+      isVisible(fields, "favorites"),
+    );
   } else if (data.site === "wattpad") {
     const { meta } = data;
     metaRows += row("Genre", meta.genre, isVisible(fields, "genres"));
@@ -116,10 +162,13 @@ export function renderStoryInfoHtml(data: FicData, settings: Settings): string {
   metaRows += linkRow("Source", core.sourceUrl, isVisible(fields, "sourceUrl"));
 
   const titleHtml = isVisible(fields, "title") ? `<h1>${escHtml(core.title)}</h1>` : "";
-  const authorHtml = isVisible(fields, "author") ? `<p class="author"><em>by ${escHtml(core.author)}</em></p>` : "";
-  const summaryHtml = core.summary && isVisible(fields, "summary")
-    ? `<div class="summary"><h2>Summary</h2><div>${core.summary}</div></div>`
+  const authorHtml = isVisible(fields, "author")
+    ? `<p class="author"><em>by ${escHtml(core.author)}</em></p>`
     : "";
+  const summaryHtml =
+    core.summary && isVisible(fields, "summary")
+      ? `<div class="summary"><h2>Summary</h2><div>${core.summary}</div></div>`
+      : "";
 
   return `<div class="story-info">
   ${titleHtml}

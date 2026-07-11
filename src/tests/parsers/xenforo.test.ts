@@ -12,7 +12,8 @@ vi.mock("../../background/request-queue.js", () => ({
 }));
 
 const { enqueue } = await import("../../background/request-queue.js");
-const { spaceBattlesParser, sufficientVelocityParser, questionableQuestingParser } = await import("../../parsers/xenforo.js");
+const { spaceBattlesParser, sufficientVelocityParser, questionableQuestingParser } =
+  await import("../../parsers/xenforo.js");
 
 const fixtureDir = join(dirname(fileURLToPath(import.meta.url)), "../fixtures");
 const BASE = "https://forums.spacebattles.com";
@@ -29,7 +30,8 @@ describe("XenForo / SpaceBattles parser — threads/a-song-of-dust.99999", () =>
 
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url === `${BASE}/threads/99999/threadmarks`) return htmlResponse("xenforo-threadmarks.html");
+      if (url === `${BASE}/threads/99999/threadmarks`)
+        return htmlResponse("xenforo-threadmarks.html");
       if (url === `${BASE}/threads/99999/`) return htmlResponse("xenforo-thread.html");
       if (url.includes("post-200")) return htmlResponse("xenforo-post.html");
       throw new Error(`Unexpected fetch: ${url}`);
@@ -84,11 +86,16 @@ describe("XenForo / SpaceBattles parser — threads/a-song-of-dust.99999", () =>
 
   it("throws when no threadmarks are found", async () => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
-      if (url.includes("threadmarks")) return new Response("<html><body></body></html>", { status: 200, headers: { "content-type": "text/html" } });
+      if (url.includes("threadmarks"))
+        return new Response("<html><body></body></html>", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
       return htmlResponse("xenforo-thread.html");
     });
-    await expect(spaceBattlesParser.parse(THREAD_URL, DEFAULT_SETTINGS))
-      .rejects.toThrow("No threadmarks found");
+    await expect(spaceBattlesParser.parse(THREAD_URL, DEFAULT_SETTINGS)).rejects.toThrow(
+      "No threadmarks found",
+    );
   });
 
   it("throws for a URL that does not match the thread pattern", async () => {
@@ -129,7 +136,10 @@ describe("XenForo / SpaceBattles parser — protocol-relative threadmark URLs", 
   it("resolves protocol-relative threadmark href to https", async () => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
       if (url.includes("threadmarks")) {
-        return new Response(PROTOCOL_RELATIVE_THREADMARKS, { status: 200, headers: { "content-type": "text/html" } });
+        return new Response(PROTOCOL_RELATIVE_THREADMARKS, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
       }
       if (url === `${BASE}/threads/99999/`) return htmlResponse("xenforo-thread.html");
       if (url.includes("post-200")) return htmlResponse("xenforo-post.html");
@@ -144,25 +154,33 @@ describe("XenForo / SpaceBattles parser — protocol-relative threadmark URLs", 
 
 describe("XenForo / SufficientVelocity parser — URL detection", () => {
   it("matches SV thread URLs and not SB URLs", () => {
-    expect(sufficientVelocityParser.pattern.test(
-      "https://forums.sufficientvelocity.com/threads/story.12345/",
-    )).toBe(true);
-    expect(sufficientVelocityParser.pattern.test(
-      "https://forums.spacebattles.com/threads/story.12345/",
-    )).toBe(false);
+    expect(
+      sufficientVelocityParser.pattern.test(
+        "https://forums.sufficientvelocity.com/threads/story.12345/",
+      ),
+    ).toBe(true);
+    expect(
+      sufficientVelocityParser.pattern.test("https://forums.spacebattles.com/threads/story.12345/"),
+    ).toBe(false);
   });
 });
 
 describe("XenForo / QuestionableQuesting parser — URL detection", () => {
   it("matches QQ thread URLs and not SB or SV URLs", () => {
-    expect(questionableQuestingParser.pattern.test(
-      "https://forum.questionablequesting.com/threads/story.12345/",
-    )).toBe(true);
-    expect(questionableQuestingParser.pattern.test(
-      "https://forums.spacebattles.com/threads/story.12345/",
-    )).toBe(false);
-    expect(questionableQuestingParser.pattern.test(
-      "https://forums.sufficientvelocity.com/threads/story.12345/",
-    )).toBe(false);
+    expect(
+      questionableQuestingParser.pattern.test(
+        "https://forum.questionablequesting.com/threads/story.12345/",
+      ),
+    ).toBe(true);
+    expect(
+      questionableQuestingParser.pattern.test(
+        "https://forums.spacebattles.com/threads/story.12345/",
+      ),
+    ).toBe(false);
+    expect(
+      questionableQuestingParser.pattern.test(
+        "https://forums.sufficientvelocity.com/threads/story.12345/",
+      ),
+    ).toBe(false);
   });
 });

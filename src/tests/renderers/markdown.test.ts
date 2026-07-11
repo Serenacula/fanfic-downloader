@@ -46,7 +46,12 @@ function makeFicData(title: string): FicData {
 
 describe("buildFrontmatter — YAML scalar escaping", () => {
   it("escapes newlines in the title as \\n rather than emitting a literal newline", async () => {
-    const settings = { ...DEFAULT_SETTINGS, includeCoverPage: true, includeCoverImage: false, includeToc: false };
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      includeCoverPage: true,
+      includeCoverImage: false,
+      includeToc: false,
+    };
     const data = makeFicData("Line One\nLine Two");
     const blob = await renderMarkdown(data, settings);
     const text = await blob.text();
@@ -57,8 +62,13 @@ describe("buildFrontmatter — YAML scalar escaping", () => {
   });
 
   it("escapes backslashes in the title so the YAML value is valid", async () => {
-    const settings = { ...DEFAULT_SETTINGS, includeCoverPage: true, includeCoverImage: false, includeToc: false };
-    const data = makeFicData('Path\\to\\story');
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      includeCoverPage: true,
+      includeCoverImage: false,
+      includeToc: false,
+    };
+    const data = makeFicData("Path\\to\\story");
     const blob = await renderMarkdown(data, settings);
     const text = await blob.text();
     // Each backslash must be doubled so the YAML scalar is legal
@@ -66,7 +76,12 @@ describe("buildFrontmatter — YAML scalar escaping", () => {
   });
 
   it("escapes double-quotes in the title so the YAML value is valid", async () => {
-    const settings = { ...DEFAULT_SETTINGS, includeCoverPage: true, includeCoverImage: false, includeToc: false };
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      includeCoverPage: true,
+      includeCoverImage: false,
+      includeToc: false,
+    };
     const data = makeFicData('She said "hello"');
     const blob = await renderMarkdown(data, settings);
     const text = await blob.text();

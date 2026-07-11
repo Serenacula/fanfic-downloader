@@ -40,7 +40,11 @@ function extractSeries(doc: Document): AO3Metadata["series"] {
   return series;
 }
 
-function extractChapters(doc: Document, includeAuthorNotes: boolean, sourceUrl: string): FicChapter[] {
+function extractChapters(
+  doc: Document,
+  includeAuthorNotes: boolean,
+  sourceUrl: string,
+): FicChapter[] {
   const chapters: FicChapter[] = [];
   const chapterDivs = doc.querySelectorAll("#chapters > .chapter");
 
@@ -49,7 +53,11 @@ function extractChapters(doc: Document, includeAuthorNotes: boolean, sourceUrl: 
     const content = doc.querySelector("#chapters .userstuff");
     if (content) {
       for (const landmark of Array.from(content.querySelectorAll(".landmark"))) landmark.remove();
-      chapters.push({ index: 0, title: null, htmlContent: resolveImageSrcs(sanitizeHtml(content.innerHTML), sourceUrl) });
+      chapters.push({
+        index: 0,
+        title: null,
+        htmlContent: resolveImageSrcs(sanitizeHtml(content.innerHTML), sourceUrl),
+      });
     }
     return chapters;
   }
@@ -98,18 +106,19 @@ async function parse(url: string, settings: Settings): Promise<FicData> {
   const wordCount = parseCount(wordCountText);
 
   const statusLabel = textContent(doc.querySelector("dt.status")).toLowerCase();
-  const status =
-    statusLabel.includes("complete") ? "complete"
-    : statusLabel.includes("updated") ? "in-progress"
-    : "unknown";
+  const status = statusLabel.includes("complete")
+    ? "complete"
+    : statusLabel.includes("updated")
+      ? "in-progress"
+      : "unknown";
 
   const publishDate = parseDate(
     doc.querySelector("dd.published")?.getAttribute("datetime") ??
-    textContent(doc.querySelector("dd.published")),
+      textContent(doc.querySelector("dd.published")),
   );
   const updateDate = parseDate(
     doc.querySelector("dd.status")?.getAttribute("datetime") ??
-    textContent(doc.querySelector("dd.status")),
+      textContent(doc.querySelector("dd.status")),
   );
 
   const chapters = extractChapters(doc, settings.includeAuthorNotes, sourceUrl);

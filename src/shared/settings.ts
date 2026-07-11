@@ -4,7 +4,6 @@ export type DownloadFormat = "epub" | "pdf" | "docx" | "html" | "markdown" | "tx
 
 export type FilenameTemplateVar = "title" | "author" | "currentDate" | "publishDate" | "updateDate";
 
-
 export interface Settings {
   version: 1;
   format: DownloadFormat;

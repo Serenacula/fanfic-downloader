@@ -105,4 +105,3 @@ export type FicData =
   | { site: "questionablequesting"; core: FicCore; meta: QuestionableQuestingMetadata };
 
 export type SiteId = FicData["site"];
-

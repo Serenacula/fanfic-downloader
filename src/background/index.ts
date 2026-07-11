@@ -18,12 +18,10 @@ browser.alarms.onAlarm.addListener(() => {
   // No-op — just prevents the SW from being suspended
 });
 
-browser.runtime.onMessage.addListener(
-  (message: unknown, _sender, sendResponse) => {
-    void handleMessage(message as OrchestratorMessage).then(sendResponse);
-    return true; // Keep the message channel open for async response
-  },
-);
+browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
+  void handleMessage(message as OrchestratorMessage).then(sendResponse);
+  return true; // Keep the message channel open for async response
+});
 
 browser.downloads.onChanged.addListener((delta) => {
   handleDownloadChange(delta);

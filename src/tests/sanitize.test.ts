@@ -10,7 +10,7 @@ const { sanitizeHtml } = await import("../parsers/common.js");
 
 describe("sanitizeHtml — XSS prevention", () => {
   it("strips script tags and preserves surrounding content", () => {
-    const result = sanitizeHtml('<p>before</p><script>alert(1)</script><p>after</p>');
+    const result = sanitizeHtml("<p>before</p><script>alert(1)</script><p>after</p>");
     expect(result).not.toContain("<script>");
     expect(result).toContain("before");
     expect(result).toContain("after");
@@ -60,11 +60,15 @@ describe("sanitizeHtml — XSS prevention", () => {
 
 describe("sanitizeHtml — allowed content passes through", () => {
   it("preserves https: href", () => {
-    expect(sanitizeHtml('<a href="https://example.com">link</a>')).toContain('href="https://example.com"');
+    expect(sanitizeHtml('<a href="https://example.com">link</a>')).toContain(
+      'href="https://example.com"',
+    );
   });
 
   it("preserves http: href", () => {
-    expect(sanitizeHtml('<a href="http://example.com">link</a>')).toContain('href="http://example.com"');
+    expect(sanitizeHtml('<a href="http://example.com">link</a>')).toContain(
+      'href="http://example.com"',
+    );
   });
 
   it("preserves root-relative href", () => {
@@ -81,13 +85,13 @@ describe("sanitizeHtml — allowed content passes through", () => {
   });
 
   it("preserves allowed formatting tags", () => {
-    const result = sanitizeHtml('<p><strong>bold</strong> and <em>italic</em></p>');
+    const result = sanitizeHtml("<p><strong>bold</strong> and <em>italic</em></p>");
     expect(result).toContain("<strong>bold</strong>");
     expect(result).toContain("<em>italic</em>");
   });
 
   it("preserves blockquote, headings, and lists", () => {
-    const result = sanitizeHtml('<h2>Title</h2><blockquote><ul><li>item</li></ul></blockquote>');
+    const result = sanitizeHtml("<h2>Title</h2><blockquote><ul><li>item</li></ul></blockquote>");
     expect(result).toContain("<h2>Title</h2>");
     expect(result).toContain("<li>item</li>");
     expect(result).toContain("<blockquote>");
@@ -96,7 +100,7 @@ describe("sanitizeHtml — allowed content passes through", () => {
 
 describe("sanitizeHtml — tag and attribute handling", () => {
   it("unwraps unknown tags but preserves their text content", () => {
-    const result = sanitizeHtml('<p><x-custom>visible text</x-custom></p>');
+    const result = sanitizeHtml("<p><x-custom>visible text</x-custom></p>");
     expect(result).toContain("visible text");
     expect(result).not.toContain("<x-custom>");
   });
@@ -115,7 +119,9 @@ describe("sanitizeHtml — tag and attribute handling", () => {
   });
 
   it("strips disallowed attributes but keeps allowed ones on img", () => {
-    const result = sanitizeHtml('<img src="https://x.com/img.png" alt="desc" class="big" data-id="1"/>');
+    const result = sanitizeHtml(
+      '<img src="https://x.com/img.png" alt="desc" class="big" data-id="1"/>',
+    );
     expect(result).toContain('alt="desc"');
     expect(result).not.toContain("class=");
     expect(result).not.toContain("data-id=");

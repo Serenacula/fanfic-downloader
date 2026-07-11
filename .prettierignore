@@ -1,0 +1,6 @@
+dist/
+release/
+.ai/
+CHANGELOG.md
+package-lock.json
+src/tests/fixtures/

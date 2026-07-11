@@ -13,8 +13,12 @@ describe("detectParser", () => {
   });
 
   it("matches Wattpad story and chapter URLs", () => {
-    expect(detectParser("https://www.wattpad.com/story/410660257-the-first-rain-of-may")).not.toBeNull();
-    expect(detectParser("https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue")).not.toBeNull();
+    expect(
+      detectParser("https://www.wattpad.com/story/410660257-the-first-rain-of-may"),
+    ).not.toBeNull();
+    expect(
+      detectParser("https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue"),
+    ).not.toBeNull();
     expect(detectParser("https://www.wattpad.com/user/someauthor")).toBeNull();
   });
 

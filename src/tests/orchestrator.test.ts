@@ -69,7 +69,9 @@ beforeEach(() => {
       ...(browserBase.storage as Record<string, unknown>),
       session: {
         get: vi.fn(async (key: string) => ({ [key]: sessionStore[key] })),
-        set: vi.fn(async (obj: Record<string, unknown>) => { Object.assign(sessionStore, obj); }),
+        set: vi.fn(async (obj: Record<string, unknown>) => {
+          Object.assign(sessionStore, obj);
+        }),
       },
     },
     downloads: { download: vi.fn(async () => 1) },
@@ -100,7 +102,10 @@ describe("getJobs — session storage type guard", () => {
 
 describe("startDownload — job persistence", () => {
   it("stores the job immediately before runDownload fires", async () => {
-    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn(() => Promise.resolve(FAKE_FIC)), pattern: /ffn/ });
+    vi.mocked(detectParser).mockReturnValue({
+      parse: vi.fn(() => Promise.resolve(FAKE_FIC)),
+      pattern: /ffn/,
+    });
     vi.mocked(renderTxt).mockResolvedValue(new Blob(["text"], { type: "text/plain" }));
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
@@ -109,7 +114,10 @@ describe("startDownload — job persistence", () => {
   });
 
   it("stores overrides in the job record", async () => {
-    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn().mockRejectedValue(new Error("fail")), pattern: /ffn/ });
+    vi.mocked(detectParser).mockReturnValue({
+      parse: vi.fn().mockRejectedValue(new Error("fail")),
+      pattern: /ffn/,
+    });
 
     const overrides = { format: "txt" as const };
     const dataOverrides: DataOverrides = { title: "Custom Title" };
@@ -122,7 +130,10 @@ describe("startDownload — job persistence", () => {
   });
 
   it("stores a job with undefined overrides when none are passed", async () => {
-    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn().mockRejectedValue(new Error("fail")), pattern: /ffn/ });
+    vi.mocked(detectParser).mockReturnValue({
+      parse: vi.fn().mockRejectedValue(new Error("fail")),
+      pattern: /ffn/,
+    });
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
     const jobs = await getJobs();
@@ -134,7 +145,10 @@ describe("startDownload — job persistence", () => {
 
 describe("startDownload — object URL lifecycle", () => {
   it("revokes the object URL even when browser.downloads.download rejects", async () => {
-    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn(() => Promise.resolve(FAKE_FIC)), pattern: /ffn/ });
+    vi.mocked(detectParser).mockReturnValue({
+      parse: vi.fn(() => Promise.resolve(FAKE_FIC)),
+      pattern: /ffn/,
+    });
     vi.mocked(renderEpub).mockResolvedValue(new Blob(["epub"], { type: "application/epub+zip" }));
 
     const revokespy = vi.spyOn(URL, "revokeObjectURL");
@@ -147,11 +161,14 @@ describe("startDownload — object URL lifecycle", () => {
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
 
-    await vi.waitFor(async () => {
-      const jobs = await getJobs();
-      const job = jobs.find((j) => j.id === id);
-      if (job?.status !== "failed") throw new Error("Job has not failed yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const jobs = await getJobs();
+        const job = jobs.find((j) => j.id === id);
+        if (job?.status !== "failed") throw new Error("Job has not failed yet");
+      },
+      { timeout: 2000 },
+    );
 
     expect(revokespy).toHaveBeenCalled();
     revokespy.mockRestore();
@@ -167,21 +184,27 @@ describe("retryJob — overrides pass-through", () => {
     const id = await startDownload("https://www.fanfiction.net/s/1/1/", overrides);
 
     // Wait for first attempt to fail
-    await vi.waitFor(async () => {
-      const jobs = await getJobs();
-      const failed = jobs.find((j) => j.id === id && j.status === "failed") != null;
-      if (!failed) throw new Error("Job has not failed yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const jobs = await getJobs();
+        const failed = jobs.find((j) => j.id === id && j.status === "failed") != null;
+        if (!failed) throw new Error("Job has not failed yet");
+      },
+      { timeout: 2000 },
+    );
 
     await retryJob(id);
 
     // Wait for the retry to also fail — this confirms runDownload ran again
-    await vi.waitFor(async () => {
-      const jobs = await getJobs();
-      const job = jobs.find((j) => j.id === id);
-      const ready = job?.status === "failed" && mockParse.mock.calls.length >= 2;
-      if (!ready) throw new Error("Retry has not completed yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const jobs = await getJobs();
+        const job = jobs.find((j) => j.id === id);
+        const ready = job?.status === "failed" && mockParse.mock.calls.length >= 2;
+        if (!ready) throw new Error("Retry has not completed yet");
+      },
+      { timeout: 2000 },
+    );
 
     expect(mockParse.mock.calls.length).toBeGreaterThanOrEqual(2);
 
@@ -200,10 +223,13 @@ describe("retryJob — overrides pass-through", () => {
     vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
-    await vi.waitFor(async () => {
-      const job = (await getJobs()).find((j) => j.id === id);
-      if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const job = (await getJobs()).find((j) => j.id === id);
+        if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
+      },
+      { timeout: 2000 },
+    );
 
     await retryJob(id);
     expect(mockParse).toHaveBeenCalledTimes(1);
@@ -224,10 +250,13 @@ describe("startDownload — chapter fetch progress", () => {
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
 
-    await vi.waitFor(async () => {
-      const job = (await getJobs()).find((j) => j.id === id);
-      if (job?.chaptersFetched !== 3) throw new Error("Progress not recorded yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const job = (await getJobs()).find((j) => j.id === id);
+        if (job?.chaptersFetched !== 3) throw new Error("Progress not recorded yet");
+      },
+      { timeout: 2000 },
+    );
 
     const job = (await getJobs()).find((j) => j.id === id);
     expect(job?.chaptersTotal).toBe(10);
@@ -238,22 +267,34 @@ describe("startDownload — chapter fetch progress", () => {
 describe("cancelJob then retryJob — stale run does not race the retry", () => {
   it("ignores the cancelled run when its parse resolves after a retry started", async () => {
     let resolveFirstParse: ((data: FicData) => void) | undefined;
-    const mockParse = vi.fn()
-      .mockImplementationOnce(() => new Promise<FicData>((resolve) => { resolveFirstParse = resolve; }))
+    const mockParse = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<FicData>((resolve) => {
+            resolveFirstParse = resolve;
+          }),
+      )
       .mockImplementation(() => new Promise<FicData>(() => {}));
     vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
     vi.mocked(renderTxt).mockResolvedValue(new Blob(["text"], { type: "text/plain" }));
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/", { format: "txt" });
-    await vi.waitFor(() => {
-      if (mockParse.mock.calls.length < 1) throw new Error("Parse not called yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      () => {
+        if (mockParse.mock.calls.length < 1) throw new Error("Parse not called yet");
+      },
+      { timeout: 2000 },
+    );
 
     await cancelJob(id);
     await retryJob(id);
-    await vi.waitFor(() => {
-      if (mockParse.mock.calls.length < 2) throw new Error("Retry parse not called yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      () => {
+        if (mockParse.mock.calls.length < 2) throw new Error("Retry parse not called yet");
+      },
+      { timeout: 2000 },
+    );
 
     // The first (cancelled) run's parse finally resolves — it must notice it is
     // stale and stop, not continue on to render and clobber the retried job.
@@ -278,9 +319,27 @@ describe("recoverInterruptedJobs — background restart", () => {
       downloadId: null,
     };
     sessionStore["downloadJobs"] = {
-      "active-1": { ...baseJob, id: "active-1", status: "fetching-chapters", error: null, completedAt: null },
-      "complete-1": { ...baseJob, id: "complete-1", status: "complete", error: null, completedAt: Date.now() },
-      "failed-1": { ...baseJob, id: "failed-1", status: "failed", error: "already failed", completedAt: Date.now() },
+      "active-1": {
+        ...baseJob,
+        id: "active-1",
+        status: "fetching-chapters",
+        error: null,
+        completedAt: null,
+      },
+      "complete-1": {
+        ...baseJob,
+        id: "complete-1",
+        status: "complete",
+        error: null,
+        completedAt: Date.now(),
+      },
+      "failed-1": {
+        ...baseJob,
+        id: "failed-1",
+        status: "failed",
+        error: "already failed",
+        completedAt: Date.now(),
+      },
     };
 
     await recoverInterruptedJobs();
@@ -288,7 +347,9 @@ describe("recoverInterruptedJobs — background restart", () => {
     const jobs = await getJobs();
     const recovered = jobs.find((j) => j.id === "active-1");
     expect(recovered?.status).toBe("failed");
-    expect(recovered?.error).toBe("Interrupted by an extension restart — click Retry to start again");
+    expect(recovered?.error).toBe(
+      "Interrupted by an extension restart — click Retry to start again",
+    );
     expect(jobs.find((j) => j.id === "complete-1")?.status).toBe("complete");
     expect(jobs.find((j) => j.id === "failed-1")?.error).toBe("already failed");
 
@@ -298,9 +359,12 @@ describe("recoverInterruptedJobs — background restart", () => {
     const mockParse = vi.fn(() => new Promise<FicData>(() => {}));
     vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
     await retryJob("active-1");
-    await vi.waitFor(() => {
-      if (mockParse.mock.calls.length < 1) throw new Error("Retry parse not called yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      () => {
+        if (mockParse.mock.calls.length < 1) throw new Error("Retry parse not called yet");
+      },
+      { timeout: 2000 },
+    );
   });
 
   it("does not touch a job that is still running in this context", async () => {
@@ -310,10 +374,13 @@ describe("recoverInterruptedJobs — background restart", () => {
     vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/");
-    await vi.waitFor(async () => {
-      const job = (await getJobs()).find((j) => j.id === id);
-      if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const job = (await getJobs()).find((j) => j.id === id);
+        if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
+      },
+      { timeout: 2000 },
+    );
 
     await recoverInterruptedJobs();
 
@@ -324,16 +391,22 @@ describe("recoverInterruptedJobs — background restart", () => {
 
 describe("handleDownloadChange — object URL lifecycle", () => {
   it("revokes the object URL when the browser reports the download complete", async () => {
-    vi.mocked(detectParser).mockReturnValue({ parse: vi.fn(() => Promise.resolve(FAKE_FIC)), pattern: /ffn/ });
+    vi.mocked(detectParser).mockReturnValue({
+      parse: vi.fn(() => Promise.resolve(FAKE_FIC)),
+      pattern: /ffn/,
+    });
     vi.mocked(renderTxt).mockResolvedValue(new Blob(["text"], { type: "text/plain" }));
 
     const revokeSpy = vi.spyOn(URL, "revokeObjectURL");
 
     const id = await startDownload("https://www.fanfiction.net/s/1/1/", { format: "txt" });
-    await vi.waitFor(async () => {
-      const job = (await getJobs()).find((j) => j.id === id);
-      if (job?.status !== "complete") throw new Error("Job has not completed yet");
-    }, { timeout: 2000 });
+    await vi.waitFor(
+      async () => {
+        const job = (await getJobs()).find((j) => j.id === id);
+        if (job?.status !== "complete") throw new Error("Job has not completed yet");
+      },
+      { timeout: 2000 },
+    );
 
     expect(revokeSpy).not.toHaveBeenCalled();
     handleDownloadChange({ id: 1, state: { current: "complete" } });

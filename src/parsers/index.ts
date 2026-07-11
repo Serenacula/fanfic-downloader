@@ -5,7 +5,11 @@ import { royalRoadParser } from "./royalroad.js";
 import { tapasParser } from "./tapas.js";
 import { scribbleHubParser } from "./scribblehub.js";
 import { wattpadParser } from "./wattpad.js";
-import { spaceBattlesParser, sufficientVelocityParser, questionableQuestingParser } from "./xenforo.js";
+import {
+  spaceBattlesParser,
+  sufficientVelocityParser,
+  questionableQuestingParser,
+} from "./xenforo.js";
 
 const parsers: Parser[] = [
   ao3Parser,

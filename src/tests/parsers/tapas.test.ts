@@ -31,8 +31,18 @@ function jsonResponse(path: string): Response {
 }
 
 const EPISODE_IDS = [
-  "1527944", "3492000", "1624816", "3492037", "1682117", "3492051",
-  "3493154", "3493156", "3756840", "3756842", "3763377", "3853400",
+  "1527944",
+  "3492000",
+  "1624816",
+  "3492037",
+  "1682117",
+  "3492051",
+  "3493154",
+  "3493156",
+  "3756840",
+  "3756842",
+  "3763377",
+  "3853400",
 ];
 
 describe("Tapas parser — series/The-Last-Story-TLS", () => {
@@ -52,39 +62,60 @@ describe("Tapas parser — series/The-Last-Story-TLS", () => {
   });
 
   it("returns the correct site identifier", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("tapas");
   });
 
   it("extracts title and author", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The Last Story");
     expect(data.core.author).toBe("Lore");
   });
 
   it("extracts summary", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.summary).toContain("knighthood");
   });
 
   it("finds all 12 episodes", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(12);
   });
 
   it("extracts chapter content", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.htmlContent.length).toBeGreaterThan(100);
   });
 
   it("extracts chapter titles", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.title).toBeTruthy();
     expect(data.core.chapters[0]!.title).not.toBe("Untitled");
   });
 
   it("extracts Tapas-specific metadata", async () => {
-    const data = await tapasParser.parse("https://tapas.io/series/The-Last-Story-TLS/info", DEFAULT_SETTINGS);
+    const data = await tapasParser.parse(
+      "https://tapas.io/series/The-Last-Story-TLS/info",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as TapasMetadata;
     expect(meta.genre).toBe("GL");
   });
@@ -97,10 +128,16 @@ describe("Tapas parser — pagination URL construction", () => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
       capturedUrls.push(url);
       if (url.includes("tapas.io/series/The-Last-Story-TLS/info")) {
-        return new Response(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../fixtures/tapas-info.html"), "utf8"), {
-          status: 200,
-          headers: { "content-type": "text/html" },
-        });
+        return new Response(
+          readFileSync(
+            join(dirname(fileURLToPath(import.meta.url)), "../fixtures/tapas-info.html"),
+            "utf8",
+          ),
+          {
+            status: 200,
+            headers: { "content-type": "text/html" },
+          },
+        );
       }
       if (url.includes("tapas.io/series/150240/episodes")) {
         const singlePageResponse = {
@@ -116,10 +153,13 @@ describe("Tapas parser — pagination URL construction", () => {
         });
       }
       if (url.includes("tapas.io/episode/9001")) {
-        return new Response("<html><body><div class='prose-content'><p>Content</p></div></body></html>", {
-          status: 200,
-          headers: { "content-type": "text/html" },
-        });
+        return new Response(
+          "<html><body><div class='prose-content'><p>Content</p></div></body></html>",
+          {
+            status: 200,
+            headers: { "content-type": "text/html" },
+          },
+        );
       }
       throw new Error(`Unexpected fetch: ${url}`);
     });

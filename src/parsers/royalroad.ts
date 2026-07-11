@@ -76,13 +76,15 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     .filter(Boolean);
 
   // RR uses bg-blue-hoki for both content-type badges and status — must match by text
-  const statusEl = Array.from(fictionDoc.querySelectorAll(".label-sm")).find(
-    (el) => /completed|ongoing|hiatus|stub|dropped/i.test(el.textContent ?? ""),
+  const statusEl = Array.from(fictionDoc.querySelectorAll(".label-sm")).find((el) =>
+    /completed|ongoing|hiatus|stub|dropped/i.test(el.textContent ?? ""),
   );
   const statusText = (statusEl?.textContent?.trim() ?? "").toLowerCase();
-  const status = statusText.includes("complete") ? "complete" as const
-    : statusText.includes("ongoing") ? "in-progress" as const
-    : "unknown" as const;
+  const status = statusText.includes("complete")
+    ? ("complete" as const)
+    : statusText.includes("ongoing")
+      ? ("in-progress" as const)
+      : ("unknown" as const);
 
   // Stats are in alternating label/value <li> pairs under .stats-content
   const views = parseCount(findStatValue(fictionDoc, "Total Views"));
@@ -96,9 +98,10 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const rating = isNaN(ratingScore) ? null : ratingScore;
 
   // Word count is embedded in the Pages tooltip data-content attribute
-  const pagesDataContent = fictionDoc
-    .querySelector(".stats-content i[data-content*='words.']")
-    ?.getAttribute("data-content") ?? "";
+  const pagesDataContent =
+    fictionDoc
+      .querySelector(".stats-content i[data-content*='words.']")
+      ?.getAttribute("data-content") ?? "";
   const wordMatch = /calculated from ([\d,]+) words/i.exec(pagesDataContent);
   const wordCount = wordMatch ? parseCount(wordMatch[1]!) : null;
 
@@ -120,7 +123,9 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
           span.remove();
         }
       }
-      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), chapterPageUrl) : "";
+      const htmlContent = content
+        ? resolveImageSrcs(sanitizeHtml(content.innerHTML), chapterPageUrl)
+        : "";
       onProgress?.(++fetchedCount, chapterListing.length);
       return { index, title: listing.title, htmlContent };
     }),

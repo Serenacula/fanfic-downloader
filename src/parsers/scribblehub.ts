@@ -139,10 +139,14 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   debugLog(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
 
   const doc = await scribbleHubFetchHtml(sourceUrl);
-  debugLog(`[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`);
+  debugLog(
+    `[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`,
+  );
 
   const title = textContent(doc.querySelector(".fic_title")) || "Untitled";
-  const author = textContent(doc.querySelector('[property="author"] .auth_name_fic, .auth_name_fic')) || "Unknown";
+  const author =
+    textContent(doc.querySelector('[property="author"] .auth_name_fic, .auth_name_fic')) ||
+    "Unknown";
   const summaryEl = doc.querySelector(".wi_fic_desc");
   const summary = summaryEl ? sanitizeHtml(summaryEl.innerHTML) : null;
 
@@ -157,9 +161,11 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   // Status is the text in the span following the .rnd_stats badge with the status icon
   const statusSpan = doc.querySelector("i.fa.status")?.parentElement?.nextElementSibling;
   const statusText = (statusSpan?.textContent ?? "").toLowerCase();
-  const status = statusText.includes("complet") ? "complete" as const
-    : statusText.includes("ongoing") ? "in-progress" as const
-    : "unknown" as const;
+  const status = statusText.includes("complet")
+    ? ("complete" as const)
+    : statusText.includes("ongoing")
+      ? ("in-progress" as const)
+      : ("unknown" as const);
 
   const views = statValue(doc, "Views");
   const favorites = statValue(doc, "Favorites");
@@ -183,7 +189,9 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     [...listings].reverse().map(async (listing, index) => {
       const chapterDoc = await scribbleHubFetchHtml(listing.url);
       const content = chapterDoc.querySelector("#chp_raw, .chp_raw");
-      const htmlContent = content ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url) : "";
+      const htmlContent = content
+        ? resolveImageSrcs(sanitizeHtml(content.innerHTML), listing.url)
+        : "";
       onProgress?.(++fetchedCount, listings.length);
       return { index, title: listing.title, htmlContent };
     }),

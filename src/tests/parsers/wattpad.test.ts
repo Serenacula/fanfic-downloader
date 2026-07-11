@@ -33,7 +33,8 @@ function jsonResponse(data: unknown): Response {
 const STORY_API = {
   title: "The First Rain of May",
   user: { name: "jeng delacruz" },
-  description: "After fleeing a violent ambush, a merchant's daughter takes shelter with a mysterious healer in the forest.",
+  description:
+    "After fleeing a violent ambush, a merchant's daughter takes shelter with a mysterious healer in the forest.",
   completed: false,
   mainCategory: "General Fiction",
   tags: ["1800s", "darkfantasy", "fantasy-romance", "kitsune", "sapphic", "slowburn"],
@@ -70,29 +71,44 @@ describe("Wattpad parser — story/410660257 (The First Rain of May)", () => {
   });
 
   it("returns the correct site identifier", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("wattpad");
   });
 
   it("extracts title and author from API", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The First Rain of May");
     expect(data.core.author).toBe("jeng delacruz");
   });
 
   it("extracts summary", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.summary).not.toBeNull();
     expect(data.core.summary!.length).toBeGreaterThan(20);
   });
 
   it("extracts status from completed flag", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.status).toBe("in-progress");
   });
 
   it("extracts tags from API without platform noise", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.tags).toContain("1800s");
     expect(data.core.tags).toContain("sapphic");
     expect(data.core.tags).not.toContain("eBooks");
@@ -101,30 +117,45 @@ describe("Wattpad parser — story/410660257 (The First Rain of May)", () => {
   });
 
   it("extracts cover image from JSON-LD when not in og:image", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.coverImageUrl).toContain("img.wattpad.com");
   });
 
   it("extracts dates from JSON-LD", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.publishDate).toBeInstanceOf(Date);
     expect(data.core.updateDate).toBeInstanceOf(Date);
     expect(data.core.publishDate!.getFullYear()).toBe(2026);
   });
 
   it("finds the correct number of chapters", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(1);
   });
 
   it("extracts chapter content from API text", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.title).toBe("Prologue");
     expect(data.core.chapters[0]!.htmlContent.length).toBeGreaterThan(50);
   });
 
   it("extracts Wattpad-specific metadata", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     const meta = data.meta as WattpadMetadata;
     expect(meta.genre).toBe("General Fiction");
     expect(meta.reads).toBe(27);
@@ -152,13 +183,19 @@ describe("Wattpad parser — HTML fallback (no API)", () => {
   });
 
   it("falls back to HTML metadata when API fails", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.title).toBe("The First Rain of May");
     expect(data.core.author).toBe("jeng delacruz");
   });
 
   it("falls back to p[data-p-id] chapter content when API fails", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/410660257-the-first-rain-of-may", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/410660257-the-first-rain-of-may",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters[0]!.htmlContent).toContain("bukot");
   });
 });
@@ -188,20 +225,29 @@ describe("Wattpad parser — HTML fallback with root-relative chapter href", () 
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
       if (url.includes("wattpad.com/story/999999") && !url.includes("api/")) {
-        return new Response(ROOT_RELATIVE_STORY_HTML, { status: 200, headers: { "content-type": "text/html" } });
+        return new Response(ROOT_RELATIVE_STORY_HTML, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
       }
       if (url.includes("api/v3/stories/999999")) {
         return new Response(null, { status: 500 });
       }
       if (url.includes("api/v3/story_parts/1625014783")) {
-        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), { status: 200, headers: { "content-type": "application/json" } });
+        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       }
       throw new Error(`Unexpected fetch: ${url}`);
     });
   });
 
   it("resolves root-relative chapter href to an absolute URL", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/999999-root-relative", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/999999-root-relative",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(1);
     expect(data.core.chapters[0]!.title).toBe("Chapter One");
   });
@@ -231,20 +277,29 @@ describe("Wattpad parser — HTML fallback with a malformed link on the page", (
   beforeEach(() => {
     vi.mocked(enqueue).mockImplementation(async (url: string) => {
       if (url.includes("wattpad.com/story/888888") && !url.includes("api/")) {
-        return new Response(MALFORMED_LINK_STORY_HTML, { status: 200, headers: { "content-type": "text/html" } });
+        return new Response(MALFORMED_LINK_STORY_HTML, {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        });
       }
       if (url.includes("api/v3/stories/888888")) {
         return new Response(null, { status: 500 });
       }
       if (url.includes("api/v3/story_parts/1625014783")) {
-        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), { status: 200, headers: { "content-type": "application/json" } });
+        return new Response(JSON.stringify({ text: "<p>Chapter content</p>" }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       }
       throw new Error(`Unexpected fetch: ${url}`);
     });
   });
 
   it("skips the malformed href instead of failing the whole parse", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/story/888888-malformed", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/story/888888-malformed",
+      DEFAULT_SETTINGS,
+    );
     expect(data.core.chapters).toHaveLength(1);
     expect(data.core.chapters[0]!.title).toBe("Chapter One");
   });
@@ -279,7 +334,10 @@ describe("Wattpad parser — chapter URL entry point", () => {
   });
 
   it("resolves story from chapter URL via API and downloads correctly", async () => {
-    const data = await wattpadParser.parse("https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue", DEFAULT_SETTINGS);
+    const data = await wattpadParser.parse(
+      "https://www.wattpad.com/1625014783-the-first-rain-of-may-prologue",
+      DEFAULT_SETTINGS,
+    );
     expect(data.site).toBe("wattpad");
     expect(data.core.title).toBe("The First Rain of May");
     expect(data.core.chapters).toHaveLength(1);
