@@ -102,6 +102,8 @@ function render(settings: Settings): void {
         <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px">
           <input id="maxConcurrentDownloads" type="number" min="1" max="8" value="${settings.maxConcurrentDownloads}" style="max-width:80px;margin:0" />
         </div>
+
+        ${toggle("debugLogging", "Enable debug logging", settings.debugLogging)}
       </section>
 
       <section>

@@ -33,6 +33,7 @@ beforeEach(() => {
     maxConcurrentDownloads: 3,
     filenameTemplate: "{title} - {author}",
     storyInfoFields: {},
+    debugLogging: false,
   });
 });
 
@@ -103,6 +104,7 @@ describe("request queue", () => {
       maxConcurrentDownloads: 3,
       filenameTemplate: "{title} - {author}",
       storyInfoFields: {},
+    debugLogging: false,
     });
 
     const dispatchTimes: number[] = [];

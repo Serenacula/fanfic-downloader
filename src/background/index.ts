@@ -4,7 +4,9 @@ import {
   recoverInterruptedJobs,
   type OrchestratorMessage,
 } from "./orchestrator.js";
+import { initLogger } from "../shared/logger.js";
 
+initLogger();
 void recoverInterruptedJobs();
 
 browser.runtime.onInstalled.addListener(() => {

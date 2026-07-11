@@ -15,6 +15,7 @@ import {
   type OnProgress,
 } from "./common.js";
 import { enqueue } from "../background/request-queue.js";
+import { debugLog } from "../shared/logger.js";
 
 interface SeriesRef {
   id: string;
@@ -92,19 +93,19 @@ function parseListingsFromDoc(doc: Document): ChapterListing[] {
 
 async function fetchChapterList(seriesId: string, seriesDoc: Document): Promise<ChapterListing[]> {
   try {
-    console.log(`[scribblehub] fetching AJAX chapter list for series ${seriesId}`);
+    debugLog(`[scribblehub] fetching AJAX chapter list for series ${seriesId}`);
     // ScribbleHub loads its TOC via WordPress AJAX
     const response = await enqueue("https://www.scribblehub.com/wp-admin/admin-ajax.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=wi_getreleases_long&pagenum=1&mypostid=${seriesId}`,
     });
-    console.log(`[scribblehub] AJAX response status: ${response.status}`);
+    debugLog(`[scribblehub] AJAX response status: ${response.status}`);
     if (response.ok) {
       const html = await response.text();
       const tocDoc = new DOMParser().parseFromString(html, "text/html");
       const listings = parseListingsFromDoc(tocDoc);
-      console.log(`[scribblehub] AJAX returned ${listings.length} chapters`);
+      debugLog(`[scribblehub] AJAX returned ${listings.length} chapters`);
       if (listings.length > 0) return listings;
     }
   } catch (error) {
@@ -112,18 +113,18 @@ async function fetchChapterList(seriesId: string, seriesDoc: Document): Promise<
   }
   // Fall back to TOC items embedded in the series page itself
   const fallbackListings = parseListingsFromDoc(seriesDoc);
-  console.log(`[scribblehub] static HTML fallback: ${fallbackListings.length} chapters`);
+  debugLog(`[scribblehub] static HTML fallback: ${fallbackListings.length} chapters`);
   return fallbackListings;
 }
 
 async function fetchWordCount(canonicalUrl: string): Promise<number | null> {
   if (!canonicalUrl) return null;
   const statsUrl = canonicalUrl.endsWith("/") ? `${canonicalUrl}stats/` : `${canonicalUrl}/stats/`;
-  console.log(`[scribblehub] fetching word count from ${statsUrl}`);
+  debugLog(`[scribblehub] fetching word count from ${statsUrl}`);
   try {
     const doc = await scribbleHubFetchHtml(statsUrl);
     const count = tableStatValue(doc, "Word Count:");
-    console.log(`[scribblehub] word count: ${count}`);
+    debugLog(`[scribblehub] word count: ${count}`);
     return count;
   } catch (error) {
     console.warn(`[scribblehub] word count fetch failed:`, error);
@@ -135,10 +136,10 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const ref = resolveSeriesRef(url);
   if (!ref) throw new Error(`Not a valid ScribbleHub URL: ${url}`);
   const { id: seriesId, seriesPageUrl: sourceUrl } = ref;
-  console.log(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
+  debugLog(`[scribblehub] parsing ${url}, seriesId=${seriesId}, sourceUrl=${sourceUrl}`);
 
   const doc = await scribbleHubFetchHtml(sourceUrl);
-  console.log(`[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`);
+  debugLog(`[scribblehub] series page fetched, title element: "${doc.querySelector(".fic_title")?.textContent?.trim()}"`);
 
   const title = textContent(doc.querySelector(".fic_title")) || "Untitled";
   const author = textContent(doc.querySelector('[property="author"] .auth_name_fic, .auth_name_fic')) || "Unknown";
@@ -176,7 +177,7 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
   const publishDate = listings[listings.length - 1]?.date ?? null;
   const updateDate = listings[0]?.date ?? null;
 
-  console.log(`[scribblehub] fetching ${listings.length} chapters`);
+  debugLog(`[scribblehub] fetching ${listings.length} chapters`);
   let fetchedCount = 0;
   const chapters: FicChapter[] = await Promise.all(
     [...listings].reverse().map(async (listing, index) => {

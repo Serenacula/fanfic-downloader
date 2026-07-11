@@ -5,6 +5,9 @@
       get: () => Promise.resolve({}),
       set: () => Promise.resolve(),
     },
+    onChanged: {
+      addListener: () => {},
+    },
   },
   tabs: {
     query: () => Promise.resolve([]),

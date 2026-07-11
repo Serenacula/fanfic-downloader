@@ -5,6 +5,7 @@ import type {
     RendererFn,
 } from "../shared/settings.js"
 import { getSettings } from "../shared/settings.js"
+import { debugLog } from "../shared/logger.js"
 import { detectParser } from "../parsers/index.js"
 import { renderEpub } from "../renderers/epub.js"
 import { renderHtml } from "../renderers/html.js"
@@ -272,7 +273,7 @@ async function runDownload(
     dataOverrides?: DataOverrides,
 ): Promise<void> {
     try {
-        console.log(`[fanfic-downloader] starting download job=${id} url=${url}`)
+        debugLog(`starting download job=${id} url=${url}`)
         const settings = { ...(await getSettings()), ...overrides }
         const parser = detectParser(url)
         if (!parser) throw new Error(`Unsupported site: ${url}`)
@@ -284,7 +285,7 @@ async function runDownload(
         })
         if (await isStale(id, generation)) return
 
-        console.log(`[fanfic-downloader] calling parser for ${url}`)
+        debugLog(`calling parser for ${url}`)
         const onProgress = (fetched: number, total: number) => {
             if (jobGenerations.get(id) !== generation) return
             void updateJob(id, {
@@ -294,7 +295,7 @@ async function runDownload(
             })
         }
         const parsed: FicData = await parser.parse(url, settings, onProgress)
-        console.log(`[fanfic-downloader] parser returned: title="${parsed.core.title}" chapters=${parsed.core.chapters.length}`)
+        debugLog(`parser returned: title="${parsed.core.title}" chapters=${parsed.core.chapters.length}`)
         const ficData: FicData = dataOverrides
             ? {
                   ...parsed,
@@ -318,8 +319,8 @@ async function runDownload(
 
         const renderer = RENDERERS[settings.format]
         const blob = await renderer(ficData, settings)
-        console.log(
-            `[fanfic-downloader] rendered ${settings.format}: ${blob.size} bytes, type="${blob.type}"`,
+        debugLog(
+            `rendered ${settings.format}: ${blob.size} bytes, type="${blob.type}"`,
         )
 
         if (await isStale(id, generation)) return
@@ -333,8 +334,8 @@ async function runDownload(
         const filename = `${baseName}.${extension}`
 
         const objectUrl = URL.createObjectURL(blob)
-        console.log(
-            `[fanfic-downloader] downloading as "${filename}" from ${objectUrl}`,
+        debugLog(
+            `downloading as "${filename}" from ${objectUrl}`,
         )
         let downloadId: number
         try {
@@ -347,7 +348,7 @@ async function runDownload(
             URL.revokeObjectURL(objectUrl)
             throw downloadError
         }
-        console.log(`[fanfic-downloader] download initiated, id=${downloadId}`)
+        debugLog(`download initiated, id=${downloadId}`)
         pendingObjectUrls.set(downloadId, objectUrl)
         setTimeout(
             () => revokePendingObjectUrl(downloadId),
@@ -558,8 +559,8 @@ export function handleDownloadChange(delta: {
     state?: { current?: string | undefined } | undefined
 }): void {
     const state = delta.state?.current
-    console.log(
-        `[fanfic-downloader] download ${delta.id} state: ${state ?? "(unchanged)"}`,
+    debugLog(
+        `download ${delta.id} state: ${state ?? "(unchanged)"}`,
     )
 
     if (state === "complete" || state === "interrupted") {
@@ -574,8 +575,8 @@ export function handleDownloadChange(delta: {
                     (job) => job.downloadId === delta.id,
                 )
                 if (job && job.status === "complete") {
-                    console.log(
-                        `[fanfic-downloader] marking job ${job.id} as failed due to interrupted download`,
+                    debugLog(
+                        `marking job ${job.id} as failed due to interrupted download`,
                     )
                     await updateJob(job.id, {
                         status: "failed",

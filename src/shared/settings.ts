@@ -20,6 +20,7 @@ export interface Settings {
   maxConcurrentDownloads: number;
   filenameTemplate: string;
   storyInfoFields: Partial<Record<string, boolean>>;
+  debugLogging: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -37,6 +38,7 @@ export const DEFAULT_SETTINGS: Settings = {
   maxConcurrentDownloads: 3,
   filenameTemplate: "{title} - {author}",
   storyInfoFields: {},
+  debugLogging: false,
 };
 
 export const MIN_RATE_LIMIT_MS = 200;

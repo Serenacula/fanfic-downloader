@@ -1,9 +1,14 @@
 ## [1.1.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.0.0...v1.1.0) (2026-07-11)
 
+### ⚠ BREAKING CHANGES
+
+* enforce minimum rate limit (200ms) and concurrency cap (1-8) to prevent Cloudflare blocks
+
 ### Features
 
 * add FictionPress support via shared FFN parser logic ([764fe4a](https://github.com/Serenacula/fanfic-downloader/commit/764fe4ac1876bb3f4b191e8cdb9c427e8d2335e7))
 * auto-build source zip to release/ as part of npm run build ([d9c867d](https://github.com/Serenacula/fanfic-downloader/commit/d9c867dbe67398f91a1adf473ec4a035634ed222))
+* enforce minimum rate limit (200ms) and concurrency cap (1-8) to prevent Cloudflare blocks ([07377f9](https://github.com/Serenacula/fanfic-downloader/commit/07377f9a471c3020a89da14aac90ecb94dc5a16f))
 * show per-chapter fetch progress in download status ([c0e9f6f](https://github.com/Serenacula/fanfic-downloader/commit/c0e9f6fe816ab4cba5126aa93c751f1e3e7dec70))
 * show site-specific Cloudflare error messages with Retry guidance ([01554d2](https://github.com/Serenacula/fanfic-downloader/commit/01554d2d98f9ff8131f85f51dd3164365665fb05))
 
