@@ -39,11 +39,21 @@ export const DEFAULT_SETTINGS: Settings = {
   storyInfoFields: {},
 };
 
+export const MIN_RATE_LIMIT_MS = 200;
 export const MAX_RATE_LIMIT_MS = 10_000;
+export const MIN_MAX_CONCURRENT = 1;
+export const MAX_MAX_CONCURRENT = 8;
 
+// A rate limit below this floor (and unlimited concurrency, see
+// clampMaxConcurrent) is how users get themselves Cloudflare-banned.
 export function clampRateLimitMs(value: number): number {
   if (isNaN(value)) return DEFAULT_SETTINGS.rateLimitMs;
-  return Math.min(Math.max(0, value), MAX_RATE_LIMIT_MS);
+  return Math.min(Math.max(MIN_RATE_LIMIT_MS, value), MAX_RATE_LIMIT_MS);
+}
+
+export function clampMaxConcurrent(value: number): number {
+  if (isNaN(value)) return DEFAULT_SETTINGS.maxConcurrentDownloads;
+  return Math.min(Math.max(MIN_MAX_CONCURRENT, value), MAX_MAX_CONCURRENT);
 }
 
 export type RendererFn = (data: FicData, settings: Settings) => Promise<Blob>;
@@ -53,10 +63,15 @@ const STORAGE_KEY = "settings";
 export async function getSettings(): Promise<Settings> {
   const result = await browser.storage.local.get(STORAGE_KEY);
   const stored = result[STORAGE_KEY];
-  if (stored == null || typeof stored !== "object") {
-    return { ...DEFAULT_SETTINGS };
-  }
-  return { ...DEFAULT_SETTINGS, ...(stored as Partial<Settings>) };
+  const merged =
+    stored == null || typeof stored !== "object"
+      ? { ...DEFAULT_SETTINGS }
+      : { ...DEFAULT_SETTINGS, ...(stored as Partial<Settings>) };
+  return {
+    ...merged,
+    rateLimitMs: clampRateLimitMs(merged.rateLimitMs),
+    maxConcurrentDownloads: clampMaxConcurrent(merged.maxConcurrentDownloads),
+  };
 }
 
 export async function saveSettings(patch: Partial<Omit<Settings, "version">>): Promise<void> {

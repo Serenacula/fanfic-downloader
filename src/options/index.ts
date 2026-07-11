@@ -4,6 +4,7 @@ import {
     getSettings,
     saveSettings,
     clampRateLimitMs,
+    clampMaxConcurrent,
     DEFAULT_SETTINGS,
     type Settings,
 } from "../shared/settings.js"
@@ -95,14 +96,12 @@ function render(settings: Settings): void {
         ${toggle("confirmationDialogue", "Preview & edit metadata before downloading", settings.confirmationDialogue)}
 
         <label>Minimum delay between requests (ms)</label>
-        <input id="rateLimitMs" type="number" min="0" max="10000" value="${settings.rateLimitMs}" />
+        <input id="rateLimitMs" type="number" min="200" max="10000" value="${settings.rateLimitMs}" />
 
         <label>Maximum concurrent downloads</label>
         <div style="display:flex;align-items:center;gap:10px;margin:4px 0 8px">
-          <input id="maxConcurrentDownloads" type="number" min="0" max="100" value="${settings.maxConcurrentDownloads}" style="max-width:80px;margin:0" />
-          <span id="concurrent-symbol" style="font-size:18px;color:#c9aff0">${settings.maxConcurrentDownloads === 0 ? "∞" : ""}</span>
+          <input id="maxConcurrentDownloads" type="number" min="1" max="8" value="${settings.maxConcurrentDownloads}" style="max-width:80px;margin:0" />
         </div>
-        <p class="note">0 = no limit</p>
       </section>
 
       <section>
@@ -160,11 +159,6 @@ function wireEvents(): void {
             document.getElementById("filenameTemplate") as HTMLInputElement
         ).value
 
-        const concurrentSymbol = document.getElementById("concurrent-symbol")
-        if (concurrentSymbol)
-            concurrentSymbol.textContent =
-                maxConcurrentDownloads === 0 ? "∞" : ""
-
         const checkboxPatch: Partial<Settings> = {}
         for (const checkbox of Array.from(
             document.querySelectorAll<HTMLInputElement>("input[data-key]"),
@@ -186,9 +180,7 @@ function wireEvents(): void {
         await saveSettings({
             format,
             rateLimitMs: clampRateLimitMs(rateLimitMs),
-            maxConcurrentDownloads: isNaN(maxConcurrentDownloads)
-                ? DEFAULT_SETTINGS.maxConcurrentDownloads
-                : Math.max(0, maxConcurrentDownloads),
+            maxConcurrentDownloads: clampMaxConcurrent(maxConcurrentDownloads),
             filenameTemplate:
                 filenameTemplate || DEFAULT_SETTINGS.filenameTemplate,
             storyInfoFields,
