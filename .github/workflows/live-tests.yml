@@ -1,0 +1,49 @@
+name: Live-site tests
+
+# Runs weekly against the real sites (Tier 1 live parser tests), independent of
+# every-push CI. Cloudflare-walled sites (ScribbleHub, FFN, SpaceBattles) are
+# expected to skip on GitHub-hosted runners' datacenter IPs — only a break in the
+# plain-HTTP sites (AO3, RoyalRoad, Wattpad, Tapas) should fail this run.
+#
+# GitHub auto-disables scheduled workflows after 60 days without repository
+# activity, and schedules only fire on the default branch — a silent stop after a
+# quiet period is expected behavior, not a bug; re-enable from the Actions tab.
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  test-live:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run test:live
+
+      - name: File an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create live-test-failure --color B60205 --force
+
+          existing=$(gh issue list --label live-test-failure --state open --json number --jq length)
+          if [ "$existing" -eq 0 ]; then
+            gh issue create \
+              --title "Live-site tests failing ($(date +%F))" \
+              --label live-test-failure \
+              --body "The weekly live-site parser tests failed. See the run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi
