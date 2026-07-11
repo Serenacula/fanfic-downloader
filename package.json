@@ -7,7 +7,8 @@
         "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s -r 0",
         "dev": "vite build --watch",
         "test": "vitest run",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "check-versions": "node scripts/check-version-sync.mjs"
     },
     "keywords": [],
     "author": "",
