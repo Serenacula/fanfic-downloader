@@ -19,8 +19,7 @@ const baseSettings = {
 };
 
 vi.mock("../shared/settings.js", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("../shared/settings.js")>();
+  const actual = await importOriginal<typeof import("../shared/settings.js")>();
   return {
     ...actual,
     getSettings: vi.fn(async () => baseSettings),

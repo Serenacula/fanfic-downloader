@@ -185,11 +185,7 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
         : ("unknown" as const);
 
   const coverImageUrl =
-    jsonLd?.image ??
-    (doc.querySelector('img[data-testid="image"]'))?.getAttribute(
-      "src",
-    ) ??
-    null;
+    jsonLd?.image ?? doc.querySelector('img[data-testid="image"]')?.getAttribute("src") ?? null;
 
   let parts: PartListing[];
   if (apiData?.parts?.length) {
@@ -204,7 +200,7 @@ async function parse(url: string, settings: Settings, onProgress?: OnProgress): 
     // this fallback may only capture links visible in the summary view.
     const CHAPTER_HREF = /^https:\/\/www\.wattpad\.com\/(\d+)/;
     const seen = new Set<string>();
-    parts = (Array.from(doc.querySelectorAll("a[href]"))).flatMap((link) => {
+    parts = Array.from(doc.querySelectorAll("a[href]")).flatMap((link) => {
       let absoluteHref: string;
       try {
         absoluteHref = new URL(link.getAttribute("href") ?? "", sourceUrl).href;
