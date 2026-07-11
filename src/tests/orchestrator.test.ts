@@ -30,6 +30,7 @@ const {
   retryJob,
   cancelJob,
   handleDownloadChange,
+  recoverInterruptedJobs,
   resetOrchestratorStateForTests,
 } = await import("../background/orchestrator.js");
 
@@ -260,6 +261,62 @@ describe("cancelJob then retryJob — stale run does not race the retry", () => 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(renderTxt).not.toHaveBeenCalled();
+    const job = (await getJobs()).find((j) => j.id === id);
+    expect(job?.status).toBe("fetching-metadata");
+  });
+});
+
+describe("recoverInterruptedJobs — background restart", () => {
+  it("marks stranded active jobs as failed and leaves finished jobs alone", async () => {
+    const baseJob = {
+      url: "https://www.fanfiction.net/s/1/1/",
+      title: null,
+      author: null,
+      chaptersTotal: null,
+      chaptersFetched: 0,
+      startedAt: Date.now(),
+      downloadId: null,
+    };
+    sessionStore["downloadJobs"] = {
+      "active-1": { ...baseJob, id: "active-1", status: "fetching-chapters", error: null, completedAt: null },
+      "complete-1": { ...baseJob, id: "complete-1", status: "complete", error: null, completedAt: Date.now() },
+      "failed-1": { ...baseJob, id: "failed-1", status: "failed", error: "already failed", completedAt: Date.now() },
+    };
+
+    await recoverInterruptedJobs();
+
+    const jobs = await getJobs();
+    const recovered = jobs.find((j) => j.id === "active-1");
+    expect(recovered?.status).toBe("failed");
+    expect(recovered?.error).toBe("Interrupted by an extension restart — click Retry to start again");
+    expect(jobs.find((j) => j.id === "complete-1")?.status).toBe("complete");
+    expect(jobs.find((j) => j.id === "failed-1")?.error).toBe("already failed");
+
+    // retryJob must now accept the recovered job (it transitioned to "failed").
+    // runDownload fires via `void` inside retryJob, so the parser call lands in a
+    // later microtask — poll for it rather than asserting synchronously.
+    const mockParse = vi.fn(() => new Promise<FicData>(() => {}));
+    vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
+    await retryJob("active-1");
+    await vi.waitFor(() => {
+      if (mockParse.mock.calls.length < 1) throw new Error("Retry parse not called yet");
+    }, { timeout: 2000 });
+  });
+
+  it("does not touch a job that is still running in this context", async () => {
+    // Parser never resolves, so the job stays active — simulating a job that was
+    // started by a startDownload message that also woke this background context.
+    const mockParse = vi.fn(() => new Promise<FicData>(() => {}));
+    vi.mocked(detectParser).mockReturnValue({ parse: mockParse, pattern: /ffn/ });
+
+    const id = await startDownload("https://www.fanfiction.net/s/1/1/");
+    await vi.waitFor(async () => {
+      const job = (await getJobs()).find((j) => j.id === id);
+      if (job?.status !== "fetching-metadata") throw new Error("Job has not started yet");
+    }, { timeout: 2000 });
+
+    await recoverInterruptedJobs();
+
     const job = (await getJobs()).find((j) => j.id === id);
     expect(job?.status).toBe("fetching-metadata");
   });

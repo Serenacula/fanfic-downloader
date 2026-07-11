@@ -221,6 +221,38 @@ export async function retryJob(id: string): Promise<void> {
     void runDownload(id, job.url, bumpGeneration(id), job.overrides, job.dataOverrides)
 }
 
+const INTERRUPTIBLE_STATUSES: readonly JobStatus[] = [
+    "queued",
+    "fetching-metadata",
+    "fetching-chapters",
+    "rendering",
+    "saving",
+]
+
+// storage.session survives an event-page restart, so a job left in an active
+// status is either stranded (the background died mid-download) or still running
+// in THIS context (the background may have been woken BY the startDownload
+// message that's driving it). jobGenerations only holds entries for runs started
+// in this context, so it's the signal that distinguishes the two — a job without
+// one is a leftover from a previous context and gets marked failed.
+export async function recoverInterruptedJobs(): Promise<void> {
+    const jobs = await loadJobs()
+    const stranded = Object.values(jobs).filter(
+        (job) =>
+            INTERRUPTIBLE_STATUSES.includes(job.status) &&
+            !jobGenerations.has(job.id),
+    )
+    await Promise.all(
+        stranded.map((job) =>
+            updateJob(job.id, {
+                status: "failed",
+                error: "Interrupted by an extension restart — click Retry to start again",
+                completedAt: Date.now(),
+            }),
+        ),
+    )
+}
+
 async function isCancelled(id: string): Promise<boolean> {
     if (cancelledJobs.has(id)) return true;
     const jobs = await loadJobs();

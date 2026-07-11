@@ -1,4 +1,11 @@
-import { handleMessage, handleDownloadChange, type OrchestratorMessage } from "./orchestrator.js";
+import {
+  handleMessage,
+  handleDownloadChange,
+  recoverInterruptedJobs,
+  type OrchestratorMessage,
+} from "./orchestrator.js";
+
+void recoverInterruptedJobs();
 
 browser.runtime.onInstalled.addListener(() => {
   // Create a periodic alarm to keep the service worker alive during downloads
