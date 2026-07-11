@@ -1,7 +1,5 @@
 # Sere's Fanfic Downloader
 
-`VERSION: 1.1.0`
-
 ![Screenshot](images/Screenshot%202026-05-01%20at%2018.59.09.png)
 
 A Firefox extension for downloading fanfiction from popular sites in your preferred format.
