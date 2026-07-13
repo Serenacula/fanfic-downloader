@@ -1,3 +1,48 @@
+## [2.0.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.1.0...v2.0.0) (2026-07-13)
+
+### ⚠ BREAKING CHANGES
+
+* enforce minimum rate limit (200ms) and concurrency cap (1-8) to prevent Cloudflare blocks
+
+### Features
+
+* enforce minimum rate limit (200ms) and concurrency cap (1-8) to prevent Cloudflare blocks ([07377f9](https://github.com/Serenacula/fanfic-downloader/commit/07377f9a471c3020a89da14aac90ecb94dc5a16f))
+* gate debug logging behind a settings flag ([188e5b9](https://github.com/Serenacula/fanfic-downloader/commit/188e5b9b55038208a94c14ce90bc4c58d95a0386))
+* show per-chapter fetch progress in download status ([c0e9f6f](https://github.com/Serenacula/fanfic-downloader/commit/c0e9f6fe816ab4cba5126aa93c751f1e3e7dec70))
+* show site-specific Cloudflare error messages with Retry guidance ([01554d2](https://github.com/Serenacula/fanfic-downloader/commit/01554d2d98f9ff8131f85f51dd3164365665fb05))
+
+### Bug Fixes
+
+* add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([5b6131b](https://github.com/Serenacula/fanfic-downloader/commit/5b6131bbad65218fbd7ca4601f3ddd29ce35d788))
+* add browser-like Accept headers to HTML fetches to bypass Cloudflare bot detection ([b02db3d](https://github.com/Serenacula/fanfic-downloader/commit/b02db3d514082b3adb9dc31afa27c92e7135f11f))
+* always include nav.xhtml in EPUB3 manifest regardless of includeToc ([98e1d89](https://github.com/Serenacula/fanfic-downloader/commit/98e1d89ed0217b08543e222d8a45c39aa0a250ab))
+* apply bug-loop iteration-1 fixes (F-01 through F-09) ([775d546](https://github.com/Serenacula/fanfic-downloader/commit/775d5466112e7b3790b2ee0ed981065ceb4e77e3))
+* apply bugloop iteration-9 fixes (F-01 through F-07) ([7fbb3b0](https://github.com/Serenacula/fanfic-downloader/commit/7fbb3b078e8775f6af88766e47e06ce30f00fc32))
+* catch download-start failures in the popup's download button ([bf7b4ea](https://github.com/Serenacula/fanfic-downloader/commit/bf7b4eaedfcef13393bec86160b08dbe8a4134f4))
+* catch save/reload failures in the options page's reset button ([dd5fb9c](https://github.com/Serenacula/fanfic-downloader/commit/dd5fb9cdd33ac286820e399c323179352475696b))
+* catch sendMessage failures in the confirmation dialog's download button ([d28d544](https://github.com/Serenacula/fanfic-downloader/commit/d28d54497bc85d1b76a8f5031107b66bfb46c2ab))
+* clamp rateLimitMs to [0, 10000] on save (F-06) ([01e7c68](https://github.com/Serenacula/fanfic-downloader/commit/01e7c688b299b29e45d1150f8d9780c41c44aa6f))
+* correct AO3 in-progress status detection and SVG cover MIME type ([4e6b1fb](https://github.com/Serenacula/fanfic-downloader/commit/4e6b1fb6c249825c05d3efce1fcfc1c8391a1437))
+* escape FFN summary text before HTML wrapping and harden date-label detection ([591ab6c](https://github.com/Serenacula/fanfic-downloader/commit/591ab6c510674297689475591cf71cc1ef140779))
+* FFN universe selector, chapter progress status order, summary image embedding ([752ca8b](https://github.com/Serenacula/fanfic-downloader/commit/752ca8b5c0422eef335d940676660ac09e4bbe3e))
+* FictionPress metadata, concurrent job storage race, request-queue drain busy-loop ([b907e81](https://github.com/Serenacula/fanfic-downloader/commit/b907e81265198f49ce5758eae3897ae380b713a7))
+* filter rows with no chapter link in RoyalRoad extractor ([c4178b1](https://github.com/Serenacula/fanfic-downloader/commit/c4178b17903ee289ae8ceeab54ca3df84d270310))
+* guard against multiple edge-case crashes and an infinite loop (F-01, F-03, F-04, F-05, F-09) ([2f7fa64](https://github.com/Serenacula/fanfic-downloader/commit/2f7fa6457ec6a61674ab2a972e9779d0c4dbf8d9))
+* include underlying error in request-queue failure message, add orchestrator download logging ([2d6d8d0](https://github.com/Serenacula/fanfic-downloader/commit/2d6d8d02732beb2468077580cbb8ac4cdffa45c5))
+* inline formatting in PDF/DOCX, image src absolutisation in AO3/FFN, scoped image remapping, YAML newline escaping, FFN date label matching ([1698f12](https://github.com/Serenacula/fanfic-downloader/commit/1698f12466af66749f67438edc825126fbf490ca))
+* invalidate stale download runs after cancel+retry, revoke object URLs on download completion ([0656dd0](https://github.com/Serenacula/fanfic-downloader/commit/0656dd0edd9d7e44b738a0132ae3efc3458392be))
+* mark jobs stranded by an extension restart as failed so they can be retried ([a915e61](https://github.com/Serenacula/fanfic-downloader/commit/a915e61a89f50f0804c7a2645553c8b02caf36ba))
+* only fall back to content-script proxy on Cloudflare-shaped failures, preserve direct fetch error ([f3b94c1](https://github.com/Serenacula/fanfic-downloader/commit/f3b94c13109ba997312174354b55816d7ed1f3f8))
+* proxy XenForo fetches through active tab to bypass Cloudflare JS challenge ([eefff28](https://github.com/Serenacula/fanfic-downloader/commit/eefff2841a42b429e24c7c6b1645b20eeea90f2e))
+* read dt.status label for AO3 status detection instead of dd.status date ([417b9aa](https://github.com/Serenacula/fanfic-downloader/commit/417b9aa6ceeffb868170a7a247410f7b0cd190b8))
+* remove credentials:include from request queue — caused CORS preflight failures on Firefox for non-Cloudflare sites (e.g. AO3); replace synthetic AO3 multichapter fixture with real page dump and update tests ([0a9398b](https://github.com/Serenacula/fanfic-downloader/commit/0a9398b17704e4dbe28d1810ffee7b6d34a6ccf5))
+* remove Upgrade-Insecure-Requests header from fetchHtml ([37b54f3](https://github.com/Serenacula/fanfic-downloader/commit/37b54f37d294c2e666dbe182b26ae0fcb93a14a5))
+* request-queue drain stall, FFN summary escaping, AO3 updateDate, XenForo hostname guard, image remap dedup, misc cleanups ([769f566](https://github.com/Serenacula/fanfic-downloader/commit/769f5669c888091877664c8aa788a9f38622be3b))
+* retry PDF font loading after a failed attempt instead of caching the rejection ([02c630f](https://github.com/Serenacula/fanfic-downloader/commit/02c630f2a79eee09ab16d7bf3308760077c0c3b1))
+* revoke object URL immediately after download, fix protocol-relative and root-relative URL handling ([a575d15](https://github.com/Serenacula/fanfic-downloader/commit/a575d15670bd139bbe6977371048661e84726aca))
+* route AO3 fetches through content script proxy to bypass Cloudflare ([91ca49d](https://github.com/Serenacula/fanfic-downloader/commit/91ca49dd8e07823f2aecef6a25e93d0b631c1756))
+* skip malformed hrefs in Wattpad chapter-link fallback instead of failing the parse ([a53d175](https://github.com/Serenacula/fanfic-downloader/commit/a53d1756bf31d3db74a223f328d726a4d92d1419))
+* try direct fetch first, fall back to content script proxy on failure ([f66d95d](https://github.com/Serenacula/fanfic-downloader/commit/f66d95d854396deb5e697cf5730497eea50bd1e4))
 
 ## [1.1.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.0.0...v1.1.0) (2026-05-07)
 
