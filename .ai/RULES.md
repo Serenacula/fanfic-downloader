@@ -14,3 +14,22 @@ If a task seems to require a push to be "done" (e.g. to trigger a release workfl
 finish everything else and tell the user a push is the remaining step — do not do it
 for them, and do not ask "should I push?" as a way of getting a one-time yes that
 covers future turns.
+
+## Commit messages must be descriptive, not just a batch label
+
+Spotted in CHANGELOG.md (2026-07-13): commits like `apply bug-loop iteration-1 fixes
+(F-01 through F-09)` and `apply bugloop iteration-9 fixes (F-01 through F-07)` — these
+came from an automated bugloop run that batched several unrelated fixes under one
+opaque label instead of describing what was actually fixed. A commit message like this
+is useless in the changelog and in `git log`/`git blame`: it tells a reader nothing
+about user-visible behavior, and forces them to open the diff to find out what F-03
+even was.
+
+Every commit — whether written by hand or by an automated loop (bugloop, plan
+execution, etc.) — must describe what changed in terms someone reading the changelog
+would understand, per the global commit-message rules (conventional commit type,
+message states what changed and why). If a single commit really does bundle several
+distinct fixes, either: (a) split it into one commit per fix (preferred — this repo's
+worklog/plan conventions already ask for one commit per work item), or (b) if bundling
+is unavoidable, write a message that summarizes what each fix actually does, not just
+an internal iteration/ticket ID. "Fixed F-01 through F-09" is not a summary.
