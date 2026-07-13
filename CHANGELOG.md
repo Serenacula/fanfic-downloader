@@ -1,3 +1,4 @@
+
 ## [2.0.0](https://github.com/Serenacula/fanfic-downloader/compare/v1.1.0...v2.0.0) (2026-07-13)
 
 ### ⚠ BREAKING CHANGES
