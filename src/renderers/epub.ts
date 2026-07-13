@@ -247,7 +247,7 @@ export const renderEpub: RendererFn = async (data, settings) => {
       if (error) reject(error);
       else
         resolve(
-          new Blob([data_.buffer as ArrayBuffer], {
+          new Blob([data_.buffer], {
             type: "application/epub+zip",
           }),
         );

@@ -112,7 +112,7 @@ export function zipFiles(files: Record<string, Uint8Array | string>): Promise<Bl
     }
     fflateZip(input, (error, data) => {
       if (error) reject(error);
-      else resolve(new Blob([data.buffer as ArrayBuffer], { type: "application/zip" }));
+      else resolve(new Blob([data.buffer], { type: "application/zip" }));
     });
   });
 }
